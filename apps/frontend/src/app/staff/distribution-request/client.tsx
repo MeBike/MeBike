@@ -64,7 +64,6 @@ export default function DistributionRequestClient({
   }, [getMyStationDetail, listStation?.currentStation?.id]);
   return (
     <div className="space-y-6">
-      {/* Header - Trả lại nút Tạo yêu cầu cho Tấn đù đây */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">

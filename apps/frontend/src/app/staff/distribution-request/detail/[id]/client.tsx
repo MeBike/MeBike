@@ -23,8 +23,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-
-// Icons
 import {
   ArrowLeft,
   Bike,
@@ -34,9 +32,8 @@ import {
   XCircle,
 } from "lucide-react";
 
-// Types
 import type { RedistributionRequestDetail, RedistributionRequestStatus } from "@/types/DistributionRequest";
-import type { BikeStatus } from "@/types";
+import type { BikeStatus, CurrentStation } from "@/types";
 
 
 const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: string }> = {
@@ -86,8 +83,6 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      
-      {/* HEADER SECTION */}
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between border-b pb-6">
         <div className="space-y-3">
           <Button
@@ -185,6 +180,7 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
                   <span className="text-slate-500 block text-xs font-medium uppercase tracking-wider mb-1">Số lượng</span>
                   <span className="text-xl font-bold text-blue-700">{data.requestedQuantity} xe</span>
                 </div>
+                
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                   <span className="text-slate-500 block text-xs font-medium uppercase tracking-wider mb-1">Ngày tạo</span>
                   <span className="font-semibold text-slate-700">{formatToVNTime(data.createdAt)}</span>
@@ -225,7 +221,7 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
                     <div className="h-2.5 w-2.5 rounded-full bg-slate-400"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm xuất phát</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm cho xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.sourceStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.sourceStation.address}</p>
                   </div>
@@ -237,7 +233,7 @@ export const DistributionRequestDetailClient = ({ data, onStartTransit, onCancel
                     <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm đích đến</p>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm nhận xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.targetStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.targetStation.address}</p>
                   </div>

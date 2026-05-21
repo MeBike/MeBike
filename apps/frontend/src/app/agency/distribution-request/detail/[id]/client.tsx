@@ -405,7 +405,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Trạm xuất phát
+                      Trạm cho xe
                     </p>
                     <p className="font-bold text-slate-900 text-base">
                       {data.sourceStation.name}
@@ -421,7 +421,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1">
                     <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">
-                      Trạm đích đến
+                      Trạm nhận xe
                     </p>
                     <p className="font-bold text-slate-900 text-base">
                       {data.targetStation.name}

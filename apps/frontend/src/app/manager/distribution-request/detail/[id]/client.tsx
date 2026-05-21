@@ -247,7 +247,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="h-2.5 w-2.5 rounded-full bg-slate-400"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm xuất phát</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm cho xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.sourceStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.sourceStation.address}</p>
                   </div>
@@ -257,7 +257,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm đích đến</p>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm nhận xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.targetStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.targetStation.address}</p>
                   </div>
