@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Wrench, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,18 +12,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { Bike, BikeStatus } from "@/types";
-import { ArrowRight } from "lucide-react";
+
 interface SimpleUpdateBikeDialogProps {
   bike: Bike;
-  onUpdate: (data: { status: "AVAILABLE" | "BROKEN" }) => Promise<void>;
+  onUpdate: (data: { status: "AVAILABLE" }) => Promise<void>;
   isUpdating: boolean;
 }
 
-// Cấu hình màu và nhãn cho trạng thái xe
-export const getStatusConfig = (status: BikeStatus) => {
+// Bổ sung type "FIXED" nếu trong BikeStatus của bạn chưa có
+export const getStatusConfig = (status: BikeStatus | "FIXED") => {
   switch (status) {
     case "AVAILABLE":
       return { label: "Sẵn sàng", color: "bg-green-100 text-green-800" };
+    case "FIXED":
+      return { label: "Đã sửa xong", color: "bg-emerald-100 text-emerald-800" };
     case "BOOKED":
       return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800" };
     case "RESERVED":
@@ -53,10 +55,10 @@ export function SimpleUpdateBikeDialog({
   isUpdating,
 }: SimpleUpdateBikeDialogProps) {
   const [open, setOpen] = useState(false);
-  const currentStatus = bike.status as BikeStatus;
-  const targetStatus: BikeStatus = currentStatus === "AVAILABLE" ? "BROKEN" : "AVAILABLE";
+  const currentStatus = bike.status as BikeStatus | "FIXED";
+  const targetStatus = "AVAILABLE"; // Luôn luôn là AVAILABLE đối với Staff
   
-  const handleToggleStatus = async () => {
+  const handleConfirmReady = async () => {
     try {
       await onUpdate({ status: targetStatus });
       setOpen(false);
@@ -65,9 +67,9 @@ export function SimpleUpdateBikeDialog({
     }
   };
 
-  const canUpdate = currentStatus === "AVAILABLE" || currentStatus === "BROKEN";
+  // Nút chỉ bấm được khi xe đang ở trạng thái FIXED
+  const canUpdate = currentStatus === "FIXED";
   
-  // Lấy cấu hình hiển thị từ hàm getStatusConfig
   const currentConfig = getStatusConfig(currentStatus);
   const targetConfig = getStatusConfig(targetStatus);
 
@@ -75,45 +77,38 @@ export function SimpleUpdateBikeDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant={currentStatus === "AVAILABLE" ? "destructive" : "outline"} 
+          variant="default"
           size="sm" 
           disabled={!canUpdate}
           className="gap-2"
         >
-          {currentStatus === "AVAILABLE" ? (
-            <AlertTriangle className="h-4 w-4" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4" />
-          )}
-          {currentStatus === "AVAILABLE" ? "Báo hỏng xe" : "Xác nhận sửa xong"}
+          <CheckCircle2 className="h-4 w-4" />
+          Đưa vào hoạt động
         </Button>
       </DialogTrigger>
+      
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Xác nhận thay đổi trạng thái</DialogTitle>
+          <DialogTitle>Xác nhận đưa xe vào hoạt động</DialogTitle>
           <DialogDescription>
-            Bạn đang thực hiện thay đổi trạng thái cho xe <strong>#{bike.bikeNumber || bike.id.slice(-6)}</strong>
+            Bạn đang xác nhận xe <strong>#{bike.bikeNumber || bike.id.slice(-6)}</strong> đã sẵn sàng để khách thuê.
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-6 flex flex-col items-center justify-center space-y-4">
           <div className="flex items-center gap-4 text-sm font-medium">
-            {/* Sử dụng cấu hình màu và nhãn cho trạng thái hiện tại */}
             <span className={`px-3 py-1 rounded-md ${currentConfig.color}`}>
               {currentConfig.label}
             </span>
             
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
             
-            {/* Sử dụng cấu hình màu và nhãn cho trạng thái mục tiêu */}
             <span className={`px-3 py-1 rounded-md ${targetConfig.color}`}>
               {targetConfig.label}
             </span>
           </div>
           <p className="text-center text-sm text-muted-foreground">
-            {targetStatus === "BROKEN" 
-              ? "Lưu ý: Xe sẽ không thể được thuê sau khi báo hỏng." 
-              : "Xác nhận xe đã được kiểm tra và sẵn sàng hoạt động trở lại."}
+            Xác nhận xe đã được kiểm tra kỹ thuật và đủ điều kiện để hoạt động trở lại.
           </p>
         </div>
 
@@ -122,11 +117,11 @@ export function SimpleUpdateBikeDialog({
             Hủy
           </Button>
           <Button 
-            onClick={handleToggleStatus} 
+            onClick={handleConfirmReady} 
             disabled={isUpdating}
-            variant={targetStatus === "AVAILABLE" ? "default" : "destructive"}
+            variant="default"
           >
-            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận"}
+            {isUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Xác nhận sẵn sàng"}
           </Button>
         </div>
       </DialogContent>

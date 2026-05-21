@@ -168,7 +168,7 @@ export const bikeService = {
     status,
   }: {
     id: string;
-    status: "AVAILABLE" | "BROKEN" | "FIXED";
+    status: "AVAILABLE";
   }) => {
     const response = await fetchHttpClient.patch(
       ENDPOINT.BIKE.MANAGER_UPDATE(id),
