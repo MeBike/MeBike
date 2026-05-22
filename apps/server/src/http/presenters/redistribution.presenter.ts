@@ -29,6 +29,41 @@ function mapStationDetail(station: any) {
   };
 }
 
+function mapSourceStationDetail(station: any, requestedQuantity: number) {
+  if (!station)
+    return null;
+
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    latitude: station.latitude,
+    longitude: station.longitude,
+    totalCapacity: station.totalCapacity,
+    availableBikesBefore: station.availableBikes,
+    bikesForRedistribution: requestedQuantity,
+    availableBikesAfter: Math.max(station.availableBikes - requestedQuantity, 0),
+    updatedAt: station.updatedAt.toISOString(),
+  };
+}
+
+function mapTargetStationDetail(station: any, requestedQuantity: number, actualReceivedBikes: number) {
+  if (!station)
+    return null;
+  return {
+    id: station.id,
+    name: station.name,
+    address: station.address,
+    latitude: station.latitude,
+    longitude: station.longitude,
+    totalCapacity: station.totalCapacity,
+    availableBikesBefore: station.availableBikes,
+    actualReceivedBikes,
+    availableBikesAfter: Math.min(station.availableBikes + requestedQuantity, station.totalInStationBikes),
+    updatedAt: station.updatedAt.toISOString(),
+  };
+}
+
 function mapUserSummary(user: any) {
   if (!user)
     return null;
@@ -137,13 +172,18 @@ export function toContractRedistributionRequestListItem(
 export function toContractRedistributionRequestDetail(
   row: RedistributionRequestDetailRow,
 ): RedistributionContracts.RedistributionRequestDetail {
+  const actualReceivedBikes = row.items.filter(item => item.deliveredAt !== null).length;
   return {
     id: row.id,
     requestedByUser: mapUserDetail(row.requestedByUser)!,
     approvedByUser: mapUserDetail(row.approvedByUser),
     rejectedByUser: mapUserDetail(row.rejectedByUser),
-    sourceStation: mapStationDetail(row.sourceStation)!,
-    targetStation: mapStationDetail(row.targetStation)!,
+    sourceStation: mapSourceStationDetail(row.sourceStation, row.requestedQuantity)!,
+    targetStation: mapTargetStationDetail(
+      row.targetStation,
+      row.requestedQuantity,
+      actualReceivedBikes,
+    )!,
     items: mapDetailedRequestItemArray(row.items),
     requestedQuantity: row.requestedQuantity ?? undefined,
     reason: row.reason,

@@ -36,6 +36,8 @@ export type StationDetail = {
   latitude: number;
   longitude: number;
   totalCapacity: number;
+  totalInStationBikes: number;
+  availableBikes: number;
   updatedAt: Date;
 };
 

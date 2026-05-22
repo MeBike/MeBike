@@ -40,6 +40,15 @@ function mapStationSummary(station: any): StationSummary | null {
 function mapStationDetail(station: any): StationDetail | null {
   if (!station)
     return null;
+  const inStationBikesCount = station.bikes ? Math.min(
+    station.totalCapacity,
+    station.bikes.filter((b: any) =>
+      ["AVAILABLE", "RESERVED", "PENDING_DISPATCH", "BROKEN", "FIXED"].includes(b.status)
+    ).length
+  ) : 0;
+
+  const availableBikesCount = station.bikes ? station.bikes.filter((b: any) => b.status === "AVAILABLE").length : 0;
+
   return {
     id: station.id,
     name: station.name,
@@ -47,6 +56,8 @@ function mapStationDetail(station: any): StationDetail | null {
     latitude: station.latitude,
     longitude: station.longitude,
     totalCapacity: station.totalCapacity,
+    totalInStationBikes: inStationBikesCount,
+    availableBikes: availableBikesCount,
     updatedAt: station.updatedAt,
   };
 }
@@ -120,6 +131,11 @@ const detailedStationSelect = {
   longitude: true,
   totalCapacity: true,
   updatedAt: true,
+  bikes: {
+    select: {
+      status: true,
+    },
+  },
 };
 
 const summaryUserSelect = {

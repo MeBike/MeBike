@@ -67,6 +67,10 @@ export const RedistributionStationSchema = z.object({
   longitude: z.number(),
   totalCapacity: z.number(),
   updatedAt: z.iso.datetime(),
+  availableBikesBefore: z.number().optional(),
+  bikesForRedistribution: z.number().optional(),
+  actualReceivedBikes: z.number().optional(),
+  availableBikesAfter: z.number().optional(),
   locationGeo: z
     .object({
       type: z.literal("Point"),
