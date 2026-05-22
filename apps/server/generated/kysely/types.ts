@@ -168,7 +168,8 @@ export const RedistributionStatus = {
     IN_TRANSIT: "IN_TRANSIT",
     PARTIALLY_COMPLETED: "PARTIALLY_COMPLETED",
     COMPLETED: "COMPLETED",
-    CANCELLED: "CANCELLED"
+    CANCELLED: "CANCELLED",
+    REVERTED: "REVERTED"
 } as const;
 export type RedistributionStatus = (typeof RedistributionStatus)[keyof typeof RedistributionStatus];
 export const ConfirmationMethod = {
@@ -544,6 +545,7 @@ export type RedistributionRequest = {
     requested_by_user_id: string;
     approved_by_user_id: string | null;
     rejected_by_user_id: string | null;
+    reverted_by_user_id: string | null;
     source_station_id: string;
     target_station_id: string;
     reason: string | null;
