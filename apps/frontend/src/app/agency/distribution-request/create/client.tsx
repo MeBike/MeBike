@@ -137,12 +137,13 @@ export default function CreateDistributionRequestClient({
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Tổng xe
+                            Tổng xe hiện có tại trạm
                           </span>
                           <span className="font-semibold text-base">
-                            {myStationDetail.bikes.total}
+                            {myStationDetail.capacity.totalInStationBikes}
                           </span>
                         </div>
+
 
                         {/* Ô SẴN SÀNG: Thêm cảnh báo đỏ nếu < 10 */}
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm relative">
@@ -169,22 +170,12 @@ export default function CreateDistributionRequestClient({
 
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Đang được thuê
-                          </span>
-                          <span className="font-semibold text-base text-blue-600">
-                            {myStationDetail.bikes.booked}
-                          </span>
-                        </div>
-
-                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
-                          <span className="text-xs text-muted-foreground font-medium">
                             Đã đặt trước
                           </span>
                           <span className="font-semibold text-base text-orange-500">
                             {myStationDetail.bikes.reserved}
                           </span>
                         </div>
-
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
                             Bị hỏng
@@ -193,7 +184,6 @@ export default function CreateDistributionRequestClient({
                             {myStationDetail.bikes.broken}
                           </span>
                         </div>
-
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
                             Chuẩn bị điều phối
@@ -204,26 +194,10 @@ export default function CreateDistributionRequestClient({
                         </div>
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Đang vận chuyển
-                          </span>
-                          <span className="font-semibold text-base text-orange-500">
-                            {myStationDetail.bikes.transporting}
-                          </span>
-                        </div>
-                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
-                          <span className="text-xs text-muted-foreground font-medium">
-                            Hỗ trợ sự cố
-                          </span>
-                          <span className="font-semibold text-base text-orange-500">
-                            {myStationDetail.bikes.swapping}
-                          </span>
-                        </div>
-                        <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm">
-                          <span className="text-xs text-muted-foreground font-medium">
-                            Tạm ngưng hoạt động
+                            Đã sửa
                           </span>
                           <span className="font-semibold text-base text-grey-500">
-                            {myStationDetail.bikes.disabled}
+                            {myStationDetail.bikes.fixed}
                           </span>
                         </div>
                       </div>
