@@ -198,7 +198,11 @@ export default function StationDetailPage() {
     isFetchingManagerViewDistributionRequestHistory,
     getManagerViewHistoryDistribution,
   } = useDistributionRequest({ 
-    hasToken: true, 
+    hasToken: true,
+    ...(id &&
+      listStation?.currentStation?.id !== myStationDetail?.id && {
+        targetStationId: id,
+      }), 
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE
   });
