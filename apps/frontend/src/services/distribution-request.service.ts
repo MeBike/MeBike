@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import { ENDPOINT } from "@/constants";
 import { AxiosResponse } from "axios";
-import { ApiResponse } from "@/types";
+import { ApiResponse, BikeStatus } from "@/types";
 import { CreateRedistributionRequestInput } from "@/schemas/distribution-request-schema";
 import type {
   RedistributionRequest,
@@ -235,6 +235,42 @@ export const distributionRequestService = {
     const response = await fetchHttpClient.post<RedistributionRequestDetailForApprove>(
       ENDPOINT.DISTRIBUTION_REQUEST.CREATE_DISTRIBUTION_REQUEST,
       data,
+    );
+    return response;
+  },
+  getHistoryForStaff : async ({page,pageSize,status,targetStationId} : {page ?: number , pageSize ?: number , status ?: BikeStatus , targetStationId ?: string}) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
+      ENDPOINT.DISTRIBUTION_REQUEST.STAFF_VIEW_HISTORY,
+      {
+        page : page,
+        pageSize : pageSize,
+        status : status,
+        targetStationId : targetStationId,
+      }
+    );
+    return response;
+  },
+  getHistoryForManager : async ({page,pageSize,status,targetStationId} : {page ?: number , pageSize ?: number , status ?: BikeStatus , targetStationId ?: string}) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
+      ENDPOINT.DISTRIBUTION_REQUEST.MANAGER_VIEW_HISTORY,
+      {
+        page : page,
+        pageSize : pageSize,
+        status : status,
+        targetStationId : targetStationId,
+      }
+    );
+    return response;
+  },
+  getHistoryForAgency : async ({page,pageSize,status,targetStationId} : {page ?: number , pageSize ?: number , status ?: BikeStatus , targetStationId ?: string}) : Promise<AxiosResponse<ApiResponse<RedistributionRequest[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<RedistributionRequest[]>>(
+      ENDPOINT.DISTRIBUTION_REQUEST.AGENCY_VIEW_HISTORY,
+      {
+        page : page,
+        pageSize : pageSize,
+        status : status,
+        targetStationId : targetStationId,
+      }
     );
     return response;
   },

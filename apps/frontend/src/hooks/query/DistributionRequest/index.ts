@@ -5,4 +5,7 @@ export * from "./useGetStaffViewDistributionRequest";
 export * from "./useGetAdminViewDistributionRequestDetail";
 export * from "./useGetStaffViewDistributionRequestDetail";
 export * from "./useGetAgencyViewDistributionRequestDetail";
-export * from "./useGetManagerViewDistributionRequestDetail"
+export * from "./useGetManagerViewDistributionRequestDetail";
+export * from "./useGetHistoryDistributionStaff";
+export * from "./useGetHistoryDistributionManager";
+export * from "./useGetHistoryDistributionAgency";

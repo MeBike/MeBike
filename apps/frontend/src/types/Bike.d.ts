@@ -29,7 +29,9 @@ export type BikeStatus =
   | "UNAVAILABLE"
   | "LOST"
   | "DISABLED"
-  | "REDISTRIBUTING"
+  | "PENDING_DISPATCH"
+  | "TRANSPORTING"
+  | "SWAPPING"
   | "FIXED"
   | "";
 export interface BikeActivityStats {
