@@ -5,7 +5,6 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { isWithinOvernightOperationsWindow, makeOvernightOperationsClosedError } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
-import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 import type { RentalRow } from "../../../models";
 import type { ConfirmRentalReturnInput } from "../../../types";
@@ -198,16 +197,8 @@ export function ensureReturnDestinationReadyInTx(args: {
     }
 
     const stationSnapshot = stationSnapshotOpt.value;
-    const totalInStationBikes = countInStationBikes({
-      totalCapacity: stationSnapshot.totalCapacity,
-      availableBikes: stationSnapshot.availableBikes,
-      reservedBikes: stationSnapshot.reservedBikes,
-      pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
-      brokenBikes: stationSnapshot.brokenBikes,
-      fixedBikes: stationSnapshot.fixedBikes,
-    });
     const physicalRemaining = stationSnapshot.totalCapacity
-      - totalInStationBikes
+      - stationSnapshot.totalInStationBikes
       - stationSnapshot.activeReturnSlots
       - stationSnapshot.incomingRedistributionBikes;
 
@@ -216,7 +207,7 @@ export function ensureReturnDestinationReadyInTx(args: {
         stationId: args.input.stationId,
         totalCapacity: stationSnapshot.totalCapacity,
         returnSlotLimit: stationSnapshot.returnSlotLimit,
-        totalInStationBikes,
+        totalInStationBikes: stationSnapshot.totalInStationBikes,
         activeReturnSlots: stationSnapshot.activeReturnSlots,
         incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
       }));

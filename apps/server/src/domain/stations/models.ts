@@ -32,6 +32,7 @@ export type StationRow = {
   createdAt: string;
   updatedAt: string;
   totalBikes: number;
+  totalInStationBikes: number;
   availableBikes: number;
   bookedBikes: number;
   brokenBikes: number;
