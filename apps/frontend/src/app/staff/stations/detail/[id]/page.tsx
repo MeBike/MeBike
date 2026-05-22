@@ -232,7 +232,6 @@ export default function StationDetailPage() {
   const { id } = useParams() as { id: string };
   const [historyPage, setHistoryPage] = useState(1);
   const HISTORY_PAGE_SIZE = 5;
-
   const {
     getMyStationDetail,
     myStationDetail,
@@ -243,22 +242,22 @@ export default function StationDetailPage() {
     hasToken: true,
     stationId: id,
   });
-
   const {
     staffViewDistributionRequestHistory,
     isFetchingStaffViewDistributionRequestHistory,
     getStaffViewHistoryDistribution,
   } = useDistributionRequest({
     hasToken: true,
-    targetStationId: id,
+    ...(id &&
+      listStation?.currentStation?.id !== myStationDetail?.id && {
+        targetStationId: id,
+      }),
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE,
   });
-
   const [isVisualLoading, setIsVisualLoading] = useState(true);
   const [hasNotified, setHasNotified] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
-
   useEffect(() => {
     if (!id) return;
     const lastSentStr = localStorage.getItem(`low_bike_notif_sent_${id}`);
