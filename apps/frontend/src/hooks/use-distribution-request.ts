@@ -541,11 +541,13 @@ export const useDistributionRequest = ({
     page: page,
     pageSize: pageSize,
     status : bike_status,
+    targetStationId : targetStationId,
   });
   const {data: managerViewDistributionRequestHistory,refetch: refetchManagerViewDistributionRequestHistory,isFetching: isFetchingManagerViewDistributionRequestHistory,} = useGetManagerViewHistoryDistributionRequestQuery({
     page: page,
     pageSize: pageSize,
     status : bike_status,
+    targetStationId : targetStationId,
   });
   const getStaffViewHistoryDistribution = useCallback(() => {
     if (!hasToken) {

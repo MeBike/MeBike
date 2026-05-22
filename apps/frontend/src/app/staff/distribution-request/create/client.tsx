@@ -194,7 +194,7 @@ export default function CreateDistributionRequestClient({
                           <span className="text-xs text-muted-foreground font-medium">
                             Đã sửa
                           </span>
-                          <span className="font-semibold text-base text-grey-500">
+                          <span className="font-semibold text-base text-gray-500">
                             {myStationDetail.bikes.fixed}
                           </span>
                         </div>

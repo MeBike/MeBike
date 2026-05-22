@@ -257,7 +257,7 @@ export function BikeDetailView({
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <SectionCard icon={BikeIcon} title="Thông Đài cơ bản">
+            <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
                   label="Tên xe / Model"
