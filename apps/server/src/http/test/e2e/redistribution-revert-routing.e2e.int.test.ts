@@ -92,6 +92,7 @@ describe("redistribution revert routing e2e", () => {
     expect(body.reason).toBe("Too long to deliver and not needed anymore");
     expect(body.revertedByUser).not.toBeNull();
     expect(body.revertedByUser?.id).toBe(manager.id);
+    expect(body.revertedBikes).toBe(1);
 
     // 6. Verify the request in database is updated
     const updatedRequest = await fixture.prisma.redistributionRequest.findUnique({
