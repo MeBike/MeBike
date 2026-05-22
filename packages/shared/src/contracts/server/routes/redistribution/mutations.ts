@@ -10,6 +10,7 @@ import {
   RedistributionRequestIdParamSchema,
   RedistributionRequestSchemaOpenApi,
   RejectRedistributionRequestSchemaOpenApi,
+  RevertRedistributionRequestSchemaOpenApi,
 } from "./shared";
 import {
   forbiddenResponse,
@@ -564,3 +565,86 @@ export const confirmRedistributionRequestCompletion = createRoute({
     }),
   },
 });
+
+export const revertRemainingRedistributionRequest = createRoute({
+  method: "post",
+  path: "/v1/redistribution-requests/{requestId}/revert-remaining",
+  tags: ["Redistribution Requests"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RedistributionRequestIdParamSchema,
+    body: {
+      content: {
+        "application/json": {
+          schema: RevertRedistributionRequestSchemaOpenApi,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Redistribution request remaining bikes reverted successfully",
+      content: {
+        "application/json": {
+          schema: RedistributionRequestDetailSchemaOpenApi,
+        },
+      },
+    },
+    400: {
+      description: "Redistribution request revert failed",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            CannotRevertNonTransitOrPartiallyCompletedRedistribution: {
+              value: {
+                error: "Cannot revert redistribution request that is not in transit or partially completed state",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .CANNOT_REVERT_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  currentStatus: "APPROVED",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: {
+      description: "Unauthorized redistribution request revert",
+      content: {
+        "application/json": {
+          schema: RedistributionReqErrorResponseSchema,
+          examples: {
+            UnauthorizedRedistributionRevert: {
+              value: {
+                error: "Unauthorized redistribution revert",
+                details: {
+                  code: RedistributionReqErrorCodeSchema.enum
+                    .UNAUTHORIZED_REDISTRIBUTION_REVERT,
+                  requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+                  targetStationId: "019d53a7-dbbb-7185-b741-ae192a4017b4",
+                  workingStationId: "019d432f-dbbb-7185-b741-eee4e5662134",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: notFoundResponse({
+      schema: RedistributionReqErrorResponseSchema,
+      description: "Redistribution request not found",
+      example: {
+        error: "Redistribution request not found",
+        details: {
+          code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+          requestId: "019d56cf-e09b-701f-a6cb-ae192a4017b7",
+        },
+      },
+    }),
+  },
+});
+

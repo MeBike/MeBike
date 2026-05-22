@@ -8,6 +8,7 @@ export {
   rejectRedistributionRequest,
   startTransition,
   confirmRedistributionRequestCompletion,
+  revertRemainingRedistributionRequest,
 } from "./mutations";
 
 export {

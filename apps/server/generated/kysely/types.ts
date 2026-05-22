@@ -549,6 +549,8 @@ export type RedistributionRequest = {
     source_station_id: string;
     target_station_id: string;
     reason: string | null;
+    source_available_bikes_before: number | null;
+    target_available_bikes_before: number | null;
     requested_quantity: number;
     status: Generated<RedistributionStatus>;
     started_at: Timestamp | null;

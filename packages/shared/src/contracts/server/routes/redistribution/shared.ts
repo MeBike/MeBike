@@ -11,6 +11,7 @@ import {
   RedistributionStatusSchema,
   RejectRedistributionRequestSchema,
   ConfirmRedistributionRequestCompletionSchema,
+  RevertRedistributionRequestSchema,
 } from "../../redistribution";
 import { paginationQueryFields, PaginationSchema, SortDirectionSchema } from "../../schemas";
 
@@ -148,6 +149,11 @@ export const RejectRedistributionRequestSchemaOpenApi =
 export const ConfirmRedistributionRequestCompletionSchemaOpenApi = 
   ConfirmRedistributionRequestCompletionSchema.openapi("ConfirmRedistributionRequestCompletion", {
     description: "Payload for confirming redistribution request completion",
+  });
+
+export const RevertRedistributionRequestSchemaOpenApi = 
+  RevertRedistributionRequestSchema.openapi("RevertRedistributionRequest", {
+    description: "Payload for reverting remaining redistribution request",
   });
 
 // Response

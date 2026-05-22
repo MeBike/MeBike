@@ -309,7 +309,7 @@ export function makeReturnSlotRepository(
           Effect.tryPromise({
             try: () =>
               client.bike.count({
-                where: { stationId, status: { in: ["AVAILABLE", "RESERVED", "PENDING_DISPATCH", "BROKEN", "FIXED"]} },
+                where: { stationId, status: { in: ["AVAILABLE", "RESERVED", "PENDING_DISPATCH", "BROKEN", "FIXED", "TRANSPORTING"]} },
               }),
             catch: cause =>
               new RentalRepositoryError({
@@ -340,6 +340,7 @@ export function makeReturnSlotRepository(
                 where: {
                   targetStationId: stationId,
                   status: { in: ["APPROVED", "IN_TRANSIT", "PARTIALLY_COMPLETED"] },
+                  completedAt: null,
                 },
                 select: {
                   _count: {
@@ -358,7 +359,7 @@ export function makeReturnSlotRepository(
               }),
           }).pipe(
             Effect.map(rows => rows.reduce((acc, row) => acc + row._count.items, 0)),
-          ),
+          ) ,
         ]);
 
         return Option.some({

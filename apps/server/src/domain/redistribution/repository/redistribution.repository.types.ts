@@ -18,12 +18,15 @@ export type CreateRedistributionRequestInput = {
   requestedQuantity: number;
   reason?: string | null;
   bikeIds?: string[];
+  sourceAvailableBikesBefore?: number | null;
+  targetAvailableBikesBefore?: number | null;
 };
 
 export type UpdateRedistributionRequestData = {
   status?: RedistributionStatus;
   approvedByUserId?: string | null;
   rejectedByUserId?: string | null;
+  revertedByUserId?: string | null;
   requestedQuantity?: number;
   reason?: string | null;
   startedAt?: Date | null;

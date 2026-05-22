@@ -187,6 +187,21 @@ export class IncompletedRedistributionRequestExists extends Data.TaggedError(
     readonly status: string;
   }> {}
 
+export class UnauthorizedRedistributionRevert extends Data.TaggedError(
+  "UnauthorizedRedistributionRevert",
+)<{
+    readonly requestId: string;
+    readonly targetStationId: string;
+    readonly workingStationId: string;
+  }> {}
+
+export class CannotRevertNonTransitOrPartiallyCompletedRedistribution extends Data.TaggedError(
+  "CannotRevertNonTransitOrPartiallyCompletedRedistribution",
+)<{
+    readonly requestId: string;
+    readonly currentStatus: string;
+  }> {}
+
 export type RedistributionServiceFailure
   = | RedistributionRequestNotFound
     | RedistributionRequestNotFoundWithStatus
@@ -199,6 +214,7 @@ export type RedistributionServiceFailure
     | UnauthorizedRedistributionRejection
     | UnauthorizedRedistributionCompletion
     | UnauthorizedStartTransition
+    | UnauthorizedRedistributionRevert
     | StationNotFound
     | AgencyNotFound
     | UserNotFound
@@ -211,6 +227,7 @@ export type RedistributionServiceFailure
     | CannotRejectNonPendingRedistribution
     | CannotStartTransitionNonApprovedRedistribution
     | CannotConfirmNonTransitedRedistribution
+    | CannotRevertNonTransitOrPartiallyCompletedRedistribution
     | NoBikesInRedistributionRequest
     | InvalidBikeIdsForRedistributionCompletion
     | IncompletedRedistributionRequestExists

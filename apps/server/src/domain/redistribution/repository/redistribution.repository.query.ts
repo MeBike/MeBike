@@ -159,12 +159,17 @@ export const detailedRedistributionRequestSelect = {
   rejectedByUser: {
     select: detailedUserSelect,
   },
+  revertedByUser: {
+    select: detailedUserSelect,
+  },
   sourceStation: {
     select: detailedStationSelect,
   },
   targetStation: {
     select: detailedStationSelect,
   },
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -196,12 +201,17 @@ export const summaryRedistributionRequestSelect = {
   rejectedByUser: {
     select: summaryUserSelect,
   },
+  revertedByUser: {
+    select: summaryUserSelect,
+  },
   sourceStation: {
     select: summaryStationSelect,
   },
   targetStation: {
     select: summaryStationSelect,
   },
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -219,8 +229,11 @@ export const redistributionRequestSelect = {
   requestedByUserId: true,
   approvedByUserId: true,
   rejectedByUserId: true,
+  revertedByUserId: true,
   sourceStationId: true,
   targetStationId: true,
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -256,8 +269,11 @@ export function mapToRedistributionRequestDetail(
     requestedByUser: mapUserDetail(raw.requestedByUser)!,
     approvedByUser: mapUserDetail(raw.approvedByUser),
     rejectedByUser: mapUserDetail(raw.rejectedByUser),
+    revertedByUser: mapUserDetail(raw.revertedByUser),
     sourceStation: mapStationDetail(raw.sourceStation)!,
     targetStation: mapStationDetail(raw.targetStation)!,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -278,8 +294,11 @@ export function mapToRedistributionRequestSummaryRow(
     requestedByUser: mapUserSummary(raw.requestedByUser)!,
     approvedByUser: mapUserSummary(raw.approvedByUser),
     rejectedByUser: mapUserSummary(raw.rejectedByUser),
+    revertedByUser: mapUserSummary(raw.revertedByUser),
     sourceStation: mapStationSummary(raw.sourceStation)!,
     targetStation: mapStationSummary(raw.targetStation)!,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -299,8 +318,11 @@ export function mapToRedistributionRequestRow(
     requestedByUserId: raw.requestedByUserId,
     approvedByUserId: raw.approvedByUserId ?? null,
     rejectedByUserId: raw.rejectedByUserId ?? null,
+    revertedByUserId: raw.revertedByUserId ?? null,
     sourceStationId: raw.sourceStationId,
     targetStationId: raw.targetStationId,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],

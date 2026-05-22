@@ -20,6 +20,8 @@ model RedistributionRequest {
   sourceStationId   String               @map("source_station_id") @db.Uuid
   targetStationId   String              @map("target_station_id") @db.Uuid
   reason            String?
+  sourceAvailableBikesBefore Int?                 @map("source_available_bikes_before")
+  targetAvailableBikesBefore Int?                 @map("target_available_bikes_before")
   requestedQuantity Int                 @map("requested_quantity")
   status            RedistributionStatus @default(PENDING_APPROVAL)
   startedAt         DateTime?            @map("started_at") @db.Timestamptz

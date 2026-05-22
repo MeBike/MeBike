@@ -70,8 +70,11 @@ export type RedistributionRequestRow = {
   requestedByUserId: string;
   approvedByUserId: string | null;
   rejectedByUserId: string | null;
+  revertedByUserId: string | null;
   sourceStationId: string;
   targetStationId: string;
+  sourceAvailableBikesBefore: number | null;
+  targetAvailableBikesBefore: number | null;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItem[];
@@ -87,8 +90,11 @@ export type RedistributionRequestSummaryRow = {
   requestedByUser: UserSummary;
   approvedByUser: UserSummary | null;
   rejectedByUser: UserSummary | null;
+  revertedByUser: UserSummary | null;
   sourceStation: StationSummary;
   targetStation: StationSummary;
+  sourceAvailableBikesBefore: number | null;
+  targetAvailableBikesBefore: number | null;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItem[];
@@ -104,8 +110,11 @@ export type RedistributionRequestDetailRow = {
   requestedByUser: UserDetail;
   approvedByUser: UserDetail | null;
   rejectedByUser: UserDetail | null;
+  revertedByUser: UserDetail | null;
   sourceStation: StationDetail;
   targetStation: StationDetail;
+  sourceAvailableBikesBefore: number | null;
+  targetAvailableBikesBefore: number | null;
   requestedQuantity: number;
   reason: string | null;
   items: RedistributionRequestItemDetail[];
