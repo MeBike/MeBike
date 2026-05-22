@@ -250,7 +250,6 @@ export default function StationDetailPage() {
     getStaffViewHistoryDistribution,
   } = useDistributionRequest({
     hasToken: true,
-    targetStationId: id,
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE,
   });

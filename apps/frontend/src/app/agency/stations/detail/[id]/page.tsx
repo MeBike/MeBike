@@ -270,7 +270,6 @@ export default function StationDetailPage() {
     getAgencyViewHistoryDistribution,
   } = useDistributionRequest({
     hasToken: true,
-    targetStationId: id, // Filter theo ID
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE,
   });

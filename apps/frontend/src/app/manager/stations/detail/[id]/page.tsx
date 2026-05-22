@@ -199,7 +199,6 @@ export default function StationDetailPage() {
     getManagerViewHistoryDistribution,
   } = useDistributionRequest({ 
     hasToken: true, 
-    targetStationId: id, // Truyền id trạm để lọc
     page: historyPage,
     pageSize: HISTORY_PAGE_SIZE
   });
