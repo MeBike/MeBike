@@ -31,7 +31,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -189,19 +189,40 @@ function StatusItem({
 function getRedistributionStatusConfig(status: string) {
   switch (status) {
     case "PENDING":
-      return { label: "Chờ phê duyệt", color: "bg-amber-100 text-amber-800 border-amber-200" };
+      return {
+        label: "Chờ phê duyệt",
+        color: "bg-amber-100 text-amber-800 border-amber-200",
+      };
     case "APPROVED":
-      return { label: "Đã phê duyệt", color: "bg-blue-100 text-blue-800 border-blue-200" };
+      return {
+        label: "Đã phê duyệt",
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+      };
     case "IN_TRANSIT":
-      return { label: "Đang vận chuyển", color: "bg-purple-100 text-purple-800 border-purple-200" };
+      return {
+        label: "Đang vận chuyển",
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+      };
     case "COMPLETED":
-      return { label: "Đã hoàn thành", color: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+      return {
+        label: "Đã hoàn thành",
+        color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      };
     case "CANCELLED":
-      return { label: "Đã hủy", color: "bg-red-100 text-red-800 border-red-200" };
+      return {
+        label: "Đã hủy",
+        color: "bg-red-100 text-red-800 border-red-200",
+      };
     case "REJECTED":
-      return { label: "Từ chối", color: "bg-red-100 text-red-800 border-red-200" };
+      return {
+        label: "Từ chối",
+        color: "bg-red-100 text-red-800 border-red-200",
+      };
     default:
-      return { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
+      return {
+        label: status,
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+      };
   }
 }
 
@@ -227,11 +248,11 @@ export default function StationDetailPage() {
     staffViewDistributionRequestHistory,
     isFetchingStaffViewDistributionRequestHistory,
     getStaffViewHistoryDistribution,
-  } = useDistributionRequest({ 
-    hasToken: true, 
+  } = useDistributionRequest({
+    hasToken: true,
     targetStationId: id,
     page: historyPage,
-    pageSize: HISTORY_PAGE_SIZE
+    pageSize: HISTORY_PAGE_SIZE,
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState(true);
@@ -330,7 +351,7 @@ export default function StationDetailPage() {
   }
 
   const station = myStationDetail as Station;
-  
+
   // Xử lý dữ liệu history an toàn
   const historyDataResponse = staffViewDistributionRequestHistory?.data as any;
   const historyItems: RedistributionRequest[] = historyDataResponse?.data || [];
@@ -339,7 +360,6 @@ export default function StationDetailPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-background pb-12 pt-6">
       <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
-        
         {/* HEADER & METADATA */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -386,34 +406,36 @@ export default function StationDetailPage() {
                   <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
                 </Button>
               )}
-              <Button
-                onClick={handleSendNotification}
-                disabled={
-                  station.bikes.available > 10 ||
-                  isSendingNotification ||
-                  hasNotified
-                }
-                className={cn(
-                  "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
-                  station.bikes.available <= 10 && !hasNotified
-                    ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
-                    : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed",
-                )}
-              >
-                <Bell
+              {station.id === listStation?.currentStation.id && (
+                <Button
+                  onClick={handleSendNotification}
+                  disabled={
+                    station.bikes.available > 10 ||
+                    isSendingNotification ||
+                    hasNotified
+                  }
                   className={cn(
-                    "w-4 h-4 mr-2",
-                    station.bikes.available <= 10 &&
-                      !hasNotified &&
-                      "animate-bounce",
+                    "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
+                    station.bikes.available <= 10 && !hasNotified
+                      ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
+                      : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed",
                   )}
-                />
-                {isSendingNotification
-                  ? "Đang gửi..."
-                  : hasNotified
-                    ? "Đã thông báo"
-                    : "Báo thiếu xe"}
-              </Button>
+                >
+                  <Bell
+                    className={cn(
+                      "w-4 h-4 mr-2",
+                      station.bikes.available <= 10 &&
+                        !hasNotified &&
+                        "animate-bounce",
+                    )}
+                  />
+                  {isSendingNotification
+                    ? "Đang gửi..."
+                    : hasNotified
+                      ? "Đã thông báo"
+                      : "Báo thiếu xe"}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -711,7 +733,10 @@ export default function StationDetailPage() {
           {isFetchingStaffViewDistributionRequestHistory ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col gap-3 p-5 rounded-xl border border-border/40 bg-muted/5">
+                <div
+                  key={i}
+                  className="flex flex-col gap-3 p-5 rounded-xl border border-border/40 bg-muted/5"
+                >
                   <div className="flex justify-between">
                     <Skeleton className="h-5 w-1/3" />
                     <Skeleton className="h-6 w-24 rounded-full" />
@@ -727,8 +752,8 @@ export default function StationDetailPage() {
                 {historyItems.map((req) => {
                   const statusConf = getRedistributionStatusConfig(req.status);
                   return (
-                    <div 
-                      key={req.id} 
+                    <div
+                      key={req.id}
                       className="group flex flex-col md:flex-row gap-4 justify-between items-start md:items-center p-5 rounded-xl border border-border/50 bg-card hover:bg-muted/30 hover:border-primary/30 transition-all duration-300 hover:shadow-sm"
                     >
                       <div className="space-y-3 flex-1">
@@ -736,7 +761,12 @@ export default function StationDetailPage() {
                           <span className="font-mono text-sm font-bold text-foreground">
                             #{req.id.slice(0, 8).toUpperCase()}
                           </span>
-                          <Badge className={cn("border bg-transparent shadow-none px-2.5 py-0.5", statusConf.color)}>
+                          <Badge
+                            className={cn(
+                              "border bg-transparent shadow-none px-2.5 py-0.5",
+                              statusConf.color,
+                            )}
+                          >
                             {statusConf.label}
                           </Badge>
                           <div className="flex items-center text-xs text-muted-foreground ml-auto md:ml-0 font-medium">
@@ -747,41 +777,52 @@ export default function StationDetailPage() {
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
                           <div className="flex items-center text-foreground font-medium bg-muted/40 px-3 py-1.5 rounded-md border border-border/50">
-                            {
-                              listStation?.currentStation.id === req.sourceStation.id ? (
-                                <span className="text-blue-600 font-semibold">Từ trạm của tôi</span>
-                              ) : (
-                                req.sourceStation?.name || "N/A"
-                              )
-                            }
-                            <ArrowRight className="h-3.5 w-3.5 mx-2 text-primary" /> 
-                            {
-                              listStation?.currentStation.id === req.targetStation.id ? (
-                                <span className="text-blue-600 font-semibold">Đến trạm của tôi</span>
-                              ) : (
-                                req.targetStation?.name || "N/A"
-                              )
-                            }
+                            {listStation?.currentStation.id ===
+                            req.sourceStation.id ? (
+                              <span className="text-blue-600 font-semibold">
+                                Từ trạm của tôi
+                              </span>
+                            ) : (
+                              req.sourceStation?.name || "N/A"
+                            )}
+                            <ArrowRight className="h-3.5 w-3.5 mx-2 text-primary" />
+                            {listStation?.currentStation.id ===
+                            req.targetStation.id ? (
+                              <span className="text-blue-600 font-semibold">
+                                Đến trạm của tôi
+                              </span>
+                            ) : (
+                              req.targetStation?.name || "N/A"
+                            )}
                           </div>
-                          
+
                           <div className="flex items-center gap-1.5 font-medium text-foreground">
                             <Bike className="h-4 w-4 text-muted-foreground" />
-                            Số lượng: <span className="text-primary font-bold">{req.requestedQuantity} xe</span>
+                            Số lượng:{" "}
+                            <span className="text-primary font-bold">
+                              {req.requestedQuantity} xe
+                            </span>
                           </div>
                         </div>
 
                         <p className="text-sm text-muted-foreground flex items-start gap-2">
                           <ClipboardList className="h-4 w-4 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">Lý do: {req.reason || "Không có ghi chú"}</span>
+                          <span className="line-clamp-2">
+                            Lý do: {req.reason || "Không có ghi chú"}
+                          </span>
                         </p>
                       </div>
 
                       <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-none border-border/40">
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           className="w-full md:w-auto shadow-sm hover:bg-primary hover:text-primary-foreground group-hover:scale-105 transition-all"
-                          onClick={() => router.push(`/staff/distribution-request/detail/${req.id}`)}
+                          onClick={() =>
+                            router.push(
+                              `/staff/distribution-request/detail/${req.id}`,
+                            )
+                          }
                         >
                           Xem chi tiết <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -795,22 +836,30 @@ export default function StationDetailPage() {
               {totalHistoryPages > 1 && (
                 <div className="flex items-center justify-between border-t border-border/40 pt-5 mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Trang <span className="font-bold text-foreground">{historyPage}</span> / {totalHistoryPages}
+                    Trang{" "}
+                    <span className="font-bold text-foreground">
+                      {historyPage}
+                    </span>{" "}
+                    / {totalHistoryPages}
                   </p>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       disabled={historyPage === 1}
-                      onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                      onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" /> Trước
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       disabled={historyPage >= totalHistoryPages}
-                      onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+                      onClick={() =>
+                        setHistoryPage((p) =>
+                          Math.min(totalHistoryPages, p + 1),
+                        )
+                      }
                     >
                       Sau <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
@@ -823,9 +872,12 @@ export default function StationDetailPage() {
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <History className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-base font-semibold text-foreground">Không có lịch sử điều phối</p>
+              <p className="text-base font-semibold text-foreground">
+                Không có lịch sử điều phối
+              </p>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Trạm này chưa có bất kỳ yêu cầu điều phối xe nào được ghi nhận trên hệ thống.
+                Trạm này chưa có bất kỳ yêu cầu điều phối xe nào được ghi nhận
+                trên hệ thống.
               </p>
             </div>
           )}

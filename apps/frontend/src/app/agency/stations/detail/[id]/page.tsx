@@ -35,7 +35,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
-  ClipboardList
+  ClipboardList,
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -78,17 +78,33 @@ function MetricCard({
 }) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-background p-6 shadow-sm transition-all hover:shadow-md hover:border-border/80 group">
-      <div className={cn("absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-50 blur-2xl transition-all group-hover:scale-110", bgClass)} />
-      
+      <div
+        className={cn(
+          "absolute -right-6 -top-6 h-24 w-24 rounded-full opacity-50 blur-2xl transition-all group-hover:scale-110",
+          bgClass,
+        )}
+      />
+
       <div className="relative z-10 flex items-start justify-between">
         <div className="space-y-2">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <div className="flex flex-col">
-            <span className="text-3xl font-bold tracking-tight text-foreground">{value}</span>
-            {subtitle && <span className="mt-1 text-xs font-medium text-muted-foreground">{subtitle}</span>}
+            <span className="text-3xl font-bold tracking-tight text-foreground">
+              {value}
+            </span>
+            {subtitle && (
+              <span className="mt-1 text-xs font-medium text-muted-foreground">
+                {subtitle}
+              </span>
+            )}
           </div>
         </div>
-        <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl", bgClass)}>
+        <div
+          className={cn(
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
+            bgClass,
+          )}
+        >
           <Icon className={cn("h-6 w-6", colorClass)} />
         </div>
       </div>
@@ -108,7 +124,12 @@ function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-2xl border border-border/50 bg-background shadow-sm flex flex-col overflow-hidden", className)}>
+    <div
+      className={cn(
+        "rounded-2xl border border-border/50 bg-background shadow-sm flex flex-col overflow-hidden",
+        className,
+      )}
+    >
       <div className="flex items-center gap-2 border-b border-border/40 px-6 py-4 bg-muted/20">
         <Icon className="h-5 w-5 text-primary" />
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
@@ -118,11 +139,23 @@ function SectionCard({
   );
 }
 
-function Field({ label, value, className }: { label: string; value: React.ReactNode; className?: string }) {
+function Field({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={className}>
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{label}</p>
-      <div className="text-sm font-medium text-foreground bg-muted/20 px-3 py-2 rounded-lg border border-border/40">{value}</div>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+        {label}
+      </p>
+      <div className="text-sm font-medium text-foreground bg-muted/20 px-3 py-2 rounded-lg border border-border/40">
+        {value}
+      </div>
     </div>
   );
 }
@@ -149,7 +182,16 @@ function StatusItem({
         </div>
         <span className="text-sm font-medium text-foreground/80">{label}</span>
       </div>
-      <Badge variant="outline" className={cn("px-2.5 py-0.5 text-sm", boldValue ? "font-bold" : "font-semibold", color, bgColor, "border-transparent")}>
+      <Badge
+        variant="outline"
+        className={cn(
+          "px-2.5 py-0.5 text-sm",
+          boldValue ? "font-bold" : "font-semibold",
+          color,
+          bgColor,
+          "border-transparent",
+        )}
+      >
         {value || 0}
       </Badge>
     </div>
@@ -160,19 +202,40 @@ function StatusItem({
 function getRedistributionStatusConfig(status: string) {
   switch (status) {
     case "PENDING":
-      return { label: "Chờ phê duyệt", color: "bg-amber-100 text-amber-800 border-amber-200" };
+      return {
+        label: "Chờ phê duyệt",
+        color: "bg-amber-100 text-amber-800 border-amber-200",
+      };
     case "APPROVED":
-      return { label: "Đã phê duyệt", color: "bg-blue-100 text-blue-800 border-blue-200" };
+      return {
+        label: "Đã phê duyệt",
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+      };
     case "IN_TRANSIT":
-      return { label: "Đang vận chuyển", color: "bg-purple-100 text-purple-800 border-purple-200" };
+      return {
+        label: "Đang vận chuyển",
+        color: "bg-purple-100 text-purple-800 border-purple-200",
+      };
     case "COMPLETED":
-      return { label: "Đã hoàn thành", color: "bg-emerald-100 text-emerald-800 border-emerald-200" };
+      return {
+        label: "Đã hoàn thành",
+        color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      };
     case "CANCELLED":
-      return { label: "Đã hủy", color: "bg-red-100 text-red-800 border-red-200" };
+      return {
+        label: "Đã hủy",
+        color: "bg-red-100 text-red-800 border-red-200",
+      };
     case "REJECTED":
-      return { label: "Từ chối", color: "bg-red-100 text-red-800 border-red-200" };
+      return {
+        label: "Từ chối",
+        color: "bg-red-100 text-red-800 border-red-200",
+      };
     default:
-      return { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
+      return {
+        label: status,
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+      };
   }
 }
 
@@ -205,11 +268,11 @@ export default function StationDetailPage() {
     agencyViewDistributionRequestHistory,
     isFetchingAgencyViewDistributionRequestHistory,
     getAgencyViewHistoryDistribution,
-  } = useDistributionRequest({ 
-    hasToken: true, 
+  } = useDistributionRequest({
+    hasToken: true,
     targetStationId: id, // Filter theo ID
     page: historyPage,
-    pageSize: HISTORY_PAGE_SIZE
+    pageSize: HISTORY_PAGE_SIZE,
   });
 
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
@@ -273,7 +336,12 @@ export default function StationDetailPage() {
   const handleSendNotification = async () => {
     if (!myStationDetail) return;
     const currentStation = myStationDetail as Station;
-    if (currentStation.bikes.available > 10 || isSendingNotification || hasNotified) return;
+    if (
+      currentStation.bikes.available > 10 ||
+      isSendingNotification ||
+      hasNotified
+    )
+      return;
 
     setIsSendingNotification(true);
     try {
@@ -284,8 +352,13 @@ export default function StationDetailPage() {
       });
       if (response.data.success) {
         setHasNotified(true);
-        localStorage.setItem(`low_bike_notif_sent_${currentStation.id}`, Date.now().toString());
-        toast.success(`Đã gửi yêu cầu điều phối xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`);
+        localStorage.setItem(
+          `low_bike_notif_sent_${currentStation.id}`,
+          Date.now().toString(),
+        );
+        toast.success(
+          `Đã gửi yêu cầu điều phối xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`,
+        );
       } else {
         toast.error("Gửi yêu cầu điều phối thất bại. Vui lòng thử lại.");
       }
@@ -306,7 +379,8 @@ export default function StationDetailPage() {
   const isOwnStation = station.id === listStation?.currentStation?.id;
 
   const rawRevenueData =
-    (responseStationRevenueForAgency as any)?.data || responseStationRevenueForAgency;
+    (responseStationRevenueForAgency as any)?.data ||
+    responseStationRevenueForAgency;
   const currentStationRevenue: StationReport | undefined =
     rawRevenueData?.stations?.find((s: StationReport) => s.id === id);
 
@@ -318,7 +392,6 @@ export default function StationDetailPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-background pb-12 pt-6">
       <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
-        
         {/* HEADER & METADATA */}
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -336,8 +409,17 @@ export default function StationDetailPage() {
                   <h1 className="text-2xl font-bold tracking-tight text-foreground">
                     Chi tiết trạm
                   </h1>
-                  <Badge variant={station.stationType === "INTERNAL" ? "default" : "secondary"} className="rounded-full px-3 shadow-sm">
-                    {station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"}
+                  <Badge
+                    variant={
+                      station.stationType === "INTERNAL"
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="rounded-full px-3 shadow-sm"
+                  >
+                    {station.stationType === "INTERNAL"
+                      ? "Trạm nội bộ"
+                      : "Trạm đối tác"}
                   </Badge>
                 </div>
               </div>
@@ -346,35 +428,73 @@ export default function StationDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               {!isOwnStation && (
                 <Button
-                  onClick={() => router.push(`/agency/distribution-request/create?targetStationId=${station.id}`)}
+                  onClick={() =>
+                    router.push(
+                      `/agency/distribution-request/create?targetStationId=${station.id}`,
+                    )
+                  }
                   className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm rounded-full"
                 >
                   <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
                 </Button>
               )}
+              {isOwnStation && (
+                <Button
+                  onClick={handleSendNotification}
+                  disabled={
+                    station.bikes.available > 10 ||
+                    isSendingNotification ||
+                    hasNotified
+                  }
+                  className={cn(
+                    "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
+                    station.bikes.available <= 10 && !hasNotified
+                      ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
+                      : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed",
+                  )}
+                >
+                  <Bell
+                    className={cn(
+                      "w-4 h-4 mr-2",
+                      station.bikes.available <= 10 &&
+                        !hasNotified &&
+                        "animate-bounce",
+                    )}
+                  />
+                  {isSendingNotification
+                    ? "Đang gửi..."
+                    : hasNotified
+                      ? "Đã thông báo"
+                      : "Báo thiếu xe"}
+                </Button>
+              )}
               <Button
-                onClick={handleSendNotification}
-                disabled={station.bikes.available > 10 || isSendingNotification || hasNotified}
-                className={cn(
-                  "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
-                  station.bikes.available <= 10 && !hasNotified
-                    ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
-                    : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed"
-                )}
+                variant="outline"
+                className="shadow-sm rounded-full"
+                onClick={() => router.push("/agency/stations")}
               >
-                <Bell className={cn("w-4 h-4 mr-2", station.bikes.available <= 10 && !hasNotified && "animate-bounce")} />
-                {isSendingNotification ? "Đang gửi..." : hasNotified ? "Đã thông báo" : "Báo thiếu xe"}
-              </Button>
-              <Button variant="outline" className="shadow-sm rounded-full" onClick={() => router.push("/agency/stations")}>
                 Quay lại danh sách
               </Button>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
-            <div className="flex items-center gap-1.5"><Badge variant="outline" className="font-mono bg-white dark:bg-card">ID: {station.id}</Badge></div>
-            <div className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Khởi tạo: {formatToVNTime(station.createdAt)}</div>
-            <div className="flex items-center gap-1.5"><RefreshCcw className="w-3.5 h-3.5"/> Cập nhật: {formatToVNTime(station.updatedAt)}</div>
+            <div className="flex items-center gap-1.5">
+              <Badge
+                variant="outline"
+                className="font-mono bg-white dark:bg-card"
+              >
+                ID: {station.id}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" /> Khởi tạo:{" "}
+              {formatToVNTime(station.createdAt)}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <RefreshCcw className="w-3.5 h-3.5" /> Cập nhật:{" "}
+              {formatToVNTime(station.updatedAt)}
+            </div>
           </div>
         </div>
 
@@ -382,7 +502,7 @@ export default function StationDetailPage() {
         <div
           className={cn(
             "grid grid-cols-1 gap-5 sm:grid-cols-2",
-            isOwnStation ? "lg:grid-cols-4" : "lg:grid-cols-2"
+            isOwnStation ? "lg:grid-cols-4" : "lg:grid-cols-2",
           )}
         >
           {isOwnStation && (
@@ -435,40 +555,89 @@ export default function StationDetailPage() {
 
         {/* TẦNG 2: BẢN ĐỒ 2D VÀ CHI TIẾT TRẠNG THÁI */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          
           <div className="xl:col-span-2">
-              <StationLayoutMap station={station} />
+            <StationLayoutMap station={station} />
           </div>
 
           <div className="xl:col-span-1">
-            <SectionCard icon={PieChart} title="Phân bổ không gian bãi đỗ" className="h-full">
+            <SectionCard
+              icon={PieChart}
+              title="Phân bổ không gian bãi đỗ"
+              className="h-full"
+            >
               <div className="flex flex-col items-center justify-center py-4 mb-6 bg-muted/20 rounded-xl border border-border/40">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Chỗ trống hiện tại</p>
+                <p className="text-sm font-medium text-muted-foreground mb-1">
+                  Chỗ trống hiện tại
+                </p>
                 <p className="text-4xl font-black text-foreground">
-                  {station.capacity.emptyPhysicalSlots ?? station.returnSlots?.available ?? 0} <span className="text-lg font-medium text-muted-foreground">/ {station.capacity.total}</span>
+                  {station.capacity.emptyPhysicalSlots ??
+                    station.returnSlots?.available ??
+                    0}{" "}
+                  <span className="text-lg font-medium text-muted-foreground">
+                    / {station.capacity.total}
+                  </span>
                 </p>
               </div>
               <div className="space-y-3">
-                <StatusItem icon={Activity} label="Chỗ chờ khách trả xe" value={station.returnSlots?.active || 0} color="text-blue-600" />
-                <StatusItem icon={Wrench} label="Chỗ chờ xe điều phối" value={station.redistributionSlots || 0} color="text-orange-500" />
+                <StatusItem
+                  icon={Activity}
+                  label="Chỗ chờ khách trả xe"
+                  value={station.returnSlots?.active || 0}
+                  color="text-blue-600"
+                />
+                <StatusItem
+                  icon={Wrench}
+                  label="Chỗ chờ xe điều phối"
+                  value={station.redistributionSlots || 0}
+                  color="text-orange-500"
+                />
               </div>
             </SectionCard>
           </div>
 
           <div className="xl:col-span-3">
-            <SectionCard icon={Activity} title="Chi tiết trạng thái phương tiện" className="w-full">
+            <SectionCard
+              icon={Activity}
+              title="Chi tiết trạng thái phương tiện"
+              className="w-full"
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
                 <div className="bg-muted/10 rounded-xl p-5 border border-border/30">
                   <h4 className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 pb-2 border-b border-border/40">
                     <MapPin className="h-4 w-4" /> Xe nội trạm
                   </h4>
                   <div className="space-y-2.5">
-                    <StatusItem icon={CheckCircle2} label="Sẵn sàng cho thuê" value={station.bikes.available} color="text-emerald-600" boldValue />
-                    <StatusItem icon={Clock} label="Đã đặt trước" value={station.bikes.reserved} color="text-amber-600" />
-                    <StatusItem icon={Wrench} label="Chuẩn bị điều phối" value={station.bikes.pendingDispatch} color="text-orange-500" />
-                    <StatusItem icon={AlertTriangle} label="Đang bị hỏng" value={station.bikes.broken} color="text-red-500" />
-                    <StatusItem icon={Hammer} label="Đã sửa" value={station.bikes.fixed} color="text-indigo-500" />
+                    <StatusItem
+                      icon={CheckCircle2}
+                      label="Sẵn sàng cho thuê"
+                      value={station.bikes.available}
+                      color="text-emerald-600"
+                      boldValue
+                    />
+                    <StatusItem
+                      icon={Clock}
+                      label="Đã đặt trước"
+                      value={station.bikes.reserved}
+                      color="text-amber-600"
+                    />
+                    <StatusItem
+                      icon={Wrench}
+                      label="Chuẩn bị điều phối"
+                      value={station.bikes.pendingDispatch}
+                      color="text-orange-500"
+                    />
+                    <StatusItem
+                      icon={AlertTriangle}
+                      label="Đang bị hỏng"
+                      value={station.bikes.broken}
+                      color="text-red-500"
+                    />
+                    <StatusItem
+                      icon={Hammer}
+                      label="Đã sửa"
+                      value={station.bikes.fixed}
+                      color="text-indigo-500"
+                    />
                   </div>
                 </div>
 
@@ -477,9 +646,24 @@ export default function StationDetailPage() {
                     <RefreshCcw className="h-4 w-4" /> Xe luân chuyển
                   </h4>
                   <div className="space-y-2.5">
-                    <StatusItem icon={RefreshCcw} label="Hỗ trợ sự cố" value={station.bikes.swapping} color="text-blue-500" />
-                    <StatusItem icon={Truck} label="Đang vận chuyển" value={station.bikes.transporting} color="text-indigo-500" />
-                    <StatusItem icon={Bike} label="Đang thuê" value={station.bikes.booked} color="text-blue-600" />
+                    <StatusItem
+                      icon={RefreshCcw}
+                      label="Hỗ trợ sự cố"
+                      value={station.bikes.swapping}
+                      color="text-blue-500"
+                    />
+                    <StatusItem
+                      icon={Truck}
+                      label="Đang vận chuyển"
+                      value={station.bikes.transporting}
+                      color="text-indigo-500"
+                    />
+                    <StatusItem
+                      icon={Bike}
+                      label="Đang thuê"
+                      value={station.bikes.booked}
+                      color="text-blue-600"
+                    />
                   </div>
                 </div>
 
@@ -488,11 +672,20 @@ export default function StationDetailPage() {
                     <ShieldAlert className="h-4 w-4" /> Sự cố / Mất mát
                   </h4>
                   <div className="space-y-2.5">
-                    <StatusItem icon={HelpCircle} label="Bị mất" value={station.bikes.lost} color="text-red-600" />
-                    <StatusItem icon={Ban} label="Tạm ngưng hệ thống" value={station.bikes.disabled} color="text-slate-500" />
+                    <StatusItem
+                      icon={HelpCircle}
+                      label="Bị mất"
+                      value={station.bikes.lost}
+                      color="text-red-600"
+                    />
+                    <StatusItem
+                      icon={Ban}
+                      label="Tạm ngưng hệ thống"
+                      value={station.bikes.disabled}
+                      color="text-slate-500"
+                    />
                   </div>
                 </div>
-
               </div>
             </SectionCard>
           </div>
@@ -500,21 +693,56 @@ export default function StationDetailPage() {
 
         {/* TẦNG 3: THÔNG TIN CƠ BẢN VÀ NHÂN SỰ */}
         <div className="grid gap-6 lg:grid-cols-2">
-          
           <SectionCard icon={Info} title="Thông tin cơ bản">
             <div className="grid grid-cols-2 gap-y-6 gap-x-6">
-              <Field label="Tên trạm" value={station.name} className="col-span-2 sm:col-span-1" />
-              <Field label="Loại trạm" value={station.stationType === "INTERNAL" ? "Trạm nội bộ" : "Trạm đối tác"} className="col-span-2 sm:col-span-1" />
-              <Field label="Địa chỉ" value={station.address} className="col-span-2" />
-              <Field label="Tọa độ (Lat, Lng)" value={station.location.latitude ? `${station.location.latitude}, ${station.location.longitude}` : "N/A"} className="col-span-2 sm:col-span-1 font-mono" />
+              <Field
+                label="Tên trạm"
+                value={station.name}
+                className="col-span-2 sm:col-span-1"
+              />
+              <Field
+                label="Loại trạm"
+                value={
+                  station.stationType === "INTERNAL"
+                    ? "Trạm nội bộ"
+                    : "Trạm đối tác"
+                }
+                className="col-span-2 sm:col-span-1"
+              />
+              <Field
+                label="Địa chỉ"
+                value={station.address}
+                className="col-span-2"
+              />
+              <Field
+                label="Tọa độ (Lat, Lng)"
+                value={
+                  station.location.latitude
+                    ? `${station.location.latitude}, ${station.location.longitude}`
+                    : "N/A"
+                }
+                className="col-span-2 sm:col-span-1 font-mono"
+              />
               {station.agencyId ? (
                 <Field
                   label="Mã đại lý"
-                  value={<code className="text-xs text-primary">{station.agencyId}</code>}
+                  value={
+                    <code className="text-xs text-primary">
+                      {station.agencyId}
+                    </code>
+                  }
                   className="col-span-2 sm:col-span-1"
                 />
               ) : (
-                <Field label="Mã đại lý" value={<span className="text-muted-foreground italic">Không có</span>} className="col-span-2 sm:col-span-1" />
+                <Field
+                  label="Mã đại lý"
+                  value={
+                    <span className="text-muted-foreground italic">
+                      Không có
+                    </span>
+                  }
+                  className="col-span-2 sm:col-span-1"
+                />
               )}
             </div>
           </SectionCard>
@@ -524,17 +752,24 @@ export default function StationDetailPage() {
               {station.workers?.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4">
                   {station.workers.map((w) => (
-                    <div key={w.userId} className="flex items-center gap-3 p-4 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/40 transition-colors">
+                    <div
+                      key={w.userId}
+                      className="flex items-center gap-3 p-4 rounded-xl border border-border/40 bg-muted/10 hover:bg-muted/40 transition-colors"
+                    >
                       <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shadow-sm border border-primary/20">
                         {w.fullName.charAt(0)}
                       </div>
                       <div className="flex-1 overflow-hidden">
-                        <p className="text-sm font-bold truncate text-foreground">{w.fullName}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{ROLE_LABELS[w.role]}</p>
+                        <p className="text-sm font-bold truncate text-foreground">
+                          {w.fullName}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {ROLE_LABELS[w.role]}
+                        </p>
                       </div>
                       {w.technicianTeamId && (
-                        <Badge 
-                          variant="secondary" 
+                        <Badge
+                          variant="secondary"
                           className="max-w-[90px] sm:max-w-[120px] truncate text-[10px] bg-background shadow-sm inline-block text-center"
                           title={`Team ${w.technicianTeamName}`}
                         >
@@ -547,7 +782,9 @@ export default function StationDetailPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-6 px-4 text-center border-2 border-dashed border-border/60 rounded-xl bg-muted/10">
                   <Users className="h-8 w-8 text-muted-foreground/40 mb-3" />
-                  <p className="text-sm font-medium text-foreground">Chưa có nhân sự</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Chưa có nhân sự
+                  </p>
                 </div>
               )}
             </SectionCard>
@@ -569,12 +806,20 @@ export default function StationDetailPage() {
                       </p>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-lg bg-muted/20 border border-border/30">
-                      <span className="text-sm text-muted-foreground font-medium">Tổng lượt thuê:</span>
-                      <span className="text-sm font-bold">{currentStationRevenue.totalRentals} lượt</span>
+                      <span className="text-sm text-muted-foreground font-medium">
+                        Tổng lượt thuê:
+                      </span>
+                      <span className="text-sm font-bold">
+                        {currentStationRevenue.totalRentals} lượt
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 rounded-lg bg-muted/20 border border-border/30">
-                      <span className="text-sm text-muted-foreground font-medium">Thời gian thuê TB:</span>
-                      <span className="text-sm font-bold">{Math.round(currentStationRevenue.avgDuration)} phút</span>
+                      <span className="text-sm text-muted-foreground font-medium">
+                        Thời gian thuê TB:
+                      </span>
+                      <span className="text-sm font-bold">
+                        {Math.round(currentStationRevenue.avgDuration)} phút
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -592,7 +837,10 @@ export default function StationDetailPage() {
           {isFetchingAgencyViewDistributionRequestHistory ? (
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex flex-col gap-3 p-5 rounded-xl border border-border/40 bg-muted/5">
+                <div
+                  key={i}
+                  className="flex flex-col gap-3 p-5 rounded-xl border border-border/40 bg-muted/5"
+                >
                   <div className="flex justify-between">
                     <Skeleton className="h-5 w-1/3" />
                     <Skeleton className="h-6 w-24 rounded-full" />
@@ -608,8 +856,8 @@ export default function StationDetailPage() {
                 {historyItems.map((req) => {
                   const statusConf = getRedistributionStatusConfig(req.status);
                   return (
-                    <div 
-                      key={req.id} 
+                    <div
+                      key={req.id}
                       className="group flex flex-col md:flex-row gap-4 justify-between items-start md:items-center p-5 rounded-xl border border-border/50 bg-card hover:bg-muted/30 hover:border-primary/30 transition-all duration-300 hover:shadow-sm"
                     >
                       <div className="space-y-3 flex-1">
@@ -617,7 +865,12 @@ export default function StationDetailPage() {
                           <span className="font-mono text-sm font-bold text-foreground">
                             #{req.id.slice(0, 8).toUpperCase()}
                           </span>
-                          <Badge className={cn("border bg-transparent shadow-none px-2.5 py-0.5", statusConf.color)}>
+                          <Badge
+                            className={cn(
+                              "border bg-transparent shadow-none px-2.5 py-0.5",
+                              statusConf.color,
+                            )}
+                          >
                             {statusConf.label}
                           </Badge>
                           <div className="flex items-center text-xs text-muted-foreground ml-auto md:ml-0 font-medium">
@@ -628,30 +881,41 @@ export default function StationDetailPage() {
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
                           <div className="flex items-center text-foreground font-medium bg-muted/40 px-3 py-1.5 rounded-md border border-border/50">
-                            <span className="text-muted-foreground mr-2 font-normal">Từ:</span>
-                            {req.sourceStation?.name || "N/A"} 
-                            <ArrowRight className="h-3.5 w-3.5 mx-2 text-primary" /> 
+                            <span className="text-muted-foreground mr-2 font-normal">
+                              Từ:
+                            </span>
+                            {req.sourceStation?.name || "N/A"}
+                            <ArrowRight className="h-3.5 w-3.5 mx-2 text-primary" />
                             {req.targetStation?.name || "N/A"}
                           </div>
-                          
+
                           <div className="flex items-center gap-1.5 font-medium text-foreground">
                             <Bike className="h-4 w-4 text-muted-foreground" />
-                            Số lượng: <span className="text-primary font-bold">{req.requestedQuantity} xe</span>
+                            Số lượng:{" "}
+                            <span className="text-primary font-bold">
+                              {req.requestedQuantity} xe
+                            </span>
                           </div>
                         </div>
 
                         <p className="text-sm text-muted-foreground flex items-start gap-2">
                           <ClipboardList className="h-4 w-4 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">Lý do: {req.reason || "Không có ghi chú"}</span>
+                          <span className="line-clamp-2">
+                            Lý do: {req.reason || "Không có ghi chú"}
+                          </span>
                         </p>
                       </div>
 
                       <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto pt-4 md:pt-0 border-t md:border-none border-border/40">
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           className="w-full md:w-auto shadow-sm hover:bg-primary hover:text-primary-foreground group-hover:scale-105 transition-all"
-                          onClick={() => router.push(`/agency/distribution-request/detail/${req.id}`)}
+                          onClick={() =>
+                            router.push(
+                              `/agency/distribution-request/detail/${req.id}`,
+                            )
+                          }
                         >
                           Xem chi tiết <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -665,22 +929,30 @@ export default function StationDetailPage() {
               {totalHistoryPages > 1 && (
                 <div className="flex items-center justify-between border-t border-border/40 pt-5 mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Trang <span className="font-bold text-foreground">{historyPage}</span> / {totalHistoryPages}
+                    Trang{" "}
+                    <span className="font-bold text-foreground">
+                      {historyPage}
+                    </span>{" "}
+                    / {totalHistoryPages}
                   </p>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       disabled={historyPage === 1}
-                      onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                      onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" /> Trước
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       disabled={historyPage >= totalHistoryPages}
-                      onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+                      onClick={() =>
+                        setHistoryPage((p) =>
+                          Math.min(totalHistoryPages, p + 1),
+                        )
+                      }
                     >
                       Sau <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
@@ -693,14 +965,16 @@ export default function StationDetailPage() {
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <History className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-base font-semibold text-foreground">Không có lịch sử điều phối</p>
+              <p className="text-base font-semibold text-foreground">
+                Không có lịch sử điều phối
+              </p>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                Trạm này chưa có bất kỳ yêu cầu điều phối xe nào được ghi nhận trên hệ thống.
+                Trạm này chưa có bất kỳ yêu cầu điều phối xe nào được ghi nhận
+                trên hệ thống.
               </p>
             </div>
           )}
         </SectionCard>
-
       </div>
     </div>
   );
