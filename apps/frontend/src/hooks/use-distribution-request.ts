@@ -14,6 +14,9 @@ import {
   useGetStaffViewDistributionRequestDetailQuery,
   useGetAgencyViewDistributionRequestDetailQuery,
   useGetManagerViewDistributionRequestDetailQuery,
+  useGetStaffViewHistoryDistributionRequestQuery,
+  useGetAgencyViewHistoryDistributionRequestQuery,
+  useGetManagerViewHistoryDistributionRequestQuery,
 } from "@queries";
 import {
   useApproveDistributionRequestMutation,
@@ -26,9 +29,11 @@ import {
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
 import { getErrorMessageFromDistributionRequestCode, getAxiosErrorCodeMessage } from "@utils";
+import { BikeStatus } from '@/types';
 interface DistributionRequestActionProps {
   page?: number;
   pageSize?: number;
+  bike_status ?: BikeStatus;
   status?: RedistributionRequestStatus;
   id?: string;
   hasToken: boolean;
@@ -47,6 +52,7 @@ export const useDistributionRequest = ({
   approvedByUserId,
   sourceStationId,
   targetStationId,
+  bike_status
 }: DistributionRequestActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -521,6 +527,46 @@ export const useDistributionRequest = ({
       queryClient,
     ],
   );
+  const {
+    data: staffViewDistributionRequestHistory,
+    refetch: refetchStaffViewDistributionRequestHistory,
+    isFetching: isFetchingStaffViewDistributionRequestHistory,
+  } = useGetStaffViewHistoryDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status : bike_status,
+    targetStationId : targetStationId,
+  });
+  const {data: agencyViewDistributionRequestHistory,refetch: refetchAgencyViewDistributionRequestHistory,isFetching: isFetchingAgencyViewDistributionRequestHistory,} = useGetAgencyViewHistoryDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status : bike_status,
+    targetStationId : targetStationId,
+  });
+  const {data: managerViewDistributionRequestHistory,refetch: refetchManagerViewDistributionRequestHistory,isFetching: isFetchingManagerViewDistributionRequestHistory,} = useGetManagerViewHistoryDistributionRequestQuery({
+    page: page,
+    pageSize: pageSize,
+    status : bike_status,
+    targetStationId : targetStationId,
+  });
+  const getStaffViewHistoryDistribution = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchStaffViewDistributionRequestHistory();
+  }, [refetchStaffViewDistributionRequestHistory, id]);
+  const getAgencyViewHistoryDistribution = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchAgencyViewDistributionRequestHistory();
+  }, [refetchAgencyViewDistributionRequestHistory, id]);
+  const getManagerViewHistoryDistribution = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchManagerViewDistributionRequestHistory();
+  }, [refetchManagerViewDistributionRequestHistory, id]);
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -566,5 +612,15 @@ export const useDistributionRequest = ({
     agencyStartTransitDistributionRequest,
     agencyRejectDistributeRequest,
     agencyCreateDistributeRequest,
+    staffViewDistributionRequestHistory,
+    isFetchingStaffViewDistributionRequestHistory,
+    getStaffViewHistoryDistribution,
+    agencyViewDistributionRequestHistory,
+    isFetchingAgencyViewDistributionRequestHistory,
+    getAgencyViewHistoryDistribution,
+    managerViewDistributionRequestHistory,
+    isFetchingManagerViewDistributionRequestHistory,
+    getManagerViewHistoryDistribution,
+
   };
 };

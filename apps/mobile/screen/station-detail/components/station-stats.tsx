@@ -52,7 +52,11 @@ export function StationStats({ station }: StationStatsProps) {
         elevation: 6,
       }}
     >
-      <StatColumn dotColor={theme.actionPrimary.val} label="Xe có sẵn" value={station.bikes.available} />
+      <StatColumn
+        dotColor={theme.actionPrimary.val}
+        label="Xe trong trạm"
+        value={station.capacity.totalInStationBikes}
+      />
       <XStack alignSelf="stretch" backgroundColor="$borderSubtle" marginVertical="$2" width={1} />
       <StatColumn dotColor={theme.textPrimary.val} label="Chỗ trả xe" value={station.returnSlots.available} />
     </XStack>

@@ -110,7 +110,9 @@ export function BikeFilters({
               <SelectItem value="AVAILABLE">Sẵn sàng</SelectItem>
               <SelectItem value="BOOKED">Đang thuê</SelectItem>
               <SelectItem value="RESERVED">Đặt trước</SelectItem>
-              <SelectItem value="REDISTRIBUTING">Chuẩn bị điều phối</SelectItem>
+              <SelectItem value="PENDING_DISPATCH">Chuẩn bị điều phối</SelectItem>
+              <SelectItem value="TRANSPORTING">Đang vận chuyển</SelectItem>
+              <SelectItem value="SWAPPING">Hỗ trợ sự cố</SelectItem>
               <SelectItem value="BROKEN">Đang hỏng</SelectItem>
               <SelectItem value="LOST">Đã mất</SelectItem>
               <SelectItem value="DISABLED">Tạm ngưng hoạt động</SelectItem>
