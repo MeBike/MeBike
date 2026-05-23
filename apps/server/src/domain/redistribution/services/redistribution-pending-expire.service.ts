@@ -32,7 +32,7 @@ export function cancelExpiredPendingRedistributions(args: {
       }),
     );
     const expireHours = config ? Number.parseInt(config.value, 10) : Number.NaN;
-    const finalExpireHours = isNaN(expireHours) ? 24 : expireHours;
+    const finalExpireHours = Number.isNaN(expireHours) ? 24 : expireHours;
 
     const expireAfterMs = args.expireAfterMs ?? finalExpireHours * 60 * 60 * 1000;
     const cutoff = new Date(args.now.getTime() - expireAfterMs);

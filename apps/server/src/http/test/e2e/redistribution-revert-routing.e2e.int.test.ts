@@ -22,16 +22,6 @@ describe("redistribution revert routing e2e", () => {
     },
   });
 
-  async function createManagerToken(stationId?: string) {
-    const manager = await fixture.factories.user({ role: "MANAGER" });
-
-    if (stationId) {
-      await fixture.factories.userOrgAssignment({ userId: manager.id, stationId });
-    }
-
-    return fixture.auth.makeAccessToken({ userId: manager.id, role: "MANAGER" });
-  }
-
   it("successfully reverts remaining transporting bikes and updates status to REVERTED with reason", async () => {
     // 1. Create source and target stations
     const sourceStation = await fixture.factories.station({

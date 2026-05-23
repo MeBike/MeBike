@@ -29,7 +29,7 @@ export const updateSystemConfig: RouteHandler<ConfigRoutes["updateSystemConfig"]
   // Validation bounds
   if (key === "min_available_bikes_at_station") {
     const val = Number.parseInt(value, 10);
-    if (isNaN(val) || val < 0) {
+    if (Number.isNaN(val) || val < 0) {
       return c.json({
         error: "Invalid value",
         details: {
@@ -41,7 +41,7 @@ export const updateSystemConfig: RouteHandler<ConfigRoutes["updateSystemConfig"]
   }
   else if (key === "redistribution_pending_expire_hours") {
     const val = Number.parseInt(value, 10);
-    if (isNaN(val) || val < 1) {
+    if (Number.isNaN(val) || val < 1) {
       return c.json({
         error: "Invalid value",
         details: {

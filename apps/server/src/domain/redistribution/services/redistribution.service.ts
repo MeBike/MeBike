@@ -513,7 +513,7 @@ function makeRedistributionService(
               }),
             );
             const parsedVal = minBikesConfig ? Number.parseInt(minBikesConfig.value, 10) : Number.NaN;
-            const minAvailableBikesLimit = isNaN(parsedVal) ? 10 : parsedVal;
+            const minAvailableBikesLimit = Number.isNaN(parsedVal) ? 10 : parsedVal;
 
             if (restBikes < minAvailableBikesLimit) {
               return yield* Effect.fail(

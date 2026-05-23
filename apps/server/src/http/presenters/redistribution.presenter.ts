@@ -15,20 +15,6 @@ function mapStationSummary(station: any) {
   };
 }
 
-function mapStationDetail(station: any) {
-  if (!station)
-    return null;
-  return {
-    id: station.id,
-    name: station.name,
-    address: station.address,
-    latitude: station.latitude,
-    longitude: station.longitude,
-    totalCapacity: station.totalCapacity,
-    updatedAt: station.updatedAt.toISOString(),
-  };
-}
-
 function mapSourceStationDetail(
   station: any,
   requestedQuantity: number,
