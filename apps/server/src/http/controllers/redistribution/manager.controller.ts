@@ -474,6 +474,82 @@ const confirmRedistributionRequestCompletion: RouteHandler<
   );
 };
 
+const revertRemainingRedistributionRequest: RouteHandler<
+  RedistributionRoutes["revertRemainingRedistributionRequest"]
+> = async (c) => {
+  const { userId } = c.var.currentUser!;
+  const { requestId } = c.req.valid("param");
+  const { reason } = c.req.valid("json");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* RedistributionServiceTag;
+      return yield* service.revertRemaining({ requestId, userId, reason });
+    }),
+    "POST /v1/redistribution-requests/{requestId}/revert-remaining",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json(toContractRedistributionRequestDetail(right), 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("UserNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.USER_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.USER_NOT_FOUND,
+                userId: error.userId,
+              },
+            },
+            404,
+          )),
+        Match.tag("RedistributionRequestNotFound", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 404>(
+            {
+              error: redistributionReqErrorMessages.REDISTRIBUTION_REQUEST_NOT_FOUND,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.REDISTRIBUTION_REQUEST_NOT_FOUND,
+                requestId: error.requestId,
+              },
+            },
+            404,
+          )),
+        Match.tag("UnauthorizedRedistributionRevert", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 403>(
+            {
+              error: redistributionReqErrorMessages.UNAUTHORIZED_REDISTRIBUTION_REVERT,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.UNAUTHORIZED_REDISTRIBUTION_REVERT,
+                requestId: error.requestId,
+                targetStationId: error.targetStationId,
+                workingStationId: error.workingStationId,
+              },
+            },
+            403,
+          )),
+        Match.tag("CannotRevertNonTransitOrPartiallyCompletedRedistribution", error =>
+          c.json<RedistributionContracts.RedistributionReqErrorResponse, 400>(
+            {
+              error: redistributionReqErrorMessages.CANNOT_REVERT_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+              details: {
+                code: RedistributionReqErrorCodeSchema.enum.CANNOT_REVERT_NON_TRANSIT_OR_PARTIALLY_COMPLETED_REDISTRIBUTION,
+                requestId: error.requestId,
+                currentStatus: error.currentStatus,
+              },
+            },
+            400,
+          )),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const RedistributionManagerController = {
   getRequestListForManager,
   getRequestHistoryForManager,
@@ -481,4 +557,5 @@ export const RedistributionManagerController = {
   approveRedistributionRequest,
   rejectRedistributionRequest,
   confirmRedistributionRequestCompletion,
+  revertRemainingRedistributionRequest,
 } as const;

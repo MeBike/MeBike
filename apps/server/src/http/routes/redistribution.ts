@@ -110,6 +110,12 @@ export function registerRedistributionRoutes(app: import("@hono/zod-openapi").Op
   } satisfies RouteConfig;
   app.openapi(managerConfirmRoute, RedistributionManagerController.confirmRedistributionRequestCompletion);
 
+  const managerRevertRoute = {
+    ...redistribution.revertRemainingRedistributionRequest,
+    middleware: [requireStationManagementMiddleware] as const,
+  } satisfies RouteConfig;
+  app.openapi(managerRevertRoute, RedistributionManagerController.revertRemainingRedistributionRequest);
+
   // Agency routes
   const agencyListRoute = {
     ...redistribution.getRequestListForAgency,

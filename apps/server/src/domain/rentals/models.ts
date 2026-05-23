@@ -209,12 +209,8 @@ export type ReturnSlotRow = {
 export type ReturnSlotStationCapacityRow = {
   stationId: string;
   totalCapacity: number;
+  totalInStationBikes: number;
   returnSlotLimit: number;
-  availableBikes: number;
-  reservedBikes: number;
-  pendingDispatchBikes: number;
-  brokenBikes: number;
-  fixedBikes: number;
   activeReturnSlots: number;
   incomingRedistributionBikes: number;
 };

@@ -92,15 +92,8 @@ export function countInStationBikes({
 function computeAvailableReturnSlots(
   station: StationBaseRow,
   counts: BikeCounts,
+  totalInStationBikes: number,
 ) {
-  const totalInStationBikes = countInStationBikes({
-    totalCapacity: station.totalCapacity,
-    availableBikes: counts.availableBikes,
-    reservedBikes: counts.reservedBikes,
-    pendingDispatchBikes: counts.pendingDispatchBikes,
-    brokenBikes: counts.brokenBikes,
-    fixedBikes: counts.fixedBikes,
-  });
   return Math.max(
     0,
     Math.min(
@@ -160,7 +153,8 @@ export function applyCounts(
     updatedAt,
     activeReturnSlots: resolved.activeReturnSlots,
     incomingRedistributionBikes: resolved.incomingRedistributionBikes,
-    availableReturnSlots: computeAvailableReturnSlots(station, resolved),
+    totalInStationBikes: inStationBikes,
+    availableReturnSlots: computeAvailableReturnSlots(station, resolved, inStationBikes + resolved.transportingBikes),
     emptySlots: Math.max(0, station.totalCapacity - inStationBikes),
   };
 }
@@ -320,6 +314,7 @@ export function getIncomingRedistributionCounts(
         where: {
           targetStationId: { in: stationIds },
           status: { in: ["APPROVED", "IN_TRANSIT", "PARTIALLY_COMPLETED"] },
+          completedAt: null,
         },
         select: {
           targetStationId: true,

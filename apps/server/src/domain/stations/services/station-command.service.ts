@@ -24,7 +24,6 @@ import {
   StationNotFound,
   StationReturnSlotLimitBelowActiveReservations as StationReturnSlotLimitBelowActiveReservationsError,
 } from "../errors";
-import { countInStationBikes } from "../repository/station.repository.counts";
 
 /**
  * Xây dựng service command-side cho station domain.
@@ -137,14 +136,7 @@ export function makeStationCommandService(args: {
     returnSlotLimit: number;
   }) =>
     Effect.gen(function* () {
-      const totalInStationBikes = countInStationBikes({
-        totalCapacity: current.totalCapacity,
-        availableBikes: current.availableBikes,
-        reservedBikes: current.reservedBikes,
-        pendingDispatchBikes: current.pendingDispatchBikes,
-        brokenBikes: current.brokenBikes,
-        fixedBikes: current.fixedBikes,
-      });
+      const totalInStationBikes = current.totalInStationBikes;
       if (
         next.totalCapacity !== current.totalCapacity
         && next.totalCapacity < totalInStationBikes + current.activeReturnSlots + current.incomingRedistributionBikes

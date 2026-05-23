@@ -35,6 +35,7 @@ import {
   CannotCancelNonPendingRedistribution,
   CannotConfirmNonTransitedRedistribution,
   CannotRejectNonPendingRedistribution,
+  CannotRevertNonTransitOrPartiallyCompletedRedistribution,
   CannotStartTransitionNonApprovedRedistribution,
   ExceededMinBikesAtStation,
   IncompletedRedistributionRequestExists,
@@ -50,6 +51,7 @@ import {
   UnauthorizedRedistributionCompletion,
   UnauthorizedRedistributionCreation,
   UnauthorizedRedistributionRejection,
+  UnauthorizedRedistributionRevert,
   UnauthorizedStartTransition,
   UserNotFound,
 } from "../domain-errors";
@@ -57,8 +59,6 @@ import {
   makeRedistributionRepository,
   RedistributionRepository,
 } from "../repository/redistribution.repository";
-
-const MIN_AVAILABLE_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (
@@ -154,6 +154,16 @@ export type RedistributionService = {
     Prisma | RedistributionRepository | BikeRepository
   >;
 
+  revertRemaining: (args: {
+    requestId: string;
+    userId: string;
+    reason: string;
+  }) => Effect.Effect<
+    RedistributionRequestDetailRow,
+    RedistributionServiceFailure | BikeRepositoryError,
+    Prisma | RedistributionRepository | BikeRepository
+  >;
+
   adminListRequests: (
     filter: AdminRedistributionFilter,
     page: PageRequest<RedistributionSortField>,
@@ -222,6 +232,7 @@ function makeRedistributionService(
     RedistributionStatus.COMPLETED,
     RedistributionStatus.CANCELLED,
     RedistributionStatus.REJECTED,
+    RedistributionStatus.REVERTED,
   ];
 
   const assertUserExists = (userId: string) =>
@@ -243,6 +254,7 @@ function makeRedistributionService(
     repo.findWhere({
       sourceStationId: stationId,
       status: { notIn: TERMINAL_STATUSES },
+      completedAt: null,
     });
 
   const toRedistributionWhere = (
@@ -451,11 +463,20 @@ function makeRedistributionService(
             const txRedistributionRepo = makeRedistributionRepository(tx);
 
             // Fetch bikes + check minimum remaining available bikes
-            const [totalAvailableCount, pickedBikes] = yield* Effect.all([
+            const [totalAvailableCount, targetAvailableCount, pickedBikes] = yield* Effect.all([
               Effect.promise(() =>
                 tx.bike.count({
                   where: {
                     stationId: sourceStation.id,
+                    status: "AVAILABLE",
+                  },
+                }),
+              ),
+
+              Effect.promise(() =>
+                tx.bike.count({
+                  where: {
+                    stationId: args.targetStationId,
                     status: "AVAILABLE",
                   },
                 }),
@@ -486,11 +507,19 @@ function makeRedistributionService(
 
             const restBikes = totalAvailableCount - pickedCount;
 
-            if (restBikes < MIN_AVAILABLE_BIKES_AT_STATION) {
+            const minBikesConfig = yield* Effect.promise(() =>
+              tx.systemConfig.findUnique({
+                where: { key: "min_available_bikes_at_station" },
+              }),
+            );
+            const parsedVal = minBikesConfig ? Number.parseInt(minBikesConfig.value, 10) : Number.NaN;
+            const minAvailableBikesLimit = Number.isNaN(parsedVal) ? 10 : parsedVal;
+
+            if (restBikes < minAvailableBikesLimit) {
               return yield* Effect.fail(
                 new ExceededMinBikesAtStation({
                   stationId: args.sourceStationId,
-                  minAvailableBikes: MIN_AVAILABLE_BIKES_AT_STATION,
+                  minAvailableBikes: minAvailableBikesLimit,
                   availableBikesAfterFulfillment: restBikes,
                 }),
               );
@@ -508,6 +537,8 @@ function makeRedistributionService(
             return yield* txRedistributionRepo.create({
               ...args,
               bikeIds,
+              sourceAvailableBikesBefore: totalAvailableCount,
+              targetAvailableBikesBefore: targetAvailableCount,
             });
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
@@ -909,6 +940,89 @@ function makeRedistributionService(
                     finalStatus === RedistributionStatus.COMPLETED
                       ? now
                       : undefined,
+                },
+              )
+              .pipe(Effect.map(o => Option.getOrThrow(o)));
+
+            return updatedReq;
+          });
+        }).pipe(
+          Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+        );
+      }),
+
+    revertRemaining: ({ requestId, userId, reason }) =>
+      Effect.gen(function* () {
+        const user = yield* assertUserExists(userId);
+        const stationId = getUserStationId(user)!;
+
+        return yield* runPrismaTransaction(client, (tx) => {
+          const txRedistributionRepo = makeRedistributionRepository(tx);
+          const txBikeRepo = makeBikeRepository(tx);
+
+          return Effect.gen(function* () {
+            const reqOpt = yield* txRedistributionRepo.findAndPopulate({
+              id: requestId,
+            });
+
+            if (Option.isNone(reqOpt)) {
+              return yield* Effect.fail(
+                new RedistributionRequestNotFound({ requestId }),
+              );
+            }
+
+            const req = reqOpt.value;
+
+            // Authorization: Caller must belong to the target station
+            if (req.targetStation.id !== stationId) {
+              return yield* Effect.fail(
+                new UnauthorizedRedistributionRevert({
+                  requestId,
+                  targetStationId: req.targetStation.id,
+                  workingStationId: stationId,
+                }),
+              );
+            }
+
+            // Validation: Request must be in transit or already partially completed
+            if (
+              req.status !== RedistributionStatus.IN_TRANSIT
+              && req.status !== RedistributionStatus.PARTIALLY_COMPLETED
+            ) {
+              return yield* Effect.fail(
+                new CannotRevertNonTransitOrPartiallyCompletedRedistribution({
+                  requestId,
+                  currentStatus: req.status,
+                }),
+              );
+            }
+
+            // Gather all items that are still TRANSPORTING
+            const transportingItems = req.items.filter(
+              item => item.bike.status === BikeStatus.TRANSPORTING,
+            );
+
+            const now = new Date();
+
+            if (transportingItems.length > 0) {
+              const bikeIds = transportingItems.map(item => item.bike.id);
+              // Return status of remaining bikes to AVAILABLE at source station
+              yield* txBikeRepo.updateManyStatusAt(
+                bikeIds,
+                BikeStatus.AVAILABLE,
+                now,
+              );
+            }
+
+            // Finalize request status to REVERTED and store the reason
+            const updatedReq = yield* txRedistributionRepo
+              .updateAndFindWithPopulation(
+                { id: requestId },
+                {
+                  status: RedistributionStatus.REVERTED,
+                  reason,
+                  revertedByUserId: userId,
+                  completedAt: now,
                 },
               )
               .pipe(Effect.map(o => Option.getOrThrow(o)));

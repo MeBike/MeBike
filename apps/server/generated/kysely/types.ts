@@ -168,7 +168,8 @@ export const RedistributionStatus = {
     IN_TRANSIT: "IN_TRANSIT",
     PARTIALLY_COMPLETED: "PARTIALLY_COMPLETED",
     COMPLETED: "COMPLETED",
-    CANCELLED: "CANCELLED"
+    CANCELLED: "CANCELLED",
+    REVERTED: "REVERTED"
 } as const;
 export type RedistributionStatus = (typeof RedistributionStatus)[keyof typeof RedistributionStatus];
 export const ConfirmationMethod = {
@@ -544,9 +545,12 @@ export type RedistributionRequest = {
     requested_by_user_id: string;
     approved_by_user_id: string | null;
     rejected_by_user_id: string | null;
+    reverted_by_user_id: string | null;
     source_station_id: string;
     target_station_id: string;
     reason: string | null;
+    source_available_bikes_before: number | null;
+    target_available_bikes_before: number | null;
     requested_quantity: number;
     status: Generated<RedistributionStatus>;
     started_at: Timestamp | null;
@@ -665,6 +669,12 @@ export type Supplier = {
     status: SupplierStatus;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
+};
+export type SystemConfig = {
+    key: string;
+    value: string;
+    created_at: Generated<Timestamp>;
+    updated_at: Generated<Timestamp>;
 };
 export type TechnicianAssignment = {
     id: string;
@@ -812,6 +822,7 @@ export type DB = {
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;
+    system_configs: SystemConfig;
     technician_assignments: TechnicianAssignment;
     TechnicianTeam: TechnicianTeam;
     user_coupons: UserCoupon;

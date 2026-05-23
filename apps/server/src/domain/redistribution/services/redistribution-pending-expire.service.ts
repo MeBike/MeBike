@@ -22,12 +22,20 @@ export function cancelExpiredPendingRedistributions(args: {
   readonly now: Date;
   readonly expireAfterMs?: number;
 }): Effect.Effect<RedistributionPendingExpireSummary, never, Prisma> {
-  const expireAfterMs = args.expireAfterMs ?? 24 * 60 * 60 * 1000;
-  const cutoff = new Date(args.now.getTime() - expireAfterMs);
-
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const txBikeRepo = makeBikeRepository(client);
+
+    const config = yield* Effect.promise(() =>
+      client.systemConfig.findUnique({
+        where: { key: "redistribution_pending_expire_hours" },
+      }),
+    );
+    const expireHours = config ? Number.parseInt(config.value, 10) : Number.NaN;
+    const finalExpireHours = Number.isNaN(expireHours) ? 24 : expireHours;
+
+    const expireAfterMs = args.expireAfterMs ?? finalExpireHours * 60 * 60 * 1000;
+    const cutoff = new Date(args.now.getTime() - expireAfterMs);
 
     const expiredRequests = yield* Effect.promise(() =>
       client.redistributionRequest.findMany({
@@ -59,7 +67,7 @@ export function cancelExpiredPendingRedistributions(args: {
         where: { id: { in: requestIds } },
         data: {
           status: RedistributionStatus.CANCELLED,
-          reason: "Tự động hủy do không được phê duyệt trong vòng 24 giờ.",
+          reason: `Tự động hủy do không được phê duyệt trong vòng ${finalExpireHours} giờ.`,
           updatedAt: args.now,
         },
       }),

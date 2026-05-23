@@ -9,7 +9,6 @@ import {
   makeOvernightOperationsClosedError,
 } from "@/domain/shared";
 import { StationNotFound } from "@/domain/stations";
-import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 import { makeWalletCommandRepository } from "@/domain/wallets/repository/wallet-command.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { PrismaTransactionError, runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -170,17 +169,9 @@ export function createReturnSlot(
         }
 
         const stationSnapshot = stationSnapshotOpt.value;
-        const totalInStationBikes = countInStationBikes({
-          totalCapacity: stationSnapshot.totalCapacity,
-          availableBikes: stationSnapshot.availableBikes,
-          reservedBikes: stationSnapshot.reservedBikes,
-          pendingDispatchBikes: stationSnapshot.pendingDispatchBikes,
-          brokenBikes: stationSnapshot.brokenBikes,
-          fixedBikes: stationSnapshot.fixedBikes,
-        });
         if (availableReturnSlots(
           stationSnapshot.totalCapacity,
-          totalInStationBikes,
+          stationSnapshot.totalInStationBikes,
           stationSnapshot.activeReturnSlots,
           stationSnapshot.returnSlotLimit,
           stationSnapshot.incomingRedistributionBikes,
@@ -189,7 +180,7 @@ export function createReturnSlot(
             stationId: input.stationId,
             totalCapacity: stationSnapshot.totalCapacity,
             returnSlotLimit: stationSnapshot.returnSlotLimit,
-            totalInStationBikes,
+            totalInStationBikes: stationSnapshot.totalInStationBikes,
             activeReturnSlots: stationSnapshot.activeReturnSlots,
             incomingRedistributionBikes: stationSnapshot.incomingRedistributionBikes,
           }));

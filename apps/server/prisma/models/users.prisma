@@ -54,7 +54,9 @@ model User {
   requestedRedistributionRequests RedistributionRequest[]   @relation("RedistributionRequestRequestedByUser")
   approvedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestApprovedByUser")
   rejectedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestRejectedByUser")
+  revertedRedistributionRequests  RedistributionRequest[]   @relation("RedistributionRequestRevertedByUser")
   environmentalImpactStats        EnvironmentalImpactStat[]
+
   assignedNfcCard                 NfcCard?                  @relation("AssignedNfcCard")
 
   submittedAgencyRequests   AgencyRequest[] @relation("AgencyRequestRequester")

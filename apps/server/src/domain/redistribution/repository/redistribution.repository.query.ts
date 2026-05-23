@@ -40,6 +40,17 @@ function mapStationSummary(station: any): StationSummary | null {
 function mapStationDetail(station: any): StationDetail | null {
   if (!station)
     return null;
+  const inStationBikesCount = station.bikes
+    ? Math.min(
+        station.totalCapacity,
+        station.bikes.filter((b: any) =>
+          ["AVAILABLE", "RESERVED", "PENDING_DISPATCH", "BROKEN", "FIXED"].includes(b.status),
+        ).length,
+      )
+    : 0;
+
+  const availableBikesCount = station.bikes ? station.bikes.filter((b: any) => b.status === "AVAILABLE").length : 0;
+
   return {
     id: station.id,
     name: station.name,
@@ -47,6 +58,8 @@ function mapStationDetail(station: any): StationDetail | null {
     latitude: station.latitude,
     longitude: station.longitude,
     totalCapacity: station.totalCapacity,
+    totalInStationBikes: inStationBikesCount,
+    availableBikes: availableBikesCount,
     updatedAt: station.updatedAt,
   };
 }
@@ -120,6 +133,11 @@ const detailedStationSelect = {
   longitude: true,
   totalCapacity: true,
   updatedAt: true,
+  bikes: {
+    select: {
+      status: true,
+    },
+  },
 };
 
 const summaryUserSelect = {
@@ -143,12 +161,17 @@ export const detailedRedistributionRequestSelect = {
   rejectedByUser: {
     select: detailedUserSelect,
   },
+  revertedByUser: {
+    select: detailedUserSelect,
+  },
   sourceStation: {
     select: detailedStationSelect,
   },
   targetStation: {
     select: detailedStationSelect,
   },
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -180,12 +203,17 @@ export const summaryRedistributionRequestSelect = {
   rejectedByUser: {
     select: summaryUserSelect,
   },
+  revertedByUser: {
+    select: summaryUserSelect,
+  },
   sourceStation: {
     select: summaryStationSelect,
   },
   targetStation: {
     select: summaryStationSelect,
   },
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -203,8 +231,11 @@ export const redistributionRequestSelect = {
   requestedByUserId: true,
   approvedByUserId: true,
   rejectedByUserId: true,
+  revertedByUserId: true,
   sourceStationId: true,
   targetStationId: true,
+  sourceAvailableBikesBefore: true,
+  targetAvailableBikesBefore: true,
   requestedQuantity: true,
   reason: true,
   items: {
@@ -240,8 +271,11 @@ export function mapToRedistributionRequestDetail(
     requestedByUser: mapUserDetail(raw.requestedByUser)!,
     approvedByUser: mapUserDetail(raw.approvedByUser),
     rejectedByUser: mapUserDetail(raw.rejectedByUser),
+    revertedByUser: mapUserDetail(raw.revertedByUser),
     sourceStation: mapStationDetail(raw.sourceStation)!,
     targetStation: mapStationDetail(raw.targetStation)!,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -262,8 +296,11 @@ export function mapToRedistributionRequestSummaryRow(
     requestedByUser: mapUserSummary(raw.requestedByUser)!,
     approvedByUser: mapUserSummary(raw.approvedByUser),
     rejectedByUser: mapUserSummary(raw.rejectedByUser),
+    revertedByUser: mapUserSummary(raw.revertedByUser),
     sourceStation: mapStationSummary(raw.sourceStation)!,
     targetStation: mapStationSummary(raw.targetStation)!,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],
@@ -283,8 +320,11 @@ export function mapToRedistributionRequestRow(
     requestedByUserId: raw.requestedByUserId,
     approvedByUserId: raw.approvedByUserId ?? null,
     rejectedByUserId: raw.rejectedByUserId ?? null,
+    revertedByUserId: raw.revertedByUserId ?? null,
     sourceStationId: raw.sourceStationId,
     targetStationId: raw.targetStationId,
+    sourceAvailableBikesBefore: raw.sourceAvailableBikesBefore ?? null,
+    targetAvailableBikesBefore: raw.targetAvailableBikesBefore ?? null,
     requestedQuantity: raw.requestedQuantity,
     reason: raw.reason ?? "",
     items: raw.items ?? [],

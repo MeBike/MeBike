@@ -11,6 +11,7 @@ export const RedistributionStatusSchema = z.enum([
   "PARTIALLY_COMPLETED",
   "COMPLETED",
   "CANCELLED",
+  "REVERTED",
 ]);
 
 export const RedistributionRequestItemSchema = z.object({
@@ -26,12 +27,16 @@ export const RedistributionRequestSchema = z.object({
   requestedByUserId: z.uuidv7(),
   approvedByUserId: z.uuidv7().optional(),
   rejectedByUserId: z.uuidv7().optional(),
+  revertedByUserId: z.uuidv7().nullable().optional(),
   sourceStationId: z.uuidv7(),
   targetStationId: z.uuidv7(),
+  sourceAvailableBikesBefore: z.number().nullable().optional(),
+  targetAvailableBikesBefore: z.number().nullable().optional(),
   requestedQuantity: z.number(),
   reason: z.string().optional(),
   items: z.array(RedistributionRequestItemSchema),
   status: RedistributionStatusSchema,
+  revertedBikes: z.number().int().optional(),
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
@@ -67,6 +72,11 @@ export const RedistributionStationSchema = z.object({
   longitude: z.number(),
   totalCapacity: z.number(),
   updatedAt: z.iso.datetime(),
+  availableBikesBefore: z.number().optional(),
+  bikesForRedistribution: z.number().optional(),
+  actualReceivedBikes: z.number().optional(),
+  actualAvailableBikes: z.number().optional(),
+  availableBikesAfter: z.number().optional(),
   locationGeo: z
     .object({
       type: z.literal("Point"),
@@ -101,8 +111,11 @@ export const RedistributionRequestItemDetailSchema = z.object({
 export const RedistributionRequestDetailBaseSchema = z.object({
   id: z.uuidv7(),
   reason: z.string().nullable(),
+  sourceAvailableBikesBefore: z.number().nullable().optional(),
+  targetAvailableBikesBefore: z.number().nullable().optional(),
   requestedQuantity: z.number(),
   status: RedistributionStatusSchema,
+  revertedBikes: z.number().int().optional(),
   startedAt: z.iso.datetime().nullable(),
   completedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
@@ -114,6 +127,7 @@ export const RedistributionRequestDetailSchema
     requestedByUser: RedistributionUserDetailSchema,
     approvedByUser: RedistributionUserDetailSchema.nullable(),
     rejectedByUser: RedistributionUserDetailSchema.nullable(),
+    revertedByUser: RedistributionUserDetailSchema.nullable(),
     sourceStation: RedistributionStationSchema,
     targetStation: RedistributionStationSchema,
     items: z.array(RedistributionRequestItemDetailSchema),
@@ -125,6 +139,7 @@ export const RedistributionRequestListItemSchema
     requestedByUser: RedistributionUserSummarySchema,
     approvedByUser: RedistributionUserSummarySchema.nullable(),
     rejectedByUser: RedistributionUserSummarySchema.nullable(),
+    revertedByUser: RedistributionUserSummarySchema.nullable(),
     sourceStation: RedistributionStationSummarySchema,
     targetStation: RedistributionStationSummarySchema,
     items: z.array(RedistributionRequestItemSchema),
@@ -167,6 +182,13 @@ export const RejectRedistributionRequestSchema = z.object({
     .max(200, "Reason must be at most 200 characters long"),
 });
 
+export const RevertRedistributionRequestSchema = z.object({
+  reason: z
+    .string()
+    .min(10, "Reason must be at least 10 characters long")
+    .max(200, "Reason must be at most 200 characters long"),
+});
+
 export const ConfirmRedistributionRequestCompletionSchema = z.object({
   completedBikeIds: z
     .array(z.uuidv7())
@@ -190,4 +212,8 @@ export type CreateRedistributionRequest = z.infer<
 
 export type ConfirmRedistributionRequestCompletion = z.infer<
   typeof ConfirmRedistributionRequestCompletionSchema
+>;
+
+export type RevertRedistributionRequest = z.infer<
+  typeof RevertRedistributionRequestSchema
 >;

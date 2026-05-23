@@ -305,17 +305,15 @@ export function makeReturnSlotRepository(
           return Option.none();
         }
 
-        const [bikeStatusRows, activeReturnSlots, incomingRedistributionBikes] = yield* Effect.all([
+        const [totalInStationBikes, activeReturnSlots, incomingRedistributionBikes] = yield* Effect.all([
           Effect.tryPromise({
             try: () =>
-              client.bike.groupBy({
-                by: ["status"],
-                where: { stationId },
-                _count: { id: true },
+              client.bike.count({
+                where: { stationId, status: { in: ["AVAILABLE", "RESERVED", "PENDING_DISPATCH", "BROKEN", "FIXED", "TRANSPORTING"] } },
               }),
             catch: cause =>
               new RentalRepositoryError({
-                operation: "returnSlot.getStationCapacitySnapshot.bikeStatusCounts",
+                operation: "returnSlot.getStationCapacitySnapshot.totalInStationBikes",
                 cause,
               }),
           }),
@@ -342,6 +340,7 @@ export function makeReturnSlotRepository(
                 where: {
                   targetStationId: stationId,
                   status: { in: ["APPROVED", "IN_TRANSIT", "PARTIALLY_COMPLETED"] },
+                  completedAt: null,
                 },
                 select: {
                   _count: {
@@ -363,47 +362,11 @@ export function makeReturnSlotRepository(
           ),
         ]);
 
-        // Aggregate bike counts by status
-        let availableBikes = 0;
-        let reservedBikes = 0;
-        let pendingDispatchBikes = 0;
-        let brokenBikes = 0;
-        let fixedBikes = 0;
-        for (const row of bikeStatusRows) {
-          const count = Number((row as any)._count?.id ?? (row as any)._count?._all ?? (row as any)._count ?? 0);
-          switch (row.status) {
-            case "AVAILABLE": {
-              availableBikes += count;
-              break;
-            }
-            case "RESERVED": {
-              reservedBikes += count;
-              break;
-            }
-            case "PENDING_DISPATCH": {
-              pendingDispatchBikes += count;
-              break;
-            }
-            case "BROKEN": {
-              brokenBikes += count;
-              break;
-            }
-            case "FIXED": {
-              fixedBikes += count;
-              break;
-            }
-          }
-        }
-
         return Option.some({
           stationId: station.id,
           totalCapacity: station.totalCapacity,
           returnSlotLimit: station.returnSlotLimit,
-          availableBikes,
-          reservedBikes,
-          pendingDispatchBikes,
-          brokenBikes,
-          fixedBikes,
+          totalInStationBikes,
           activeReturnSlots,
           incomingRedistributionBikes,
         });

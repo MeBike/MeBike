@@ -29,6 +29,24 @@ async function main() {
   await seedDefaultPricingPolicy(prisma);
   await seedDefaultGlobalCouponRules(prisma);
 
+  // Seed default system configurations
+  await prisma.systemConfig.upsert({
+    where: { key: "min_available_bikes_at_station" },
+    update: {},
+    create: {
+      key: "min_available_bikes_at_station",
+      value: "10",
+    },
+  });
+  await prisma.systemConfig.upsert({
+    where: { key: "redistribution_pending_expire_hours" },
+    update: {},
+    create: {
+      key: "redistribution_pending_expire_hours",
+      value: "24",
+    },
+  });
+
   // Use the actual table name as it exists in the DB ("Station")
   await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;
 

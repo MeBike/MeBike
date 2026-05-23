@@ -9,6 +9,7 @@ export function makeReservationQueryService(
   return {
     getById: reservationId => repo.findById(reservationId),
     getExpandedDetailById: reservationId => repo.findExpandedDetailById(reservationId),
+    getPendingForecastByWindow: (start, end) => repo.findPendingForecastByWindow(start, end),
     listForUser: (userId, filter, pageReq) => repo.listForUser(userId, filter, pageReq),
     listForAdmin: (filter, pageReq) => repo.listForAdmin(filter, pageReq),
     getLatestPendingOrActiveForUser: userId => repo.findLatestPendingOrActiveByUserId(userId),
