@@ -16,6 +16,10 @@ export type ReservationQueryService = {
   getExpandedDetailById: (
     reservationId: string,
   ) => Effect.Effect<Option.Option<ReservationExpandedDetailRow>>;
+  getPendingForecastByWindow: (
+    start: Date,
+    end: Date,
+  ) => Effect.Effect<ReadonlyArray<ReservationExpandedDetailRow>>;
   listForUser: (
     userId: string,
     filter: ReservationFilter,

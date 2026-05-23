@@ -34,6 +34,7 @@ export type ReservationCoreReadRepo = Pick<
   ReservationRepo,
   | "findById"
   | "findExpandedDetailById"
+  | "findPendingForecastByWindow"
   | "findPendingFixedSlotByTemplateAndStart"
   | "findFixedSlotTemplateByIdForUser"
   | "listActiveFixedSlotTemplatesByDate"
@@ -87,6 +88,32 @@ export function makeReservationCoreReadRepository(
         Effect.map(row =>
           Option.fromNullable(row).pipe(Option.map(toReservationExpandedDetailRow)),
         ),
+        defectOn(ReservationRepositoryError),
+      ),
+
+    findPendingForecastByWindow: (start, end) =>
+      Effect.tryPromise({
+        try: () =>
+          client.reservation.findMany({
+            where: {
+              status: "PENDING",
+              startTime: {
+                gte: start,
+                lt: end,
+              },
+            },
+            select: selectReservationExpandedDetailRow,
+            orderBy: {
+              startTime: "asc",
+            },
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "findPendingForecastByWindow",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(rows => rows.map(toReservationExpandedDetailRow)),
         defectOn(ReservationRepositoryError),
       ),
 

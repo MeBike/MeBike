@@ -128,6 +128,11 @@ export type ReservationQueryRepo = {
     options?: { readonly onlyFixedSlot?: boolean },
   ) => Effect.Effect<Option.Option<ReservationRow>>;
 
+  findPendingForecastByWindow: (
+    start: Date,
+    end: Date,
+  ) => Effect.Effect<ReadonlyArray<ReservationExpandedDetailRow>>;
+
   /**
    * EN: Returns a paginated list of reservations for a user with filters + sorting.
    * VI: Trả về danh sách reservation của user (có phân trang), hỗ trợ filter + sort.

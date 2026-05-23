@@ -14,6 +14,7 @@ export type ReservationReadRepo = Pick<
   ReservationRepo,
   | "findById"
   | "findExpandedDetailById"
+  | "findPendingForecastByWindow"
   | "findLatestPendingOrActiveByUserId"
   | "findLatestPendingOrActiveByBikeId"
   | "findPendingHoldByUserIdNow"

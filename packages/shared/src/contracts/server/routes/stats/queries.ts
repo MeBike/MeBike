@@ -1,6 +1,11 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import { StatsSummaryResponseSchema } from "../../stats/schemas";
+import {
+  StatsSummaryResponseSchema,
+  ReservationForecastQuerySchema,
+  ReservationForecastResponseSchema,
+} from "../../stats/schemas";
+import { unauthorizedResponse, forbiddenResponse } from "../helpers";
 
 export const getStatsSummaryRoute = createRoute({
   method: "get",
@@ -17,3 +22,26 @@ export const getStatsSummaryRoute = createRoute({
     },
   },
 });
+
+export const getReservationForecastRoute = createRoute({
+  method: "get",
+  path: "/v1/stats/reservations-forecast",
+  tags: ["Stats"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ReservationForecastQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Forecast of upcoming reservations in the time window",
+      content: {
+        "application/json": {
+          schema: ReservationForecastResponseSchema,
+        },
+      },
+    },
+    401: unauthorizedResponse(),
+    403: forbiddenResponse("Staff"),
+  },
+});
+
