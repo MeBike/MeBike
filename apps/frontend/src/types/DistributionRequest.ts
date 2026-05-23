@@ -1,5 +1,6 @@
 export type RedistributionRequestStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | "IN_TRANSIT"
 | "PARTIALLY_COMPLETED";
+import type { User } from "./User";
 export type RedistributionRequest = {
   id: string;
   reason: string;
@@ -35,25 +36,23 @@ export type RedistributionRequest = {
 export type RedistributionRequestDetail = {
   id: string;
   reason: string;
+  sourceAvailableBikesBefore : number;
+  targetAvailableBikesBefore : number;
   requestedQuantity: number;
+  revertedBikes : number;
   status: RedistributionRequestStatus;
   startedAt: string;
   completedAt: string;
   createdAt: string;
   updatedAt: string;
   requestedByUser: User;
-  approvedByUser?: User;
+  approvedByUser: User;
+  revertedByUser : User;
   sourceStation: Station;
   targetStation: Station;
   items: Item[];
 };
-type User = {
-  id: string;
-  fullName: string;
-  email: string;
-  avatar: string;
-  role: string;
-};
+
 type Station = {
   id: string;
   name: string;
@@ -61,6 +60,16 @@ type Station = {
   latitude: number;
   longitude: number;
   totalCapacity: number;
+  updatedAt : string;
+  availableBikesBefore : string;
+  bikesForRedistribution : string;
+  actualReceivedBikes : string;
+  actualAvailableBikes : string;
+  availableBikesAfter : string;
+  locationGeo : {
+    type : string;
+    coordinates : number[];
+  }
 };
 type Item = {
   id: string;
