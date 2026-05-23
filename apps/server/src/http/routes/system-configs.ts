@@ -1,5 +1,7 @@
 import type { RouteConfig } from "@hono/zod-openapi";
+
 import { serverRoutes } from "@mebike/shared";
+
 import * as SystemConfigsController from "../controllers/system-configs/system-configs.controller";
 import { requireAdminMiddleware } from "../middlewares/auth";
 

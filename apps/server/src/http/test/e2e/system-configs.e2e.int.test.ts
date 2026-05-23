@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
 
 describe("system configs e2e", () => {
@@ -49,7 +50,7 @@ describe("system configs e2e", () => {
     const putStaff = await fixture.app.request("http://test/v1/admin/system-configs/test_key", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${staffToken}`,
+        "Authorization": `Bearer ${staffToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value: "test_val" }),
@@ -85,7 +86,7 @@ describe("system configs e2e", () => {
     const putRes = await fixture.app.request("http://test/v1/admin/system-configs/min_available_bikes_at_station", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${adminToken}`,
+        "Authorization": `Bearer ${adminToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value: "15" }),
@@ -98,7 +99,7 @@ describe("system configs e2e", () => {
     const invalidMinRes = await fixture.app.request("http://test/v1/admin/system-configs/min_available_bikes_at_station", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${adminToken}`,
+        "Authorization": `Bearer ${adminToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value: "-1" }),
@@ -117,7 +118,7 @@ describe("system configs e2e", () => {
     const invalidHoursRes = await fixture.app.request("http://test/v1/admin/system-configs/redistribution_pending_expire_hours", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${adminToken}`,
+        "Authorization": `Bearer ${adminToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value: "0" }),
@@ -161,7 +162,7 @@ describe("system configs e2e", () => {
     const failRequestRes = await fixture.app.request("http://test/v1/redistribution-requests", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${staffToken}`,
+        "Authorization": `Bearer ${staffToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -180,7 +181,7 @@ describe("system configs e2e", () => {
     const updateSettingRes = await fixture.app.request("http://test/v1/admin/system-configs/min_available_bikes_at_station", {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${adminToken}`,
+        "Authorization": `Bearer ${adminToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ value: "5" }),
@@ -191,7 +192,7 @@ describe("system configs e2e", () => {
     const successRequestRes = await fixture.app.request("http://test/v1/redistribution-requests", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${staffToken}`,
+        "Authorization": `Bearer ${staffToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

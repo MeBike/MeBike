@@ -47,7 +47,6 @@ async function main() {
     },
   });
 
-
   // Use the actual table name as it exists in the DB ("Station")
   await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;
 

@@ -5,4 +5,3 @@ export const StatsController = {
   getSummary,
   getReservationForecast,
 } as const;
-

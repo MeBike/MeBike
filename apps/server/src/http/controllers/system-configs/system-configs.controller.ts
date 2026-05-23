@@ -1,4 +1,5 @@
 import type { RouteHandler } from "@hono/zod-openapi";
+
 import { db } from "@/database";
 
 type ConfigRoutes = typeof import("@mebike/shared")["serverRoutes"]["systemConfigs"];
@@ -27,25 +28,26 @@ export const updateSystemConfig: RouteHandler<ConfigRoutes["updateSystemConfig"]
 
   // Validation bounds
   if (key === "min_available_bikes_at_station") {
-    const val = parseInt(value, 10);
+    const val = Number.parseInt(value, 10);
     if (isNaN(val) || val < 0) {
       return c.json({
         error: "Invalid value",
         details: {
           code: "VALIDATION_ERROR",
-          issues: [{ path: "value", message: "Value must be a non-negative integer for min_available_bikes_at_station" }]
-        }
+          issues: [{ path: "value", message: "Value must be a non-negative integer for min_available_bikes_at_station" }],
+        },
       } as any, 400);
     }
-  } else if (key === "redistribution_pending_expire_hours") {
-    const val = parseInt(value, 10);
+  }
+  else if (key === "redistribution_pending_expire_hours") {
+    const val = Number.parseInt(value, 10);
     if (isNaN(val) || val < 1) {
       return c.json({
         error: "Invalid value",
         details: {
           code: "VALIDATION_ERROR",
-          issues: [{ path: "value", message: "Value must be a positive integer for redistribution_pending_expire_hours" }]
-        }
+          issues: [{ path: "value", message: "Value must be a positive integer for redistribution_pending_expire_hours" }],
+        },
       } as any, 400);
     }
   }
@@ -62,8 +64,8 @@ export const updateSystemConfig: RouteHandler<ConfigRoutes["updateSystemConfig"]
       error: "Config not found",
       details: {
         code: "NOT_FOUND",
-        issues: [{ path: "key", message: `SystemConfig with key '${key}' not found.` }]
-      }
+        issues: [{ path: "key", message: `SystemConfig with key '${key}' not found.` }],
+      },
     } as any, 404);
   }
 

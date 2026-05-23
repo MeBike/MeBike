@@ -77,7 +77,7 @@ describe("redistribution revert routing e2e", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
           reason: "Too long to deliver and not needed anymore",

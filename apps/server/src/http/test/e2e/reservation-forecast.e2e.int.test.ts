@@ -79,7 +79,7 @@ describe("reservation forecast e2e", () => {
     // minutes < 50 => window [12:00, 13:00) in Vietnam => [05:00, 06:00) UTC
     vi.setSystemTime(new Date("2026-05-22T05:30:00.000Z"));
 
-    const reservationInsideA = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userA.id,
       stationId: station.id,
       bikeId: bikeA.id,
@@ -87,7 +87,7 @@ describe("reservation forecast e2e", () => {
       status: "PENDING",
     });
 
-    const reservationOutsideA = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userB.id,
       stationId: station.id,
       bikeId: bikeB.id,
@@ -151,7 +151,7 @@ describe("reservation forecast e2e", () => {
 
     // Custom window: 15h to 19h (Vietnam) on 2026-05-22
     // window [15:00, 19:00) Vietnam => [08:00, 12:00) UTC
-    const resA = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userA.id,
       stationId: station.id,
       bikeId: bikeA.id,
@@ -159,7 +159,7 @@ describe("reservation forecast e2e", () => {
       status: "PENDING",
     });
 
-    const resB = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userB.id,
       stationId: station.id,
       bikeId: bikeB.id,
@@ -167,7 +167,7 @@ describe("reservation forecast e2e", () => {
       status: "PENDING",
     });
 
-    const resC = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userC.id,
       stationId: station.id,
       bikeId: bikeC.id,
@@ -182,7 +182,7 @@ describe("reservation forecast e2e", () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     const body = await response.json() as StatsContracts.ReservationForecastResponse;
@@ -213,7 +213,7 @@ describe("reservation forecast e2e", () => {
 
     // Custom window: 23h (today) to 1h (next day) on 2026-05-22
     // window [23:00 on May 22, 01:00 on May 23) Vietnam => [16:00, 18:00) UTC on May 22
-    const resD = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userD.id,
       stationId: station.id,
       bikeId: bikeD.id,
@@ -221,7 +221,7 @@ describe("reservation forecast e2e", () => {
       status: "PENDING",
     });
 
-    const resE = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userE.id,
       stationId: station.id,
       bikeId: bikeE.id,
@@ -229,7 +229,7 @@ describe("reservation forecast e2e", () => {
       status: "PENDING",
     });
 
-    const resF = await fixture.factories.reservation({
+    await fixture.factories.reservation({
       userId: userF.id,
       stationId: station.id,
       bikeId: bikeF.id,
@@ -244,7 +244,7 @@ describe("reservation forecast e2e", () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     const body = await response.json() as StatsContracts.ReservationForecastResponse;
@@ -269,7 +269,7 @@ describe("reservation forecast e2e", () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     expect(responseOnlyStart.status).toBe(400);
@@ -281,7 +281,7 @@ describe("reservation forecast e2e", () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
+      },
     );
 
     expect(responseOnlyEnd.status).toBe(400);

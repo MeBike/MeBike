@@ -13,7 +13,7 @@ export type RedistributionPendingExpireSummary = {
  * và đã tồn tại quá thời gian cho phép (24 giờ) mà chưa được phê duyệt.
  *
  * Khi hủy, các xe gắn với request sẽ được trả lại trạng thái AVAILABLE.
- *  
+ *
  * @param args Input của lần sweep hiện tại.
  * @param args.now Thời điểm hiện tại dùng để tính cutoff hết hạn.
  * @param args.expireAfterMs Số mili-giây trước khi một request hết hạn (mặc định 24 giờ).
@@ -31,7 +31,7 @@ export function cancelExpiredPendingRedistributions(args: {
         where: { key: "redistribution_pending_expire_hours" },
       }),
     );
-    const expireHours = config ? parseInt(config.value, 10) : NaN;
+    const expireHours = config ? Number.parseInt(config.value, 10) : Number.NaN;
     const finalExpireHours = isNaN(expireHours) ? 24 : expireHours;
 
     const expireAfterMs = args.expireAfterMs ?? finalExpireHours * 60 * 60 * 1000;

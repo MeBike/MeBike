@@ -1,4 +1,5 @@
 import type { RouteHandler } from "@hono/zod-openapi";
+
 import { Effect } from "effect";
 
 import { ReservationQueryServiceTag } from "@/domain/reservations";
@@ -29,7 +30,8 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
 
     start = createVietnamHourDate(year, month, day, startHour);
     end = createVietnamHourDate(year, month, day, endHour);
-  } else {
+  }
+  else {
     const now = new Date();
     const formatter = new Intl.DateTimeFormat("en-US", {
       timeZone: VIETNAM_TIME_ZONE,
@@ -56,7 +58,8 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
 
     if (hStart < 5) {
       hStart = 5;
-    } else if (hStart > 23) {
+    }
+    else if (hStart > 23) {
       hStart = 23;
     }
 
@@ -64,7 +67,7 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
     end = createVietnamHourDate(year, month, day, hStart + 1);
   }
 
-  const stationScopeId = c.var.currentUser!.operatorStationId
+  const stationScopeId = c.var.currentUser!.operatorStationId;
 
   if (stationScopeId === null) {
     return c.json({
@@ -113,16 +116,21 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
 
   const counts = { AVAILABLE: 0, RESERVED: 0, PENDING_DISPATCH: 0, BROKEN: 0, FIXED: 0 };
   for (const b of bikes) {
-    if (b.status === "AVAILABLE") counts.AVAILABLE++;
-    else if (b.status === "RESERVED") counts.RESERVED++;
-    else if (b.status === "PENDING_DISPATCH") counts.PENDING_DISPATCH++;
-    else if (b.status === "BROKEN") counts.BROKEN++;
-    else if (b.status === "FIXED") counts.FIXED++;
+    if (b.status === "AVAILABLE")
+      counts.AVAILABLE++;
+    else if (b.status === "RESERVED")
+      counts.RESERVED++;
+    else if (b.status === "PENDING_DISPATCH")
+      counts.PENDING_DISPATCH++;
+    else if (b.status === "BROKEN")
+      counts.BROKEN++;
+    else if (b.status === "FIXED")
+      counts.FIXED++;
   }
 
   const currentBikes = Math.min(
     station.totalCapacity,
-    counts.AVAILABLE + counts.RESERVED + counts.PENDING_DISPATCH + counts.BROKEN + counts.FIXED
+    counts.AVAILABLE + counts.RESERVED + counts.PENDING_DISPATCH + counts.BROKEN + counts.FIXED,
   );
 
   let reservedCount = 0;

@@ -33,12 +33,12 @@ import logger from "../src/lib/logger";
 import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { DEFAULT_PRICING_POLICY_ID, seedDefaultPricingPolicy } from "./seed-pricing-policy";
+import { seedDefaultSystemConfigs } from "./seed-system-configs";
 import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
 import { seedDemoRatings } from "./seed/demo-ratings";
 import { seedRatingReasons } from "./seed/rating-reasons";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
-import { seedDefaultSystemConfigs } from "./seed-system-configs";
 
 const DEMO_PASSWORD = "Demo@123456";
 
@@ -497,7 +497,7 @@ async function main() {
     await seedDefaultGlobalCouponRules(prisma, { demoMode: true });
     await seedDemoEnvironmentPolicy(prisma);
     await seedRatingReasons(prisma);
-    await seedDefaultSystemConfigs(prisma)
+    await seedDefaultSystemConfigs(prisma);
 
     const users = buildDemoUsers(stations.length);
     const userEmails = users.map(u => u.email);

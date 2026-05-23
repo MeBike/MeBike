@@ -60,7 +60,6 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-
 export type RedistributionService = {
   getMyListInStation: (
     userId: string,
@@ -513,7 +512,7 @@ function makeRedistributionService(
                 where: { key: "min_available_bikes_at_station" },
               }),
             );
-            const parsedVal = minBikesConfig ? parseInt(minBikesConfig.value, 10) : NaN;
+            const parsedVal = minBikesConfig ? Number.parseInt(minBikesConfig.value, 10) : Number.NaN;
             const minAvailableBikesLimit = isNaN(parsedVal) ? 10 : parsedVal;
 
             if (restBikes < minAvailableBikesLimit) {
@@ -1021,7 +1020,7 @@ function makeRedistributionService(
                 { id: requestId },
                 {
                   status: RedistributionStatus.REVERTED,
-                  reason: reason,
+                  reason,
                   revertedByUserId: userId,
                   completedAt: now,
                 },

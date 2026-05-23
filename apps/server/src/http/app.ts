@@ -34,11 +34,10 @@ import { registerStripeConnectRoutes } from "./routes/stripe-connect.routes";
 import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
+import { registerSystemConfigRoutes } from "./routes/system-configs";
 import { registerTechnicianTeamRoutes } from "./routes/technician-teams";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
-import { registerSystemConfigRoutes } from "./routes/system-configs";
-
 
 export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   const app = new OpenAPIHono({
@@ -122,7 +121,6 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerIncidentRoutes(app);
   registerOperatorRoutes(app);
   registerSystemConfigRoutes(app);
-
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";

@@ -6,8 +6,6 @@ import type {
   StationRow,
 } from "@/domain/stations";
 
-
-
 function countTotalActiveSlots({
   activeReturnSlots,
   incomingRedistributionBikes,
