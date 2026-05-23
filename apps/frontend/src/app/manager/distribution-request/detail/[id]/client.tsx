@@ -52,8 +52,8 @@ import { getStatusConfig } from "@/columns/bike-colums";
 import type {
   RedistributionRequestDetail,
   RedistributionRequestStatus,
+  User,
 } from "@/types/DistributionRequest";
-import type { User } from "@/types";
 import type { CurrentStation, BikeStatus } from "@/types";
 
 // --- CONFIGS & HELPERS ---
@@ -68,6 +68,7 @@ const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: st
 };
 
 // --- COMPONENT ---
+
 interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
@@ -160,11 +161,11 @@ export const DistributionRequestDetailClient = ({
   const UserProfileMini = ({ user, label }: { user: User, label: string }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100">
       <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white">
-        {user.fullname?.charAt(0).toUpperCase() || "?"}
+        {user.fullName?.charAt(0).toUpperCase() || "?"}
       </div>
       <div className="flex flex-col overflow-hidden">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
-        <span className="font-bold text-slate-900 text-sm truncate">{user.fullname || "N/A"}</span>
+        <span className="font-bold text-slate-900 text-sm truncate">{user.fullName || "N/A"}</span>
       </div>
     </div>
   );

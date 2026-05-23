@@ -1,6 +1,5 @@
 export type RedistributionRequestStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | "IN_TRANSIT"
 | "PARTIALLY_COMPLETED";
-import type { User } from "./User";
 export type RedistributionRequest = {
   id: string;
   reason: string;
@@ -46,13 +45,26 @@ export type RedistributionRequestDetail = {
   createdAt: string;
   updatedAt: string;
   requestedByUser: User;
-  approvedByUser: User;
-  revertedByUser : User;
+  approvedByUser?: User;
+  revertedByUser? : User;
+  rejectedByUser? : User;
   sourceStation: Station;
   targetStation: Station;
   items: Item[];
 };
-
+export type User = {
+  id: string;
+  fullName: string;
+  email: string;
+  verify: string;
+  location: string;
+  username: string;
+  phoneNumber: string;
+  nfcCardUid: string;
+  updatedAt: string;
+  avatar: string;
+  role: string;
+};
 type Station = {
   id: string;
   name: string;
