@@ -35,7 +35,10 @@ export type RedistributionRequest = {
 export type RedistributionRequestDetail = {
   id: string;
   reason: string;
+  sourceAvailableBikesBefore : number;
+  targetAvailableBikesBefore : number;
   requestedQuantity: number;
+  revertedBikes : number;
   status: RedistributionRequestStatus;
   startedAt: string;
   completedAt: string;
@@ -43,14 +46,22 @@ export type RedistributionRequestDetail = {
   updatedAt: string;
   requestedByUser: User;
   approvedByUser?: User;
+  revertedByUser? : User;
+  rejectedByUser? : User;
   sourceStation: Station;
   targetStation: Station;
   items: Item[];
 };
-type User = {
+export type User = {
   id: string;
   fullName: string;
   email: string;
+  verify: string;
+  location: string;
+  username: string;
+  phoneNumber: string;
+  nfcCardUid: string;
+  updatedAt: string;
   avatar: string;
   role: string;
 };
@@ -61,6 +72,16 @@ type Station = {
   latitude: number;
   longitude: number;
   totalCapacity: number;
+  updatedAt : string;
+  availableBikesBefore : string;
+  bikesForRedistribution : string;
+  actualReceivedBikes : string;
+  actualAvailableBikes : string;
+  availableBikesAfter : string;
+  locationGeo : {
+    type : string;
+    coordinates : number[];
+  }
 };
 type Item = {
   id: string;
