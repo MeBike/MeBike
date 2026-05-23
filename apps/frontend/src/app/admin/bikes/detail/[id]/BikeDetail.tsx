@@ -10,7 +10,8 @@ import {
   User,
   ArrowRight,
   ArrowLeft,
-  Star, // Thêm icon Star cho ratings
+  Star,
+  Trash2,
 } from "lucide-react";
 import { formatCurrency } from "@/utils/formatCurrency";
 import { useRouter } from "next/navigation";
@@ -25,10 +26,23 @@ import type {
   Bike as BikeType,
   Station,
   Supplier,
-  BikeStatus
+  BikeStatus,
 } from "@/types";
 import type { UpdateBikeSchemaFormData } from "@/schemas";
 import { UpdateBikeDialog } from "../../components/update-bike";
+
+// Import các component Dialog mới của Shadcn UI
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+
 function SectionCard({
   icon: Icon,
   title,
@@ -77,20 +91,39 @@ function bikeStatusVariant(status: string) {
   if (s.includes("MAINTENANCE") || s.includes("BẢO TRÌ")) return "destructive";
   return "secondary";
 }
+
 export const getStatusConfig = (status: BikeStatus | string) => {
   switch (status) {
     case "BOOKED":
-      return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
+      return {
+        label: "Đã đặt",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      };
     case "MAINTENANCE":
-      return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800 border-blue-200" };
+      return {
+        label: "Đang bảo trì",
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+      };
     case "BROKEN":
-      return { label: "Đang hỏng", color: "bg-red-100 text-red-800 border-red-200" };
+      return {
+        label: "Đang hỏng",
+        color: "bg-red-100 text-red-800 border-red-200",
+      };
     case "AVAILABLE":
-      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800 border-green-200" };
+      return {
+        label: "Sẵn sàng",
+        color: "bg-green-100 text-green-800 border-green-200",
+      };
     case "RESERVED":
-      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800 border-orange-200" };
+      return {
+        label: "Đã giữ chỗ",
+        color: "bg-orange-100 text-orange-800 border-orange-200",
+      };
     default:
-      return { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
+      return {
+        label: status,
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+      };
   }
 };
 
@@ -102,7 +135,9 @@ export function BikeDetailView({
   onUpdate,
   stations,
   suppliers,
-  isUpdating
+  isUpdating,
+  onDelete, // Nhận props onDelete
+  isDeleting, // Nhận props isDeleting
 }: {
   bike: BikeType;
   activity: BikeActivityStats | null;
@@ -112,12 +147,15 @@ export function BikeDetailView({
   stations: Station[];
   suppliers: Supplier[];
   isUpdating: boolean;
+  onDelete: () => Promise<void>;
+  isDeleting: boolean;
 }) {
   const router = useRouter();
   const totalHours = activity
     ? Math.floor(activity.totalMinutesActive / 60)
     : 0;
-  const statusInfo = getStatusConfig(bike.status);  
+  const statusInfo = getStatusConfig(bike.status);
+
   return (
     <>
       <div className=" bg-slate-50 p-6 dark:bg-background">
@@ -137,15 +175,58 @@ export function BikeDetailView({
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <UpdateBikeDialog 
-                bike={bike} 
-                stations={stations} 
-                suppliers={suppliers} 
-                onUpdate={onUpdate}
-                isUpdating={isUpdating}
-              />
-              
-              <Button variant="outline" onClick={() => router.push("/admin/bikes")}>
+              {bike.status === "AVAILABLE" && (
+                <UpdateBikeDialog
+                  bike={bike}
+                  stations={stations}
+                  suppliers={suppliers}
+                  onUpdate={onUpdate}
+                  isUpdating={isUpdating}
+                />
+              )}
+              {bike.status === "AVAILABLE" && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      disabled={isDeleting}
+                      className="gap-2"
+                    >
+                      {isDeleting ? "Đang xóa..." : "Xóa xe"}
+                      {!isDeleting && <Trash2 className="h-4 w-4" />}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        Bạn có chắc chắn muốn xóa xe này?
+                      </DialogTitle>
+                      <DialogDescription>
+                        Hành động này không thể hoàn tác. Dữ liệu của xe đạp #
+                        {bike.bikeNumber || bike.id} sẽ bị xóa vĩnh viễn khỏi hệ
+                        thống.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Hủy</Button>
+                      </DialogClose>
+                      <Button
+                        variant="destructive"
+                        onClick={onDelete}
+                        disabled={isDeleting}
+                      >
+                        {isDeleting ? "Đang xử lý..." : "Xác nhận xóa"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              <Button
+                variant="outline"
+                onClick={() => router.push("/admin/bikes")}
+              >
                 Danh sách xe
               </Button>
             </div>
@@ -153,7 +234,6 @@ export function BikeDetailView({
         </div>
       </div>
       <div className="space-y-6">
-
         <div className="flex flex-col gap-2 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm sm:flex-row sm:items-center sm:gap-x-8">
           <div>
             <span className="text-muted-foreground">ID: </span>
@@ -177,7 +257,6 @@ export function BikeDetailView({
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            {/* Thông tin cơ bản */}
             <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
@@ -190,7 +269,7 @@ export function BikeDetailView({
                     <Badge
                       className={cn(
                         "rounded-full px-3 py-1 font-semibold border shadow-none",
-                        statusInfo.color
+                        statusInfo.color,
                       )}
                     >
                       {statusInfo.label}
@@ -202,7 +281,6 @@ export function BikeDetailView({
                   value={bike.supplier?.name || "Hệ thống"}
                 />
 
-                {/* Thêm hiển thị Ratings vào đây */}
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Đánh giá khách hàng
@@ -230,9 +308,7 @@ export function BikeDetailView({
             <SectionCard icon={MapPin} title="Vị trí">
               <Field
                 label="Trạm hiện tại"
-                value={
-                  bike.station?.name || "Đang di chuyển"
-                }
+                value={bike.station?.name || "Đang di chuyển"}
               />
             </SectionCard>
 

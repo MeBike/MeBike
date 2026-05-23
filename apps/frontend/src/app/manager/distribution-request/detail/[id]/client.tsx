@@ -57,6 +57,7 @@ interface Props {
   data: RedistributionRequestDetail;
   onApprove: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
+  onBack : () => Promise<void>;
   onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
   listStation?: CurrentStation;
 }
@@ -67,6 +68,7 @@ export const DistributionRequestDetailClient = ({
   onReject,
   onComplete,
   listStation,
+  onBack,
 }: Props) => {
   const router = useRouter();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -173,7 +175,6 @@ export const DistributionRequestDetailClient = ({
                 </Button>
               </>
             )}
-
             {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") && (
               <Button
                 className="bg-blue-600 hover:bg-blue-700 shadow-sm"
@@ -182,6 +183,16 @@ export const DistributionRequestDetailClient = ({
               >
                 {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
                 Hoàn tất ({selectedBikeIds.length} xe)
+              </Button>
+            )}
+            {(data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED") &&  (
+              <Button
+                className="bg-orange-600 hover:bg-orange-700 shadow-sm"
+                onClick={() => handleAction(() => onBack())}
+                disabled={isProcessing }
+              >
+                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
+                Hoàn xe
               </Button>
             )}
           </div>
@@ -247,7 +258,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="h-2.5 w-2.5 rounded-full bg-slate-400"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm xuất phát</p>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Trạm cho xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.sourceStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.sourceStation.address}</p>
                   </div>
@@ -257,7 +268,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="h-2.5 w-2.5 rounded-full bg-blue-500 animate-pulse"></div>
                   </div>
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm đích đến</p>
+                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">Trạm nhận xe</p>
                     <p className="font-bold text-slate-900 text-base">{data.targetStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1 line-clamp-2">{data.targetStation.address}</p>
                   </div>

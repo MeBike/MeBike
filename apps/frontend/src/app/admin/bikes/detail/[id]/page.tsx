@@ -8,6 +8,7 @@ import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { UpdateBikeSchemaFormData } from "@/schemas";
+
 export default function BikeDetailPage({
   params,
 }: {
@@ -29,10 +30,14 @@ export default function BikeDetailPage({
     getStatisticsBike,
     getBikeStats,
     updateBike,
-    isUpdatingBike
+    isUpdatingBike,
+    deleteBike,
+    isDeletingBike
   } = useBikeActions({ hasToken: true, bike_detail_id: id });
+  
   const {getAllStations,stations} = useStationActions({hasToken:true,page:1,limit:200});
   const {getAllSuppliers,suppliers} = useSupplierActions({hasToken:true,status:"",page:1,pageSize:200});
+
   useEffect(() => {
     getBikeByID();
     getAllStations();
@@ -42,6 +47,7 @@ export default function BikeDetailPage({
     getStatisticsBike();
     getBikeStats();
   }, [id]);
+
   useEffect(() => {
     if (isLoadingDetail && isLoadingStatisticsBike) {
       setIsVisualLoading(true);
@@ -52,9 +58,11 @@ export default function BikeDetailPage({
       return () => clearTimeout(timer);
     }
   }, [isLoadingDetail, isLoadingStatisticsBike]);
+
   if (isVisualLoading) {
     return <LoadingScreen />;
   }
+
   if (!detailBike) {
     return (
       <div className="flex min-h-[50vh] w-full items-center justify-center">
@@ -64,10 +72,18 @@ export default function BikeDetailPage({
       </div>
     );
   }
+
   const handleUpdateBike = async (data: UpdateBikeSchemaFormData) => {
     await updateBike(data,id);
     getBikeByID(); 
   };
+
+  // --- HÀM XÓA XE ĐÃ BỎ WINDOW.CONFIRM ---
+  const handleDeleteBike = async () => {
+    await deleteBike(id);
+    router.push("/admin/bikes");
+  };
+
   return (
     <div className="-m-6 min-h-[calc(100vh-5rem)] bg-slate-50 p-6 dark:bg-background">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -76,11 +92,12 @@ export default function BikeDetailPage({
           activity={bikeActivityStats || null}
           rentals={bikeHistory?.data.data || []}
           statisticData={statisticsBike || null}
-          // Truyền thêm props mới
           onUpdate={handleUpdateBike}
           stations={stations || []}
           suppliers={suppliers || []}
           isUpdating={isUpdatingBike}
+          onDelete={handleDeleteBike}
+          isDeleting={isDeletingBike}
         />
       </div>
     </div>
