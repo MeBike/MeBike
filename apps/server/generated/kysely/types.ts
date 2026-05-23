@@ -670,6 +670,12 @@ export type Supplier = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
+export type SystemConfig = {
+    key: string;
+    value: string;
+    created_at: Generated<Timestamp>;
+    updated_at: Generated<Timestamp>;
+};
 export type TechnicianAssignment = {
     id: string;
     incident_report_id: string;
@@ -816,6 +822,7 @@ export type DB = {
     Station: Station;
     Subscription: Subscription;
     Supplier: Supplier;
+    system_configs: SystemConfig;
     technician_assignments: TechnicianAssignment;
     TechnicianTeam: TechnicianTeam;
     user_coupons: UserCoupon;

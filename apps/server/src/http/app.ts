@@ -37,6 +37,8 @@ import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerTechnicianTeamRoutes } from "./routes/technician-teams";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
+import { registerSystemConfigRoutes } from "./routes/system-configs";
+
 
 export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   const app = new OpenAPIHono({
@@ -119,6 +121,8 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerSubscriptionRoutes(app);
   registerIncidentRoutes(app);
   registerOperatorRoutes(app);
+  registerSystemConfigRoutes(app);
+
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";

@@ -60,7 +60,6 @@ import {
   RedistributionRepository,
 } from "../repository/redistribution.repository";
 
-const MIN_AVAILABLE_BIKES_AT_STATION = 10;
 
 export type RedistributionService = {
   getMyListInStation: (
@@ -509,11 +508,19 @@ function makeRedistributionService(
 
             const restBikes = totalAvailableCount - pickedCount;
 
-            if (restBikes < MIN_AVAILABLE_BIKES_AT_STATION) {
+            const minBikesConfig = yield* Effect.promise(() =>
+              tx.systemConfig.findUnique({
+                where: { key: "min_available_bikes_at_station" },
+              }),
+            );
+            const parsedVal = minBikesConfig ? parseInt(minBikesConfig.value, 10) : NaN;
+            const minAvailableBikesLimit = isNaN(parsedVal) ? 10 : parsedVal;
+
+            if (restBikes < minAvailableBikesLimit) {
               return yield* Effect.fail(
                 new ExceededMinBikesAtStation({
                   stationId: args.sourceStationId,
-                  minAvailableBikes: MIN_AVAILABLE_BIKES_AT_STATION,
+                  minAvailableBikes: minAvailableBikesLimit,
                   availableBikesAfterFulfillment: restBikes,
                 }),
               );

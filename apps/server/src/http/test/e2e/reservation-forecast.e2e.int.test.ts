@@ -67,6 +67,8 @@ describe("reservation forecast e2e", () => {
     const token = fixture.auth.makeAccessToken({ userId: staff.id, role: "STAFF" });
 
     const station = await fixture.factories.station({ name: "Default Window Station" });
+    await fixture.factories.userOrgAssignment({ userId: staff.id, stationId: station.id });
+
     const bikeA = await fixture.factories.bike({ stationId: station.id });
     const bikeB = await fixture.factories.bike({ stationId: station.id });
 
@@ -104,9 +106,11 @@ describe("reservation forecast e2e", () => {
     expect(responseA.status).toBe(200);
     expect(bodyA.windowStart).toBe("2026-05-22T05:00:00.000Z");
     expect(bodyA.windowEnd).toBe("2026-05-22T06:00:00.000Z");
-    expect(bodyA.reservedCount).toBe(1);
-    expect(bodyA.reservations).toHaveLength(1);
-    expect(bodyA.reservations[0].id).toBe(reservationInsideA.id);
+    expect(bodyA.station).toBeDefined();
+    expect(bodyA.station?.id).toBe(station.id);
+    expect(bodyA.station?.currentBikes).toBe(2);
+    expect(bodyA.station?.reservedCount).toBe(1);
+    expect(bodyA.station?.expectedBikes).toBe(1);
 
     // Scenario B: current time is 12:55 in Vietnam (which is 05:55 UTC)
     // minutes >= 50 => window [13:00, 14:00) in Vietnam => [06:00, 07:00) UTC
@@ -123,9 +127,11 @@ describe("reservation forecast e2e", () => {
     expect(responseB.status).toBe(200);
     expect(bodyB.windowStart).toBe("2026-05-22T06:00:00.000Z");
     expect(bodyB.windowEnd).toBe("2026-05-22T07:00:00.000Z");
-    expect(bodyB.reservedCount).toBe(1);
-    expect(bodyB.reservations).toHaveLength(1);
-    expect(bodyB.reservations[0].id).toBe(reservationOutsideA.id);
+    expect(bodyB.station).toBeDefined();
+    expect(bodyB.station?.id).toBe(station.id);
+    expect(bodyB.station?.currentBikes).toBe(2);
+    expect(bodyB.station?.reservedCount).toBe(1);
+    expect(bodyB.station?.expectedBikes).toBe(1);
   });
 
   it("filters reservations correctly by custom hours window", async () => {
@@ -133,6 +139,8 @@ describe("reservation forecast e2e", () => {
     const token = fixture.auth.makeAccessToken({ userId: staff.id, role: "STAFF" });
 
     const station = await fixture.factories.station({ name: "Custom Window Station" });
+    await fixture.factories.userOrgAssignment({ userId: staff.id, stationId: station.id });
+
     const bikeA = await fixture.factories.bike({ stationId: station.id });
     const bikeB = await fixture.factories.bike({ stationId: station.id });
     const bikeC = await fixture.factories.bike({ stationId: station.id });
@@ -181,9 +189,11 @@ describe("reservation forecast e2e", () => {
     expect(response.status).toBe(200);
     expect(body.windowStart).toBe("2026-05-22T08:00:00.000Z");
     expect(body.windowEnd).toBe("2026-05-22T12:00:00.000Z");
-    expect(body.reservedCount).toBe(1);
-    expect(body.reservations).toHaveLength(1);
-    expect(body.reservations[0].id).toBe(resA.id);
+    expect(body.station).toBeDefined();
+    expect(body.station?.id).toBe(station.id);
+    expect(body.station?.currentBikes).toBe(3);
+    expect(body.station?.reservedCount).toBe(1);
+    expect(body.station?.expectedBikes).toBe(2);
   });
 
   it("handles midnight wrap when endHour <= startHour for custom windows", async () => {
@@ -191,6 +201,8 @@ describe("reservation forecast e2e", () => {
     const token = fixture.auth.makeAccessToken({ userId: staff.id, role: "STAFF" });
 
     const station = await fixture.factories.station({ name: "Midnight Wrap Station" });
+    await fixture.factories.userOrgAssignment({ userId: staff.id, stationId: station.id });
+
     const bikeD = await fixture.factories.bike({ stationId: station.id });
     const bikeE = await fixture.factories.bike({ stationId: station.id });
     const bikeF = await fixture.factories.bike({ stationId: station.id });
@@ -239,10 +251,11 @@ describe("reservation forecast e2e", () => {
     expect(response.status).toBe(200);
     expect(body.windowStart).toBe("2026-05-22T16:00:00.000Z");
     expect(body.windowEnd).toBe("2026-05-22T18:00:00.000Z");
-    expect(body.reservedCount).toBe(2);
-    expect(body.reservations).toHaveLength(2);
-    expect(body.reservations[0].id).toBe(resD.id);
-    expect(body.reservations[1].id).toBe(resE.id);
+    expect(body.station).toBeDefined();
+    expect(body.station?.id).toBe(station.id);
+    expect(body.station?.currentBikes).toBe(3);
+    expect(body.station?.reservedCount).toBe(2);
+    expect(body.station?.expectedBikes).toBe(1);
   });
 
   it("returns 400 Bad Request if only startHour or endHour is provided", async () => {

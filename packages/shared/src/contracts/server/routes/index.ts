@@ -23,6 +23,8 @@ import { suppliersRoutes } from "./suppliers";
 import { technicianTeamsRoutes } from "./technician-teams";
 import { usersRoutes } from "./users";
 import { walletsRoutes } from "./wallets";
+import { systemConfigsRoutes } from "./system-configs";
+
 
 export * from "./agencies";
 export * from "./agency-requests";
@@ -49,6 +51,7 @@ export * from "./suppliers";
 export * from "./technician-teams";
 export * from "./users";
 export * from "./wallets";
+export * from "./system-configs";
 
 export type ServerRoutes = {
   readonly agencies: typeof agenciesRoutes;
@@ -76,6 +79,7 @@ export type ServerRoutes = {
   readonly pricingPolicies: typeof pricingPoliciesRoutes;
   readonly redistribution: typeof redistributionRoutes;
   readonly technicianTeams: typeof technicianTeamsRoutes;
+  readonly systemConfigs: typeof systemConfigsRoutes;
 };
 
 export const serverRoutes: ServerRoutes = {
@@ -104,6 +108,7 @@ export const serverRoutes: ServerRoutes = {
   pricingPolicies: pricingPoliciesRoutes,
   redistribution: redistributionRoutes,
   technicianTeams: technicianTeamsRoutes,
+  systemConfigs: systemConfigsRoutes,
 };
 
 export type ServerRouteKey = keyof typeof serverRoutes;
