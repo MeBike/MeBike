@@ -402,7 +402,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Xuất Kho</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Cho</span>
                   </div>
                   <div className="space-y-3 ml-2">
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
@@ -429,7 +429,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Nhập Kho</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Nhận</span>
                   </div>
                   <div className="space-y-3 ml-2">
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
