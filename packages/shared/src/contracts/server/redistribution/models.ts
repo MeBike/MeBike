@@ -14,6 +14,21 @@ export const RedistributionStatusSchema = z.enum([
   "REVERTED",
 ]);
 
+export const PriorityLevel = {
+  HIGH: "HIGH",
+  MEDIUM: "MEDIUM",
+  LOW: "LOW",
+} as const;
+
+export type PriorityLevel = typeof PriorityLevel[keyof typeof PriorityLevel];
+
+export const PriorityLevelSchema = z.nativeEnum(PriorityLevel);
+
+export const PRIORITY_THRESHOLDS = {
+  HIGH_SCORE_MIN: -2000,
+  MEDIUM_SCORE_MIN: -10000,
+} as const;
+
 export const RedistributionRequestItemSchema = z.object({
   id: z.uuidv7(),
   redistributionRequestId: z.uuidv7(),
@@ -120,6 +135,8 @@ export const RedistributionRequestDetailBaseSchema = z.object({
   completedAt: z.iso.datetime().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  priorityScore: z.number().optional(),
+  priorityLevel: PriorityLevelSchema.optional(),
 });
 
 export const RedistributionRequestDetailSchema

@@ -34,7 +34,9 @@ function mapStationSummary(station: any): StationSummary | null {
   return {
     id: station.id,
     name: station.name,
-  };
+    latitude: station.latitude,
+    longitude: station.longitude,
+  } as any;
 }
 
 function mapStationDetail(station: any): StationDetail | null {
@@ -148,6 +150,8 @@ const summaryUserSelect = {
 const summaryStationSelect = {
   id: true,
   name: true,
+  latitude: true,
+  longitude: true,
 };
 
 export const detailedRedistributionRequestSelect = {
