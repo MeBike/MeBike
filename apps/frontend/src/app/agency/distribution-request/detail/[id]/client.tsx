@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { formatToVNTime } from "@/lib/formatVNDate";
 
 // UI Components
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -42,26 +48,62 @@ import {
   ShieldCheck,
   AlertTriangle,
   ArrowDownToLine,
-  ArrowUpFromLine
+  ArrowUpFromLine,
 } from "lucide-react";
 
 import { getStatusConfig } from "@/columns/bike-colums";
 import type {
   RedistributionRequestDetail,
   RedistributionRequestStatus,
-  User
+  User,
 } from "@/types/DistributionRequest";
 import type { CurrentStation, BikeStatus } from "@/types";
 
 // --- CONFIGS & HELPERS ---
-export const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: string; icon: any }> = {
-  PENDING_APPROVAL: { label: "Chờ phê duyệt", style: "bg-amber-100 text-amber-800 border-amber-200", icon: Clock },
-  APPROVED: { label: "Đã phê duyệt", style: "bg-blue-100 text-blue-800 border-blue-200", icon: ShieldCheck },
-  IN_TRANSIT: { label: "Đang vận chuyển", style: "bg-purple-100 text-purple-800 border-purple-200", icon: Truck },
-  PARTIALLY_COMPLETED: { label: "Hoàn tất một phần", style: "bg-indigo-100 text-indigo-800 border-indigo-200", icon: AlertTriangle },
-  COMPLETED: { label: "Đã hoàn thành", style: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: CheckCircle2 },
-  REJECTED: { label: "Đã từ chối", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
-  CANCELLED: { label: "Đã hủy bỏ", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
+export const STATUS_MAP: Record<
+  RedistributionRequestStatus | "REVERTED",
+  { label: string; style: string; icon: any }
+> = {
+  PENDING_APPROVAL: {
+    label: "Chờ phê duyệt",
+    style: "bg-amber-100 text-amber-800 border-amber-200",
+    icon: Clock,
+  },
+  APPROVED: {
+    label: "Đã phê duyệt",
+    style: "bg-blue-100 text-blue-800 border-blue-200",
+    icon: ShieldCheck,
+  },
+  IN_TRANSIT: {
+    label: "Đang vận chuyển",
+    style: "bg-purple-100 text-purple-800 border-purple-200",
+    icon: Truck,
+  },
+  PARTIALLY_COMPLETED: {
+    label: "Hoàn tất một phần",
+    style: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    icon: AlertTriangle,
+  },
+  COMPLETED: {
+    label: "Đã hoàn thành",
+    style: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    icon: CheckCircle2,
+  },
+  REVERTED: {
+    label: "Đã hoàn xe",
+    style: "bg-orange-100 text-orange-800 border-orange-300",
+    icon: ArrowUpFromLine,
+  },
+  REJECTED: {
+    label: "Đã từ chối",
+    style: "bg-red-100 text-red-800 border-red-200",
+    icon: XCircle,
+  },
+  CANCELLED: {
+    label: "Đã hủy bỏ",
+    style: "bg-red-100 text-red-800 border-red-200",
+    icon: XCircle,
+  },
 };
 
 // --- COMPONENT ---
@@ -89,13 +131,13 @@ export const DistributionRequestDetailClient = ({
   userRole = "AGENCY",
 }: Props) => {
   const router = useRouter();
-  
+
   // States
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
 
@@ -144,7 +186,9 @@ export const DistributionRequestDetailClient = ({
   // --- LOGIC: CHỌN XE ---
   const handleToggleBike = (bikeId: string) => {
     setSelectedBikeIds((prev) =>
-      prev.includes(bikeId) ? prev.filter((id) => id !== bikeId) : [...prev, bikeId]
+      prev.includes(bikeId)
+        ? prev.filter((id) => id !== bikeId)
+        : [...prev, bikeId],
     );
   };
 
@@ -152,7 +196,9 @@ export const DistributionRequestDetailClient = ({
     .filter((item) => !item.deliveredAt)
     .map((item) => item.bike.id);
 
-  const isAllSelected = selectableBikes.length > 0 && selectableBikes.length === selectedBikeIds.length;
+  const isAllSelected =
+    selectableBikes.length > 0 &&
+    selectableBikes.length === selectedBikeIds.length;
 
   const handleToggleAll = () => {
     if (isAllSelected) setSelectedBikeIds([]);
@@ -168,32 +214,105 @@ export const DistributionRequestDetailClient = ({
   const canApproveOrReject = isAgency && isTargetStation;
   const canCancelRequest = isAgency && isSourceStation;
   const canCompleteRequest = isAgency && isTargetStation;
-  
-  const isReceivingStatus = data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
+
+  const isReceivingStatus =
+    data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
   const showCheckboxColumn = isReceivingStatus && canCompleteRequest;
 
-  const statusInfo = STATUS_MAP[data.status] || {
+  // --- LOGIC TRẠNG THÁI & MÀU SẮC ---
+  const statusInfo = STATUS_MAP[data.status as keyof typeof STATUS_MAP] || {
     label: "Không xác định",
     style: "bg-gray-100 border-gray-200 text-gray-800",
-    icon: Clock
+    icon: Clock,
   };
   const StatusIcon = statusInfo.icon;
 
-  const UserProfileMini = ({ user, label }: { user: User, label: string }) => (
+  const isCompleted = data.status === "COMPLETED";
+  const isReverted = data.status === ("REVERTED" as any);
+  const isRejectedOrCancelled =
+    data.status === "REJECTED" || data.status === "CANCELLED";
+  const isTerminal = isCompleted || isReverted || isRejectedOrCancelled;
+
+  // Cấu hình linh hoạt cho Node cuối cùng trên Timeline
+  let TerminalIcon = CheckCircle2;
+  let terminalLabel = "Hoàn tất";
+  let terminalColorClass = "bg-slate-100 text-slate-400";
+  let terminalLabelColor = "text-slate-400";
+  let terminalTimeText = "Chưa hoàn thành";
+
+  if (isCompleted) {
+    TerminalIcon = CheckCircle2;
+    terminalColorClass = "bg-emerald-500 text-white";
+    terminalLabel = "Hoàn tất";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.completedAt || data.updatedAt);
+  } else if (isReverted) {
+    TerminalIcon = ArrowUpFromLine;
+    terminalColorClass = "bg-orange-500 text-white";
+    terminalLabel = "Đã hoàn xe";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.updatedAt);
+  } else if (isRejectedOrCancelled) {
+    TerminalIcon = XCircle;
+    terminalColorClass = "bg-red-500 text-white";
+    terminalLabel = data.status === "REJECTED" ? "Từ chối" : "Đã hủy";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.updatedAt);
+  }
+
+  // Cấu hình thanh Progress Bar
+  let progressWidth = "w-0";
+  let progressColor = "bg-blue-500";
+  if (isReverted) {
+    progressWidth = "w-full";
+    progressColor = "bg-orange-400";
+  } else if (isRejectedOrCancelled) {
+    progressWidth = "w-full";
+    progressColor = "bg-red-400";
+  } else if (isCompleted) {
+    progressWidth = "w-full";
+    progressColor = "bg-blue-500";
+  } else if (data.startedAt) {
+    progressWidth = "w-2/3";
+    progressColor = "bg-blue-500";
+  } else if (data.approvedByUser) {
+    progressWidth = "w-1/3";
+    progressColor = "bg-blue-500";
+  }
+
+  // Cấu hình màu cho Hero Stats
+  const getHeroColor = () => {
+    switch (data.status as string) {
+      case "COMPLETED":
+        return "from-emerald-600 to-emerald-500";
+      case "REVERTED":
+        return "from-orange-500 to-orange-400";
+      case "REJECTED":
+      case "CANCELLED":
+        return "from-red-600 to-red-500";
+      default:
+        return "from-blue-700 to-blue-600";
+    }
+  };
+
+  const UserProfileMini = ({ user, label }: { user: User; label: string }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100">
       <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white font-bold shadow-sm ring-2 ring-white">
-        {user.fullName?.charAt(0).toUpperCase() || "?"}
+        {user?.fullName?.charAt(0).toUpperCase() || "?"}
       </div>
       <div className="flex flex-col overflow-hidden">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
-        <span className="font-bold text-slate-900 text-sm truncate">{user.fullName || "N/A"}</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          {label}
+        </span>
+        <span className="font-bold text-slate-900 text-sm truncate">
+          {user?.fullName || "N/A"}
+        </span>
       </div>
     </div>
   );
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 bg-slate-50/30 min-h-screen">
-      
       {/* ================= HEADER & ACTIONS ================= */}
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between pb-2">
         <div className="space-y-3">
@@ -209,7 +328,9 @@ export const DistributionRequestDetailClient = ({
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
               Yêu cầu #{data.id.substring(0, 8)}
             </h1>
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}>
+            <span
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}
+            >
               <StatusIcon className="h-3.5 w-3.5" />
               {statusInfo.label}
             </span>
@@ -218,15 +339,27 @@ export const DistributionRequestDetailClient = ({
 
         {/* Dynamic Action Buttons based on RBAC */}
         <div className="flex flex-wrap gap-3 pt-2 md:pt-0">
-          
           {/* Trạm đích: Duyệt / Từ chối */}
           {data.status === "PENDING_APPROVAL" && canApproveOrReject && (
             <>
-              <Button variant="destructive" onClick={() => setShowRejectModal(true)} disabled={isProcessing} className="shadow-sm rounded-xl font-medium">
+              <Button
+                variant="destructive"
+                onClick={() => setShowRejectModal(true)}
+                disabled={isProcessing}
+                className="shadow-sm rounded-xl font-medium"
+              >
                 <XCircle className="mr-2 h-4 w-4" /> Từ chối
               </Button>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 shadow-sm rounded-xl font-medium" onClick={() => handleAction(onApprove)} disabled={isProcessing}>
-                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle className="mr-2 h-4 w-4" />}
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 shadow-sm rounded-xl font-medium"
+                onClick={() => handleAction(onApprove)}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                )}
                 Duyệt yêu cầu
               </Button>
             </>
@@ -234,7 +367,12 @@ export const DistributionRequestDetailClient = ({
 
           {/* Trạm xuất: Hủy yêu cầu */}
           {data.status === "PENDING_APPROVAL" && canCancelRequest && (
-            <Button variant="destructive" onClick={() => setIsCancelDialogOpen(true)} disabled={isProcessing} className="shadow-sm rounded-xl font-medium">
+            <Button
+              variant="destructive"
+              onClick={() => setIsCancelDialogOpen(true)}
+              disabled={isProcessing}
+              className="shadow-sm rounded-xl font-medium"
+            >
               <XCircle className="mr-2 h-4 w-4" /> Hủy yêu cầu
             </Button>
           )}
@@ -246,17 +384,29 @@ export const DistributionRequestDetailClient = ({
                 variant="outline"
                 className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 shadow-sm rounded-xl font-medium"
                 onClick={() => handleAction(() => onBack())}
-                disabled={isProcessing || selectedBikeIds.length === 0}
+                disabled={isProcessing}
               >
-                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
+                {isProcessing ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                )}
                 Hoàn xe
               </Button>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-xl font-medium transition-all active:scale-95"
-                onClick={() => handleAction(() => onComplete({ completedBikeIds: selectedBikeIds }))}
+                onClick={() =>
+                  handleAction(() =>
+                    onComplete({ completedBikeIds: selectedBikeIds }),
+                  )
+                }
                 disabled={isProcessing || selectedBikeIds.length === 0}
               >
-                {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCheck className="mr-2 h-4 w-4" />}
+                {isProcessing ? (
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                ) : (
+                  <CheckCheck className="mr-2 h-4 w-4" />
+                )}
                 Hoàn tất ({selectedBikeIds.length} xe)
               </Button>
             </>
@@ -269,7 +419,11 @@ export const DistributionRequestDetailClient = ({
               onClick={() => handleAction(onStartTransit)}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Truck className="mr-2 h-4 w-4" />}
+              {isProcessing ? (
+                <Loader2 className="animate-spin mr-2 h-4 w-4" />
+              ) : (
+                <Truck className="mr-2 h-4 w-4" />
+              )}
               Bắt đầu điều phối
             </Button>
           )}
@@ -281,7 +435,9 @@ export const DistributionRequestDetailClient = ({
         <CardContent className="p-6 md:p-8">
           <div className="relative flex flex-col md:flex-row justify-between w-full">
             <div className="hidden md:block absolute top-5 left-8 right-8 h-1 bg-slate-100 rounded-full z-0">
-               <div className={`h-full bg-blue-500 transition-all duration-500 rounded-full ${data.completedAt ? 'w-full' : data.startedAt ? 'w-2/3' : data.approvedByUser ? 'w-1/3' : 'w-0'}`}></div>
+              <div
+                className={`h-full transition-all duration-500 rounded-full ${progressColor} ${progressWidth}`}
+              ></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2 mb-6 md:mb-0">
@@ -290,18 +446,28 @@ export const DistributionRequestDetailClient = ({
               </div>
               <div className="text-left md:text-center mt-2">
                 <p className="font-bold text-slate-900 text-sm">Tạo yêu cầu</p>
-                <p className="text-xs text-slate-500 mt-1">{formatToVNTime(data.createdAt)}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {formatToVNTime(data.createdAt)}
+                </p>
               </div>
             </div>
 
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2 mb-6 md:mb-0">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.approvedByUser ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.approvedByUser ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}
+              >
                 <ShieldCheck className="h-5 w-5" />
               </div>
               <div className="text-left md:text-center mt-2">
-                <p className={`font-bold text-sm ${data.approvedByUser ? 'text-slate-900' : 'text-slate-400'}`}>Phê duyệt</p>
+                <p
+                  className={`font-bold text-sm ${data.approvedByUser ? "text-slate-900" : "text-slate-400"}`}
+                >
+                  Phê duyệt
+                </p>
                 {data.approvedByUser ? (
-                  <p className="text-xs text-slate-500 mt-1">{formatToVNTime(data.updatedAt)}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formatToVNTime(data.updatedAt)}
+                  </p>
                 ) : (
                   <p className="text-xs text-slate-400 mt-1">Chờ xử lý</p>
                 )}
@@ -309,30 +475,43 @@ export const DistributionRequestDetailClient = ({
             </div>
 
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2 mb-6 md:mb-0">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.startedAt ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.startedAt ? "bg-purple-600 text-white" : "bg-slate-100 text-slate-400"}`}
+              >
                 <Truck className="h-5 w-5" />
               </div>
               <div className="text-left md:text-center mt-2">
-                <p className={`font-bold text-sm ${data.startedAt ? 'text-slate-900' : 'text-slate-400'}`}>Vận chuyển</p>
+                <p
+                  className={`font-bold text-sm ${data.startedAt ? "text-slate-900" : "text-slate-400"}`}
+                >
+                  Vận chuyển
+                </p>
                 {data.startedAt ? (
-                  <p className="text-xs text-slate-500 mt-1">{formatToVNTime(data.startedAt)}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formatToVNTime(data.startedAt)}
+                  </p>
                 ) : (
                   <p className="text-xs text-slate-400 mt-1">Chưa bắt đầu</p>
                 )}
               </div>
             </div>
 
+            {/* --- Node Kết Thúc Động (Hoàn tất / Đã hoàn / Từ chối) --- */}
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.completedAt ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                <CheckCircle2 className="h-5 w-5" />
+              <div
+                className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${terminalColorClass}`}
+              >
+                <TerminalIcon className="h-5 w-5" />
               </div>
               <div className="text-left md:text-center mt-2">
-                <p className={`font-bold text-sm ${data.completedAt ? 'text-slate-900' : 'text-slate-400'}`}>Hoàn tất</p>
-                {data.completedAt ? (
-                  <p className="text-xs text-emerald-600 mt-1 font-medium">{formatToVNTime(data.completedAt)}</p>
-                ) : (
-                  <p className="text-xs text-slate-400 mt-1">Chưa hoàn thành</p>
-                )}
+                <p className={`font-bold text-sm ${terminalLabelColor}`}>
+                  {terminalLabel}
+                </p>
+                <p
+                  className={`text-xs mt-1 font-medium ${isTerminal ? terminalColorClass.split(" ")[1] : "text-slate-400"}`}
+                >
+                  {terminalTimeText}
+                </p>
               </div>
             </div>
           </div>
@@ -342,14 +521,15 @@ export const DistributionRequestDetailClient = ({
       {/* ================= SPLIT LAYOUT: LỘ TRÌNH & INVENTORY ================= */}
       <Card className="shadow-sm border-slate-200 overflow-hidden bg-white rounded-2xl">
         <div className="flex flex-col lg:flex-row">
-          
           {/* CỘT TRÁI (2/3) */}
           <div className="flex-1 p-6 lg:p-8 space-y-8">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
                 <Route className="h-5 w-5" />
               </div>
-              <h2 className="text-lg font-bold text-slate-800">Lộ trình & Tuyến đường</h2>
+              <h2 className="text-lg font-bold text-slate-800">
+                Lộ trình & Tuyến đường
+              </h2>
             </div>
 
             <div className="relative pl-4 pt-2">
@@ -363,21 +543,35 @@ export const DistributionRequestDetailClient = ({
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
                       Trạm xuất phát (Lấy xe)
                     </p>
-                    <p className="font-bold text-slate-900 text-lg">{data.sourceStation.name}</p>
-                    <p className="text-sm text-slate-500 mt-1">{data.sourceStation.address}</p>
+                    <p className="font-bold text-slate-900 text-lg">
+                      {data.sourceStation.name}
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {data.sourceStation.address}
+                    </p>
                   </div>
                 </div>
 
                 <div className="relative z-10 flex items-start gap-5">
-                  <div className="h-12 w-12 shrink-0 rounded-full bg-white border-[3px] border-blue-500 flex items-center justify-center shadow-sm">
-                    <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                  <div
+                    className={`h-12 w-12 shrink-0 rounded-full bg-white border-[3px] flex items-center justify-center shadow-sm ${isReverted ? "border-orange-500" : "border-blue-500"}`}
+                  >
+                    <div
+                      className={`h-3 w-3 rounded-full ${isReverted ? "bg-orange-500" : "bg-blue-500 animate-pulse"}`}
+                    ></div>
                   </div>
                   <div className="pt-1.5">
-                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <p
+                      className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? "text-orange-600" : "text-blue-600"}`}
+                    >
                       Trạm tiếp nhận (Trả xe)
                     </p>
-                    <p className="font-bold text-slate-900 text-lg">{data.targetStation.name}</p>
-                    <p className="text-sm text-slate-500 mt-1">{data.targetStation.address}</p>
+                    <p className="font-bold text-slate-900 text-lg">
+                      {data.targetStation.name}
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {data.targetStation.address}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -389,9 +583,8 @@ export const DistributionRequestDetailClient = ({
                 <Bike className="h-4 w-4 text-slate-400" />
                 Biến động sức chứa tại trạm
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
                 {/* Trạm Xuất */}
                 <div className="border border-slate-100 rounded-xl p-5 shadow-sm relative overflow-hidden bg-white">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-400"></div>
@@ -399,21 +592,54 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Cho</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
+                      Trạm Cho
+                    </span>
                   </div>
                   <div className="space-y-3 ml-2">
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Trước điều phối</span>
-                      <span className="font-semibold text-slate-700">{data.sourceStation?.availableBikesBefore || data.sourceAvailableBikesBefore} xe</span>
+                      <span className="font-semibold text-slate-700">
+                        {data.sourceStation?.availableBikesBefore ??
+                          (data as any).sourceAvailableBikesBefore ??
+                          0}{" "}
+                        xe
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Số xe xuất đi</span>
-                      <span className="font-bold text-orange-600">-{data.sourceStation?.bikesForRedistribution || data.requestedQuantity} xe</span>
+                      <span className="font-bold text-orange-600">
+                        -
+                        {data.sourceStation?.bikesForRedistribution ??
+                          data.requestedQuantity ??
+                          0}{" "}
+                        xe
+                      </span>
                     </div>
+
+                    {/* HIỂN THỊ DÒNG NÀY NẾU CÓ XE HOÀN TRẢ */}
+                    {(data.revertedBikes > 0 || isReverted) && (
+                      <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span className="text-slate-500">
+                          Xe hoàn trả (Nhập lại)
+                        </span>
+                        <span className="font-bold text-emerald-600">
+                          +
+                          {isReverted
+                            ? data.requestedQuantity
+                            : data.revertedBikes}{" "}
+                          xe
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes || data.sourceStation?.availableBikesAfter || (data.sourceAvailableBikesBefore - data.requestedQuantity)} xe
+                        {data.sourceStation?.actualAvailableBikes ?? 
+                         ((data.sourceAvailableBikesBefore ?? 0) - 
+                          (data.requestedQuantity ?? 0) + 
+                          (isReverted ? data.requestedQuantity : (data.revertedBikes ?? 0)))} xe
                       </span>
                     </div>
                   </div>
@@ -426,24 +652,49 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Nhận</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
+                      Trạm Nhận
+                    </span>
                   </div>
                   <div className="space-y-3 ml-2">
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Trước điều phối</span>
-                      <span className="font-semibold text-slate-700">{data.targetStation?.availableBikesBefore || data.targetAvailableBikesBefore} xe</span>
+                      <span className="font-semibold text-slate-700">
+                        {data.targetStation?.availableBikesBefore ??
+                          (data as any).targetAvailableBikesBefore ??
+                          0}{" "}
+                        xe
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
-                      <span className="text-slate-500">Thực nhận / Yêu cầu</span>
+                      <span className="text-slate-500">
+                        Thực nhận / Yêu cầu
+                      </span>
                       <div className="text-right">
-                        <span className="font-bold text-blue-600">{data.targetStation?.actualReceivedBikes || 0}</span>
-                        <span className="text-slate-400 font-medium"> / {data.requestedQuantity} xe</span>
+                        <span
+                          className={`font-bold ${isReverted && successfulBikes === 0 ? "text-slate-400" : "text-blue-600"}`}
+                        >
+                          {data.targetStation?.actualReceivedBikes ??
+                            successfulBikes}
+                        </span>
+                        <span className="text-slate-400 font-medium">
+                          {" "}
+                          / {data.requestedQuantity} xe
+                        </span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">
+                        Hiện tại / Sau ĐP
+                      </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.targetStation?.actualAvailableBikes || data.targetStation?.availableBikesAfter || (data.targetAvailableBikesBefore + data.requestedQuantity)} xe
+                        {data.targetStation?.actualAvailableBikes ??
+                          (data.targetStation?.availableBikesBefore ??
+                            (data as any).targetAvailableBikesBefore ??
+                            0) +
+                            (data.targetStation?.actualReceivedBikes ??
+                              successfulBikes)}{" "}
+                        xe
                       </span>
                     </div>
                   </div>
@@ -454,27 +705,41 @@ export const DistributionRequestDetailClient = ({
 
           {/* CỘT PHẢI (1/3) */}
           <div className="w-full lg:w-[400px] bg-slate-50 p-6 lg:p-8 border-t lg:border-t-0 lg:border-l border-slate-200 flex flex-col gap-6">
-            
             <div className="space-y-3">
-              <div className="bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+              <div
+                className={`bg-gradient-to-br ${getHeroColor()} rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-colors`}
+              >
                 <div className="relative z-10">
-                  <span className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1 block">Yêu cầu điều phối</span>
+                  <span className="text-white/80 text-xs font-bold uppercase tracking-wider mb-1 block">
+                    Yêu cầu điều phối
+                  </span>
                   <div className="text-5xl font-extrabold mt-1 flex items-baseline gap-2">
-                    {data.requestedQuantity} <span className="text-xl font-medium opacity-80">xe</span>
+                    {data.requestedQuantity}{" "}
+                    <span className="text-xl font-medium opacity-80">xe</span>
                   </div>
                 </div>
                 <Bike className="absolute -bottom-4 -right-2 w-28 h-28 text-white opacity-10 rotate-[-10deg]" />
               </div>
 
-              {data.revertedBikes > 0 && (
-                <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
+              {(data.revertedBikes > 0 || isReverted) && (
+                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
                   <div>
-                    <span className="text-red-600/80 text-xs font-bold uppercase tracking-wider block">Xe bị hoàn trả</span>
-                    <span className="text-red-700 font-bold text-2xl">{data.revertedBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-red-600/80 text-xs font-bold uppercase tracking-wider block">
+                      Xe bị hoàn trả
+                    </span>
+                    <span className="text-red-700 font-bold text-2xl">
+                      {isReverted ? data.requestedQuantity : data.revertedBikes}{" "}
+                      <span className="text-sm">xe</span>
+                    </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Bàn giao thực tế</span>
-                    <span className="text-emerald-700 font-bold text-2xl">{successfulBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">
+                      Thực nhận
+                    </span>
+                    <span className="text-emerald-700 font-bold text-2xl">
+                      {isReverted ? 0 : successfulBikes}{" "}
+                      <span className="text-sm">xe</span>
+                    </span>
                   </div>
                 </div>
               )}
@@ -492,10 +757,28 @@ export const DistributionRequestDetailClient = ({
             </div>
 
             <div className="pt-4 border-t border-slate-200 space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Nhân sự thực hiện</h4>
-              {data.requestedByUser && <UserProfileMini user={data.requestedByUser} label="Người tạo yêu cầu" />}
-              {data.approvedByUser && <UserProfileMini user={data.approvedByUser} label="Người phê duyệt" />}
-              {data.revertedByUser && data.revertedBikes > 0 && <UserProfileMini user={data.revertedByUser} label="Người báo hoàn trả" />}
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+                Nhân sự thực hiện
+              </h4>
+              {data.requestedByUser && (
+                <UserProfileMini
+                  user={data.requestedByUser}
+                  label="Người tạo yêu cầu"
+                />
+              )}
+              {data.approvedByUser && (
+                <UserProfileMini
+                  user={data.approvedByUser}
+                  label="Người phê duyệt"
+                />
+              )}
+              {data.revertedByUser &&
+                (data.revertedBikes > 0 || isReverted) && (
+                  <UserProfileMini
+                    user={data.revertedByUser}
+                    label="Người báo hoàn trả"
+                  />
+                )}
             </div>
           </div>
         </div>
@@ -512,7 +795,8 @@ export const DistributionRequestDetailClient = ({
               </CardTitle>
               <CardDescription className="mt-1">
                 Tổng cộng có {data.items?.length || 0} xe được ghi nhận.
-                {showCheckboxColumn && " Tích chọn các xe bên dưới để hoàn tất bàn giao."}
+                {showCheckboxColumn &&
+                  " Tích chọn các xe bên dưới để hoàn tất bàn giao."}
               </CardDescription>
             </div>
           </div>
@@ -532,26 +816,41 @@ export const DistributionRequestDetailClient = ({
                     />
                   </TableHead>
                 )}
-                <TableHead className="w-[80px] text-center font-bold text-slate-600">STT</TableHead>
-                <TableHead className="font-bold text-slate-600">Mã phương tiện</TableHead>
-                <TableHead className="font-bold text-slate-600">Trạng thái hiện tại</TableHead>
-                <TableHead className="font-bold text-slate-600 text-right pr-6">Thời gian bàn giao</TableHead>
+                <TableHead className="w-[80px] text-center font-bold text-slate-600">
+                  STT
+                </TableHead>
+                <TableHead className="font-bold text-slate-600">
+                  Mã phương tiện
+                </TableHead>
+                <TableHead className="font-bold text-slate-600">
+                  Trạng thái hiện tại
+                </TableHead>
+                <TableHead className="font-bold text-slate-600 text-right pr-6">
+                  Thời gian bàn giao
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.items && data.items.length > 0 ? (
                 data.items.map((item, index) => {
-                  const { label, color } = getStatusConfig(item.bike.status as BikeStatus);
+                  const { label, color } = getStatusConfig(
+                    item.bike.status as BikeStatus,
+                  );
                   const isChecked = selectedBikeIds.includes(item.bike.id);
-                  
+
                   return (
-                    <TableRow key={item.id} className={`transition-colors ${isChecked ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}>
+                    <TableRow
+                      key={item.id}
+                      className={`transition-colors ${isChecked ? "bg-blue-50/50" : "hover:bg-slate-50"}`}
+                    >
                       {showCheckboxColumn && (
                         <TableCell className="text-center">
                           {!item.deliveredAt ? (
                             <Checkbox
                               checked={isChecked}
-                              onCheckedChange={() => handleToggleBike(item.bike.id)}
+                              onCheckedChange={() =>
+                                handleToggleBike(item.bike.id)
+                              }
                               className="border-slate-300 data-[state=checked]:bg-blue-600"
                             />
                           ) : (
@@ -559,7 +858,9 @@ export const DistributionRequestDetailClient = ({
                           )}
                         </TableCell>
                       )}
-                      <TableCell className="text-center font-medium text-slate-400">{index + 1}</TableCell>
+                      <TableCell className="text-center font-medium text-slate-400">
+                        {index + 1}
+                      </TableCell>
                       <TableCell>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 text-slate-700 font-mono text-sm font-bold shadow-sm">
                           <Bike className="h-3.5 w-3.5 text-slate-400" />
@@ -567,7 +868,9 @@ export const DistributionRequestDetailClient = ({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${color}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${color}`}
+                        >
                           {label}
                         </span>
                       </TableCell>
@@ -578,7 +881,9 @@ export const DistributionRequestDetailClient = ({
                             {formatToVNTime(item.deliveredAt)}
                           </span>
                         ) : (
-                          <span className="text-slate-400 italic text-sm font-normal">Chưa bàn giao</span>
+                          <span className="text-slate-400 italic text-sm font-normal">
+                            Chưa bàn giao
+                          </span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -586,10 +891,15 @@ export const DistributionRequestDetailClient = ({
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={showCheckboxColumn ? 5 : 4} className="h-40 text-center">
+                  <TableCell
+                    colSpan={showCheckboxColumn ? 5 : 4}
+                    className="h-40 text-center"
+                  >
                     <div className="flex flex-col items-center justify-center text-slate-400 space-y-3">
                       <Bike className="h-10 w-10 text-slate-200" />
-                      <p className="font-medium text-slate-500">Chưa có danh sách xe cụ thể</p>
+                      <p className="font-medium text-slate-500">
+                        Chưa có danh sách xe cụ thể
+                      </p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -613,16 +923,30 @@ export const DistributionRequestDetailClient = ({
               className="resize-none focus-visible:ring-red-500 rounded-xl"
               rows={4}
             />
-            <p className={`text-xs text-right font-medium ${isValidReject ? "text-emerald-600" : "text-rose-500"}`}>
+            <p
+              className={`text-xs text-right font-medium ${isValidReject ? "text-emerald-600" : "text-rose-500"}`}
+            >
               {rejectReason.trim().length} / 10 ký tự
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectModal(false)} disabled={isProcessing} className="rounded-xl">
+            <Button
+              variant="outline"
+              onClick={() => setShowRejectModal(false)}
+              disabled={isProcessing}
+              className="rounded-xl"
+            >
               Hủy
             </Button>
-            <Button variant="destructive" onClick={handleRejectSubmit} disabled={isProcessing || !isValidReject} className="rounded-xl">
-              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              variant="destructive"
+              onClick={handleRejectSubmit}
+              disabled={isProcessing || !isValidReject}
+              className="rounded-xl"
+            >
+              {isProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Xác nhận từ chối
             </Button>
           </DialogFooter>
@@ -643,16 +967,30 @@ export const DistributionRequestDetailClient = ({
               className="resize-none focus-visible:ring-red-500 rounded-xl"
               rows={4}
             />
-            <p className={`text-xs text-right font-medium ${isValidCancelReason ? "text-emerald-600" : "text-rose-500"}`}>
+            <p
+              className={`text-xs text-right font-medium ${isValidCancelReason ? "text-emerald-600" : "text-rose-500"}`}
+            >
               {cancelReason.trim().length} / 10 ký tự
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} disabled={isProcessing} className="rounded-xl">
+            <Button
+              variant="outline"
+              onClick={() => setIsCancelDialogOpen(false)}
+              disabled={isProcessing}
+              className="rounded-xl"
+            >
               Đóng
             </Button>
-            <Button variant="destructive" onClick={handleCancelSubmit} disabled={isProcessing || !isValidCancelReason} className="rounded-xl">
-              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubmit}
+              disabled={isProcessing || !isValidCancelReason}
+              className="rounded-xl"
+            >
+              {isProcessing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Xác nhận hủy
             </Button>
           </DialogFooter>

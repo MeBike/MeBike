@@ -274,4 +274,11 @@ export const distributionRequestService = {
     );
     return response;
   },
+  revertRemainingBike : async ({requestId} : {requestId : string}) : Promise<AxiosResponse<RedistributionRequestDetailForApprove>> => {
+    const response = await fetchHttpClient.post<RedistributionRequestDetailForApprove>(
+      ENDPOINT.DISTRIBUTION_REQUEST.REVERT_REMAINING_BIKE(requestId),
+    );
+    return response;
+  }
+
 };

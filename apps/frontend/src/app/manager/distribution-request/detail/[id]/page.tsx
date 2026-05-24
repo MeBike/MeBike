@@ -15,7 +15,8 @@ const DistributionRequestDetailPage = () => {
     getManagerViewDistributionRequestDetail,
     approveDistributeRequest,
     rejectDistributeRequest,
-    completeDistributeRequest
+    completeDistributeRequest,
+    managerRevertRemainingBike,
   } = useDistributionRequest({
     id: id,
     hasToken: true,
@@ -58,6 +59,7 @@ const DistributionRequestDetailPage = () => {
   
   return (
     <DistributionRequestDetailClient 
+      onBack={() => managerRevertRemainingBike(id)}
       listStation={listStation}
       data={managerViewDistributionRequestDetail.data}
       onApprove={() => approveDistributeRequest(id)}

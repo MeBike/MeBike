@@ -6,12 +6,9 @@ import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { DistributionRequestDetailClient } from "./client";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { useStationActions } from "@/hooks/use-station";
-import { useAuth } from "@/providers/auth-providers";
-import { DetailUser } from "@/types";
 const DistributionRequestDetailPage = () => {
   const params = useParams();
   const id = params.id as string;
-  const { user } = useAuth();
   const {
     agencyViewDistributionRequestDetail,
     isLoadingAgencyViewDistributionRequestDetail,
@@ -21,6 +18,7 @@ const DistributionRequestDetailPage = () => {
     agencyApproveDistributeRequest,
     agencyRejectDistributeRequest,
     agencyCompleteDistributeRequest,
+    agencyRevertRemainingBike
   } = useDistributionRequest({
     id: id,
     hasToken: true,
@@ -63,6 +61,7 @@ const DistributionRequestDetailPage = () => {
   
   return (
     <DistributionRequestDetailClient 
+      onBack={() => agencyRevertRemainingBike(id)}
       listStation={listStation}
       data={agencyViewDistributionRequestDetail.data}
       onApprove={() => agencyApproveDistributeRequest(id)}

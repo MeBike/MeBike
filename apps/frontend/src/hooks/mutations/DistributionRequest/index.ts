@@ -4,3 +4,4 @@ export * from "./useCreateDistributionRequestMutation";
 export * from "./useCancelDistributionRequestMutation";
 export * from "./useStartTransitMutation";
 export * from "./useCompleteTransit";
+export * from "./useRevertRemainingBikeMutation"

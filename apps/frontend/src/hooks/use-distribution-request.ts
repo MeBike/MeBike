@@ -1,4 +1,4 @@
-import { useCancelAgencyRequestMutation } from './mutations/Agency/useCancelAgencyRequest';
+import { useCancelAgencyRequestMutation } from "./mutations/Agency/useCancelAgencyRequest";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
@@ -24,16 +24,20 @@ import {
   useCreateistributionRequestMutation,
   useCancelDistributionRequestMutation,
   useStartTransitDistributionRequestMutation,
+  useRevertRemainingBikeMutation,
   useCompleteTransitDistributionRequestMutation,
-} from "@mutations"
+} from "@mutations";
 import { useRouter } from "next/navigation";
 import { HTTP_STATUS } from "@/constants";
-import { getErrorMessageFromDistributionRequestCode, getAxiosErrorCodeMessage } from "@utils";
-import { BikeStatus } from '@/types';
+import {
+  getErrorMessageFromDistributionRequestCode,
+  getAxiosErrorCodeMessage,
+} from "@utils";
+import { BikeStatus } from "@/types";
 interface DistributionRequestActionProps {
   page?: number;
   pageSize?: number;
-  bike_status ?: BikeStatus;
+  bike_status?: BikeStatus;
   status?: RedistributionRequestStatus;
   id?: string;
   hasToken: boolean;
@@ -52,7 +56,7 @@ export const useDistributionRequest = ({
   approvedByUserId,
   sourceStationId,
   targetStationId,
-  bike_status
+  bike_status,
 }: DistributionRequestActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -106,24 +110,28 @@ export const useDistributionRequest = ({
       return;
     }
     refetchAdminViewDistributionRequest();
-  }, [refetchAdminViewDistributionRequest, page, pageSize, status]);
+  }, [refetchAdminViewDistributionRequest, hasToken,router]);
   const getStaffViewDistributionRequest = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchStaffViewDistributionRequest();
-  }, [refetchStaffViewDistributionRequest, page, pageSize, status]);
+  }, [refetchStaffViewDistributionRequest,hasToken,router]);
   const getAgencyViewDistributionRequest = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchAgencyViewDistributionRequest();
-  }, [refetchAgencyViewDistributionRequest, page, pageSize, status]);
+  }, [refetchAgencyViewDistributionRequest, hasToken,router]);
   const getManagerViewDistributionRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
     refetchManagerViewDistributionRequest();
-  }, [refetchManagerViewDistributionRequest, page, pageSize, status]);
+  }, [refetchManagerViewDistributionRequest, hasToken,router]);
   const {
     data: adminViewDistributionRequestDetail,
     refetch: refetchAdminViewDistributionRequestDetail,
@@ -149,25 +157,25 @@ export const useDistributionRequest = ({
       router.push("/login");
     }
     refetchAdminViewDistributionRequestDetail();
-  }, [refetchAdminViewDistributionRequestDetail, id]);
+  }, [refetchAdminViewDistributionRequestDetail, hasToken,router]);
   const getStaffViewDistributionRequestDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchStaffViewDistributionRequestDetail();
-  }, [refetchStaffViewDistributionRequestDetail, id]);
+  }, [refetchStaffViewDistributionRequestDetail, hasToken,router]);
   const getAgencyViewDistributionRequestDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchAgencyViewDistributionRequestDetail();
-  }, [refetchAgencyViewDistributionRequestDetail, id]);
+  }, [refetchAgencyViewDistributionRequestDetail, hasToken,router]);
   const getManagerViewDistributionRequestDetail = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchManagerViewDistributionRequestDetail();
-  }, [refetchManagerViewDistributionRequestDetail, id]);
+  }, [refetchManagerViewDistributionRequestDetail, hasToken,router]);
   const useApproveDistributeRequest = useApproveDistributionRequestMutation();
   const useRejectDistributeRequest = useRejectDistributionRequestMutation();
   const useCancelDistributionRequest = useCancelDistributionRequestMutation();
@@ -175,15 +183,15 @@ export const useDistributionRequest = ({
   const useStartTransit = useStartTransitDistributionRequestMutation();
   const useCompleteTransit = useCompleteTransitDistributionRequestMutation();
   const completeDistributeRequest = useCallback(
-    async (id:string , data : {completedBikeIds:string[]}) => {
+    async (id: string, data: { completedBikeIds: string[] }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useCompleteTransit.mutateAsync({id,data});
+        const result = await useCompleteTransit.mutateAsync({ id, data });
         if (result.status === HTTP_STATUS.OK) {
-          toast.success("Nhận xe được điều phối tới trạm thành công");;
+          toast.success("Nhận xe được điều phối tới trạm thành công");
           getManagerViewDistributionRequest();
           getManagerViewDistributionRequestDetail();
         }
@@ -193,18 +201,10 @@ export const useDistributionRequest = ({
         throw error;
       }
     },
-    [
-      useCompleteTransit,
-      hasToken,
-      router,
-      page,
-      pageSize,
-      status,
-      queryClient,
-    ],
+    [useCompleteTransit, hasToken, router, getManagerViewDistributionRequest, getManagerViewDistributionRequestDetail],
   );
   const approveDistributeRequest = useCallback(
-    async (id:string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -226,14 +226,12 @@ export const useDistributionRequest = ({
       useApproveDistributeRequest,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      getManagerViewDistributionRequest,
+      getManagerViewDistributionRequestDetail
     ],
   );
   const startTransitDistributionRequest = useCallback(
-    async (id:string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -257,23 +255,24 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useApproveDistributeRequest,
+      useStartTransit,
+      getStaffViewDistributionRequestDetail,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      queryClient
     ],
   );
   const rejectDistributeRequest = useCallback(
-    async (id:string , data : {reason:string}) => {
+    async (id: string, data: { reason: string }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useRejectDistributeRequest.mutateAsync({id,data});
+        const result = await useRejectDistributeRequest.mutateAsync({
+          id,
+          data,
+        });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu phân bổ thành công");
           getManagerViewDistributionRequest();
@@ -289,20 +288,21 @@ export const useDistributionRequest = ({
       useRejectDistributeRequest,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      getManagerViewDistributionRequest,
+      getManagerViewDistributionRequestDetail
     ],
   );
   const cancelDistributeRequest = useCallback(
-    async (id:string , data : {reason:string}) => {
+    async (id: string, data: { reason: string }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useCancelDistributionRequest.mutateAsync({id,data});
+        const result = await useCancelDistributionRequest.mutateAsync({
+          id,
+          data,
+        });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Hủy bỏ yêu điều phối xe thành công");
           getStaffViewDistributionRequest();
@@ -315,17 +315,15 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useRejectDistributeRequest,
+      useCancelDistributionRequest,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      getStaffViewDistributionRequest,
+      getStaffViewDistributionRequestDetail
     ],
   );
   const createDistributeRequest = useCallback(
-    async (data:CreateRedistributionRequestInput) => {
+    async (data: CreateRedistributionRequestInput) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -336,6 +334,9 @@ export const useDistributionRequest = ({
           toast.success("Tạo yêu cầu điều phối xe thành công");
           queryClient.invalidateQueries({
             queryKey: ["distribution-request", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["my","station-detail"],
           });
         }
       } catch (error) {
@@ -348,22 +349,19 @@ export const useDistributionRequest = ({
       useCreateDistributeRequest,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
       queryClient,
     ],
   );
   const agencyCompleteDistributeRequest = useCallback(
-    async (id:string , data : {completedBikeIds:string[]}) => {
+    async (id: string, data: { completedBikeIds: string[] }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useCompleteTransit.mutateAsync({id,data});
+        const result = await useCompleteTransit.mutateAsync({ id, data });
         if (result.status === HTTP_STATUS.OK) {
-          toast.success("Nhận xe được điều phối tới trạm thành công");;
+          toast.success("Nhận xe được điều phối tới trạm thành công");
           getAgencyViewDistributionRequest();
           getAgencyViewDistributionRequestDetail();
         }
@@ -373,18 +371,10 @@ export const useDistributionRequest = ({
         throw error;
       }
     },
-    [
-      useCompleteTransit,
-      hasToken,
-      router,
-      page,
-      pageSize,
-      status,
-      queryClient,
-    ],
+    [useCompleteTransit, hasToken, router, getAgencyViewDistributionRequest,getAgencyViewDistributionRequestDetail],
   );
   const agencyApproveDistributeRequest = useCallback(
-    async (id:string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -406,14 +396,12 @@ export const useDistributionRequest = ({
       useApproveDistributeRequest,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      getAgencyViewDistributionRequest,
+      getAgencyViewDistributionRequestDetail
     ],
   );
   const agencyStartTransitDistributionRequest = useCallback(
-    async (id:string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -432,23 +420,24 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useApproveDistributeRequest,
+      getAgencyViewDistributionRequest,
+      getAgencyViewDistributionRequestDetail,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      useStartTransit
     ],
   );
   const agencyRejectDistributeRequest = useCallback(
-    async (id:string , data : {reason:string}) => {
+    async (id: string, data: { reason: string }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useRejectDistributeRequest.mutateAsync({id,data});
+        const result = await useRejectDistributeRequest.mutateAsync({
+          id,
+          data,
+        });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Từ chối yêu cầu phân bổ thành công");
           getAgencyViewDistributionRequest();
@@ -461,23 +450,24 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useRejectDistributeRequest,
+      getAgencyViewDistributionRequest,
+      getAgencyViewDistributionRequestDetail,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      useRejectDistributeRequest,
     ],
   );
   const agencyCancelDistributeRequest = useCallback(
-    async (id:string , data : {reason:string}) => {
+    async (id: string, data: { reason: string }) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       try {
-        const result = await useCancelDistributionRequest.mutateAsync({id,data});
+        const result = await useCancelDistributionRequest.mutateAsync({
+          id,
+          data,
+        });
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Hủy bỏ yêu điều phối xe thành công");
           getAgencyViewDistributionRequest();
@@ -490,17 +480,15 @@ export const useDistributionRequest = ({
       }
     },
     [
-      useRejectDistributeRequest,
+      useCancelDistributionRequest,
+      getAgencyViewDistributionRequest,
+      getAgencyViewDistributionRequestDetail,
       hasToken,
       router,
-      page,
-      pageSize,
-      status,
-      queryClient,
     ],
   );
   const agencyCreateDistributeRequest = useCallback(
-    async (data:CreateRedistributionRequestInput) => {
+    async (data: CreateRedistributionRequestInput) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -519,12 +507,9 @@ export const useDistributionRequest = ({
     },
     [
       useCreateDistributeRequest,
+      getAgencyViewDistributionRequest,
       hasToken,
-      router,
-      page,
-      pageSize,
-      status,
-      queryClient,
+      router
     ],
   );
   const {
@@ -534,39 +519,97 @@ export const useDistributionRequest = ({
   } = useGetStaffViewHistoryDistributionRequestQuery({
     page: page,
     pageSize: pageSize,
-    status : bike_status,
-    targetStationId : targetStationId,
+    status: bike_status,
+    targetStationId: targetStationId,
   });
-  const {data: agencyViewDistributionRequestHistory,refetch: refetchAgencyViewDistributionRequestHistory,isFetching: isFetchingAgencyViewDistributionRequestHistory,} = useGetAgencyViewHistoryDistributionRequestQuery({
+  const {
+    data: agencyViewDistributionRequestHistory,
+    refetch: refetchAgencyViewDistributionRequestHistory,
+    isFetching: isFetchingAgencyViewDistributionRequestHistory,
+  } = useGetAgencyViewHistoryDistributionRequestQuery({
     page: page,
     pageSize: pageSize,
-    status : bike_status,
-    targetStationId : targetStationId,
+    status: bike_status,
+    targetStationId: targetStationId,
   });
-  const {data: managerViewDistributionRequestHistory,refetch: refetchManagerViewDistributionRequestHistory,isFetching: isFetchingManagerViewDistributionRequestHistory,} = useGetManagerViewHistoryDistributionRequestQuery({
+  const {
+    data: managerViewDistributionRequestHistory,
+    refetch: refetchManagerViewDistributionRequestHistory,
+    isFetching: isFetchingManagerViewDistributionRequestHistory,
+  } = useGetManagerViewHistoryDistributionRequestQuery({
     page: page,
     pageSize: pageSize,
-    status : bike_status,
-    targetStationId : targetStationId,
+    status: bike_status,
+    targetStationId: targetStationId,
   });
   const getStaffViewHistoryDistribution = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchStaffViewDistributionRequestHistory();
-  }, [refetchStaffViewDistributionRequestHistory, id]);
+  }, [refetchStaffViewDistributionRequestHistory,hasToken,router]);
   const getAgencyViewHistoryDistribution = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchAgencyViewDistributionRequestHistory();
-  }, [refetchAgencyViewDistributionRequestHistory, id]);
+  }, [refetchAgencyViewDistributionRequestHistory,hasToken,router]);
   const getManagerViewHistoryDistribution = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
     }
     refetchManagerViewDistributionRequestHistory();
-  }, [refetchManagerViewDistributionRequestHistory, id]);
+  }, [refetchManagerViewDistributionRequestHistory,hasToken,router]);
+  const useRevertRemainingBike = useRevertRemainingBikeMutation();
+  const managerRevertRemainingBike = useCallback(
+    async (requestId: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useRevertRemainingBike.mutateAsync({ requestId });
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Trả lại xe còn lại thành công");
+          getManagerViewDistributionRequest();
+          getManagerViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [useRevertRemainingBike, hasToken, router, getManagerViewDistributionRequest, getManagerViewDistributionRequestDetail],
+  );
+  const agencyRevertRemainingBike = useCallback(
+    async (requestId: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      try {
+        const result = await useRevertRemainingBike.mutateAsync({ requestId });
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success("Trả lại xe còn lại thành công");
+          getAgencyViewDistributionRequest();
+          getAgencyViewDistributionRequestDetail();
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromDistributionRequestCode(error_code));
+        throw error;
+      }
+    },
+    [
+      useRevertRemainingBike,
+      hasToken,
+      router,
+      getAgencyViewDistributionRequest,
+      getAgencyViewDistributionRequestDetail,
+    ],
+  );
+
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -621,6 +664,7 @@ export const useDistributionRequest = ({
     managerViewDistributionRequestHistory,
     isFetchingManagerViewDistributionRequestHistory,
     getManagerViewHistoryDistribution,
-
+    managerRevertRemainingBike,
+    agencyRevertRemainingBike
   };
 };

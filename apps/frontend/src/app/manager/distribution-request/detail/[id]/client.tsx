@@ -63,6 +63,7 @@ const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: st
   IN_TRANSIT: { label: "Đang vận chuyển", style: "bg-purple-100 text-purple-800 border-purple-200", icon: Truck },
   PARTIALLY_COMPLETED: { label: "Hoàn tất một phần", style: "bg-indigo-100 text-indigo-800 border-indigo-200", icon: AlertTriangle },
   COMPLETED: { label: "Đã hoàn thành", style: "bg-emerald-100 text-emerald-800 border-emerald-200", icon: CheckCircle2 },
+  REVERTED : { label: "Đã hoàn xe", style: "bg-orange-100 text-orange-800 border-orange-300", icon: ArrowUpFromLine },
   REJECTED: { label: "Đã từ chối", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
   CANCELLED: { label: "Đã hủy bỏ", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
 };
@@ -90,6 +91,7 @@ export const DistributionRequestDetailClient = ({
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessingRevert, setIsProcessingRevert] = useState(false);
   const [selectedBikeIds, setSelectedBikeIds] = useState<string[]>([]);
 
   const handleAction = async (action: () => Promise<void>) => {
@@ -157,6 +159,59 @@ export const DistributionRequestDetailClient = ({
   const canAction = currentStationId === data.targetStation.id;
   const showCheckboxColumn = data.status === "IN_TRANSIT" || data.status === "PARTIALLY_COMPLETED";
 
+  // --- LOGIC GIAO DIỆN TIMELINE & MÀU SẮC DỰA TRÊN STATUS KẾT THÚC ---
+  const isCompleted = data.status === "COMPLETED";
+  const isReverted = data.status === "REVERTED";
+  const isRejectedOrCancelled = data.status === "REJECTED" || data.status === "CANCELLED";
+  const isTerminal = isCompleted || isReverted || isRejectedOrCancelled;
+
+  // Cấu hình linh hoạt cho Node cuối cùng trên Timeline
+  let TerminalIcon = CheckCircle2;
+  let terminalLabel = "Hoàn tất";
+  let terminalColorClass = "bg-slate-100 text-slate-400";
+  let terminalLabelColor = "text-slate-400";
+  let terminalTimeText = "Chưa hoàn thành";
+
+  if (isCompleted) {
+    TerminalIcon = CheckCircle2;
+    terminalColorClass = "bg-emerald-500 text-white";
+    terminalLabel = "Hoàn tất";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.completedAt || data.updatedAt);
+  } else if (isReverted) {
+    TerminalIcon = ArrowUpFromLine;
+    terminalColorClass = "bg-orange-500 text-white";
+    terminalLabel = "Đã hoàn xe";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.updatedAt);
+  } else if (isRejectedOrCancelled) {
+    TerminalIcon = XCircle;
+    terminalColorClass = "bg-red-500 text-white";
+    terminalLabel = data.status === "REJECTED" ? "Từ chối" : "Đã hủy";
+    terminalLabelColor = "text-slate-900";
+    terminalTimeText = formatToVNTime(data.updatedAt);
+  }
+
+  // Cấu hình thanh Progress Bar
+  let progressWidth = "w-0";
+  let progressColor = "bg-blue-500";
+  if (isReverted) { progressWidth = "w-full"; progressColor = "bg-orange-400"; }
+  else if (isRejectedOrCancelled) { progressWidth = "w-full"; progressColor = "bg-red-400"; }
+  else if (isCompleted) { progressWidth = "w-full"; progressColor = "bg-blue-500"; }
+  else if (data.startedAt) { progressWidth = "w-2/3"; progressColor = "bg-blue-500"; }
+  else if (data.approvedByUser) { progressWidth = "w-1/3"; progressColor = "bg-blue-500"; }
+
+  // Cấu hình màu cho Hero Stats (Góc phải)
+  const getHeroColor = () => {
+    switch (data.status) {
+      case 'COMPLETED': return 'from-emerald-600 to-emerald-500';
+      case 'REVERTED': return 'from-orange-500 to-orange-400';
+      case 'REJECTED':
+      case 'CANCELLED': return 'from-red-600 to-red-500';
+      default: return 'from-blue-700 to-blue-600';
+    }
+  };
+
   // Component phụ hiển thị User Avatar
   const UserProfileMini = ({ user, label }: { user: User, label: string }) => (
     <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-colors hover:bg-slate-100">
@@ -172,8 +227,6 @@ export const DistributionRequestDetailClient = ({
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-500 bg-slate-50/30 min-h-screen">
-      
-      {/* ================= HEADER ================= */}
       <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between pb-2">
         <div className="space-y-3">
           <Button
@@ -224,9 +277,9 @@ export const DistributionRequestDetailClient = ({
                   variant="outline"
                   className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 shadow-sm rounded-xl font-medium"
                   onClick={() => handleAction(() => onBack())}
-                  disabled={isProcessing}
+                  disabled={isProcessingRevert}
                 >
-                  {isProcessing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
+                  {isProcessingRevert ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <ArrowLeft className="mr-2 h-4 w-4" />}
                   Hoàn xe
                 </Button>
                 <Button
@@ -248,7 +301,7 @@ export const DistributionRequestDetailClient = ({
         <CardContent className="p-6 md:p-8">
           <div className="relative flex flex-col md:flex-row justify-between w-full">
             <div className="hidden md:block absolute top-5 left-8 right-8 h-1 bg-slate-100 rounded-full z-0">
-               <div className={`h-full bg-blue-500 transition-all duration-500 rounded-full ${data.completedAt ? 'w-full' : data.startedAt ? 'w-2/3' : data.approvedByUser ? 'w-1/3' : 'w-0'}`}></div>
+               <div className={`h-full transition-all duration-500 rounded-full ${progressColor} ${progressWidth}`}></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2 mb-6 md:mb-0">
@@ -289,17 +342,16 @@ export const DistributionRequestDetailClient = ({
               </div>
             </div>
 
+            {/* --- Node Kết Thúc Động (Hoàn tất / Đã hoàn / Từ chối) --- */}
             <div className="relative z-10 flex flex-col items-start md:items-center gap-2">
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${data.completedAt ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                <CheckCircle2 className="h-5 w-5" />
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center shadow-sm ring-4 ring-white transition-colors ${terminalColorClass}`}>
+                <TerminalIcon className="h-5 w-5" />
               </div>
               <div className="text-left md:text-center mt-2">
-                <p className={`font-bold text-sm ${data.completedAt ? 'text-slate-900' : 'text-slate-400'}`}>Hoàn tất</p>
-                {data.completedAt ? (
-                  <p className="text-xs text-emerald-600 mt-1 font-medium">{formatToVNTime(data.completedAt)}</p>
-                ) : (
-                  <p className="text-xs text-slate-400 mt-1">Chưa hoàn thành</p>
-                )}
+                <p className={`font-bold text-sm ${terminalLabelColor}`}>{terminalLabel}</p>
+                <p className={`text-xs mt-1 font-medium ${isTerminal ? terminalColorClass.split(' ')[1] : 'text-slate-400'}`}>
+                  {terminalTimeText}
+                </p>
               </div>
             </div>
           </div>
@@ -339,11 +391,11 @@ export const DistributionRequestDetailClient = ({
 
                 {/* Trạm đến */}
                 <div className="relative z-10 flex items-start gap-5">
-                  <div className="h-12 w-12 shrink-0 rounded-full bg-white border-[3px] border-blue-500 flex items-center justify-center shadow-sm">
-                    <div className="h-3 w-3 rounded-full bg-blue-500 animate-pulse"></div>
+                  <div className={`h-12 w-12 shrink-0 rounded-full bg-white border-[3px] flex items-center justify-center shadow-sm ${isReverted ? 'border-orange-500' : 'border-blue-500'}`}>
+                    <div className={`h-3 w-3 rounded-full ${isReverted ? 'bg-orange-500' : 'bg-blue-500 animate-pulse'}`}></div>
                   </div>
                   <div className="pt-1.5">
-                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest mb-1 flex items-center gap-2">
+                    <p className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? 'text-orange-600' : 'text-blue-600'}`}>
                       Trạm tiếp nhận (Trả xe)
                     </p>
                     <p className="font-bold text-slate-900 text-lg">{data.targetStation.name}</p>
@@ -362,7 +414,7 @@ export const DistributionRequestDetailClient = ({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                {/* Box Trạm Xuất */}
+                {/* Box Trạm Xuất (Trạm Cho) */}
                 <div className="border border-slate-100 rounded-xl p-5 shadow-sm relative overflow-hidden bg-white">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-orange-400"></div>
                   
@@ -377,19 +429,35 @@ export const DistributionRequestDetailClient = ({
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Trước điều phối</span>
                       <span className="font-semibold text-slate-700">
-                        {data.sourceStation?.availableBikesBefore || data.sourceAvailableBikesBefore} xe
+                        {data.sourceStation?.availableBikesBefore ?? data.sourceAvailableBikesBefore ?? 0} xe
                       </span>
                     </div>
+                    
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Số xe xuất đi</span>
                       <span className="font-bold text-orange-600">
-                        -{data.sourceStation?.bikesForRedistribution || data.requestedQuantity} xe
+                        -{data.sourceStation?.bikesForRedistribution ?? data.requestedQuantity ?? 0} xe
                       </span>
                     </div>
+
+                    {/* HIỂN THỊ DÒNG NÀY NẾU CÓ XE HOÀN TRẢ */}
+                    {(data.revertedBikes > 0 || isReverted) && (
+                      <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
+                        <span className="text-slate-500">Xe hoàn trả</span>
+                        <span className="font-bold text-emerald-600">
+                          +{isReverted ? data.requestedQuantity : data.revertedBikes} xe
+                        </span>
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes || data.sourceStation?.availableBikesAfter || (data.sourceAvailableBikesBefore - data.requestedQuantity)} xe
+                        {/* Ưu tiên số liệu thực tế từ API, nếu không có thì tính: Trước - Xuất + Hoàn */}
+                        {data.sourceStation?.actualAvailableBikes ?? 
+                         ((data.sourceAvailableBikesBefore ?? 0) - 
+                          (data.requestedQuantity ?? 0) + 
+                          (isReverted ? data.requestedQuantity : (data.revertedBikes ?? 0)))} xe
                       </span>
                     </div>
                   </div>
@@ -410,14 +478,14 @@ export const DistributionRequestDetailClient = ({
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Trước điều phối</span>
                       <span className="font-semibold text-slate-700">
-                        {data.targetStation?.availableBikesBefore || data.targetAvailableBikesBefore} xe
+                        {data.targetStation?.availableBikesBefore ?? data.targetAvailableBikesBefore ?? 0} xe
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                       <span className="text-slate-500">Thực nhận / Yêu cầu</span>
                       <div className="text-right">
-                        <span className="font-bold text-blue-600">
-                          {data.targetStation?.actualReceivedBikes || 0} 
+                        <span className={`font-bold ${isReverted && successfulBikes === 0 ? 'text-slate-400' : 'text-blue-600'}`}>
+                          {data.targetStation?.actualReceivedBikes ?? successfulBikes} 
                         </span>
                         <span className="text-slate-400 font-medium"> / {data.requestedQuantity} xe</span>
                       </div>
@@ -425,7 +493,10 @@ export const DistributionRequestDetailClient = ({
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.targetStation?.actualAvailableBikes || data.targetStation?.availableBikesAfter || (data.targetAvailableBikesBefore + data.requestedQuantity)} xe
+                        {/* Ưu tiên số liệu thực tế từ backend, nếu không có thì tự tính: Trước + Thực nhận */}
+                        {data.targetStation?.actualAvailableBikes ?? 
+                         data.targetStation?.availableBikesAfter ?? 
+                         ((data.targetAvailableBikesBefore ?? 0) + successfulBikes)} xe
                       </span>
                     </div>
                   </div>
@@ -439,9 +510,9 @@ export const DistributionRequestDetailClient = ({
             
             {/* Box Hero Stats */}
             <div className="space-y-3">
-              <div className="bg-gradient-to-br from-blue-700 to-blue-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+              <div className={`bg-gradient-to-br ${getHeroColor()} rounded-2xl p-6 text-white shadow-lg relative overflow-hidden transition-colors`}>
                 <div className="relative z-10">
-                  <span className="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1 block">
+                  <span className="text-white/80 text-xs font-bold uppercase tracking-wider mb-1 block">
                     Yêu cầu điều phối
                   </span>
                   <div className="text-5xl font-extrabold mt-1 flex items-baseline gap-2">
@@ -451,16 +522,16 @@ export const DistributionRequestDetailClient = ({
                 <Bike className="absolute -bottom-4 -right-2 w-28 h-28 text-white opacity-10 rotate-[-10deg]" />
               </div>
 
-              {/* Box Hoàn trả */}
-              {data.revertedBikes > 0 && (
-                <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
+              {/* Box Hoàn trả - Hiển thị nếu có xe hoàn trả HOẶC trạng thái là REVERTED */}
+              {(data.revertedBikes > 0 || isReverted) && (
+                <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
                   <div>
                     <span className="text-red-600/80 text-xs font-bold uppercase tracking-wider block">Xe bị hoàn trả</span>
-                    <span className="text-red-700 font-bold text-2xl">{data.revertedBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-red-700 font-bold text-2xl">{isReverted ? data.requestedQuantity : data.revertedBikes} <span className="text-sm">xe</span></span>
                   </div>
                   <div className="text-right">
-                    <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Bàn giao thực tế</span>
-                    <span className="text-emerald-700 font-bold text-2xl">{successfulBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Thực nhận</span>
+                    <span className="text-emerald-700 font-bold text-2xl">{isReverted ? 0 : successfulBikes} <span className="text-sm">xe</span></span>
                   </div>
                 </div>
               )}
@@ -483,7 +554,7 @@ export const DistributionRequestDetailClient = ({
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Nhân sự thực hiện</h4>
               {data.requestedByUser && <UserProfileMini user={data.requestedByUser} label="Người tạo yêu cầu" />}
               {data.approvedByUser && <UserProfileMini user={data.approvedByUser} label="Người phê duyệt" />}
-              {data.revertedByUser && data.revertedBikes > 0 && <UserProfileMini user={data.revertedByUser} label="Người báo hoàn trả" />}
+              {data.revertedByUser && (data.revertedBikes > 0 || isReverted) && <UserProfileMini user={data.revertedByUser} label="Người báo hoàn trả" />}
             </div>
           </div>
         </div>
