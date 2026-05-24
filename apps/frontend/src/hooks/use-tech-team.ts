@@ -10,7 +10,6 @@ import {HTTP_STATUS} from "@constants";
 import { TechnicianStatus } from "@/types/TechnicianTeam";
 import { CreateTechnicianTeamSchema , UpdateTechnicianTeamSchema } from "@/schemas/technician-schema";
 import { getErrorMessageFromTechnicianTeamCode , getAxiosErrorCodeMessage } from "@utils";
-import { id } from "date-fns/locale";
 export interface TechnicianActionProps {
   hasToken: boolean , 
   supplier_id ?: string,
