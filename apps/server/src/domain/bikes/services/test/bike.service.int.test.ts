@@ -182,4 +182,60 @@ describe("bikeService Integration", () => {
 
     expectLeftTag(result, "BikeStationPlacementCapacityExceeded");
   });
+
+  it("fails with BikeSystemCapacityExceeded when total active bikes meets or exceeds total capacity of all stations", async () => {
+    // 1. Create a station with totalCapacity = 1
+    const station = await fixture.factories.station({ capacity: 1 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (total active = 1, capacity = 1)
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    // 3. Try to create another bike - should fail with BikeSystemCapacityExceeded
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSystemCapacityExceeded");
+  });
+
+  it("succeeds in creating bike if active bikes count is less than total capacity even if total bikes (including LOST/DISABLED) exceeds total capacity", async () => {
+    // 1. Create a station with totalCapacity = 5
+    const station = await fixture.factories.station({ capacity: 5 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (AVAILABLE) and two inactive ones (LOST, DISABLED)
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "LOST",
+    });
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "DISABLED",
+    });
+
+    // Total capacity = 5.
+    // Total active bikes = 1 (AVAILABLE). LOST and DISABLED are not counted.
+    // Since 1 < 5, we should be able to create a new bike!
+    const created = await runCreateBike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expect(created.status).toBe("AVAILABLE");
+  });
 });

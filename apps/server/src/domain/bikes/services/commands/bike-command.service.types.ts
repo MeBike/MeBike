@@ -10,6 +10,7 @@ import type {
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
   BikeSupplierNotFound,
+  BikeSystemCapacityExceeded,
   InvalidBikeStatus,
 } from "../../domain-errors";
 import type { BikeRow } from "../../models";
@@ -40,7 +41,11 @@ export type BikeCommandService = {
     input: CreateBikeInput,
   ) => Effect.Effect<
     BikeRow,
-    BikeRepositoryError | BikeStationNotFound | BikeStationPlacementCapacityExceeded | BikeSupplierNotFound
+    | BikeRepositoryError
+    | BikeStationNotFound
+    | BikeStationPlacementCapacityExceeded
+    | BikeSupplierNotFound
+    | BikeSystemCapacityExceeded
   >;
 
   adminUpdateBike: (

@@ -12,6 +12,7 @@ import {
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
   BikeSupplierNotFound,
+  BikeSystemCapacityExceeded,
   InvalidBikeStatus,
 } from "../../domain-errors";
 
@@ -72,11 +73,13 @@ export function isBikeCreateDomainPassThroughError(
 ): cause is
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound {
+| BikeSupplierNotFound
+| BikeSystemCapacityExceeded {
   return (
     cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
     || cause instanceof BikeSupplierNotFound
+    || cause instanceof BikeSystemCapacityExceeded
   );
 }
 
@@ -108,12 +111,18 @@ export function isBikeUpdateDomainPassThroughError(
  */
 export function getAvailablePlacementSlots(station: {
   totalCapacity: number;
-  totalBikes: number;
+  totalInStationBikes: number;
+  transportingBikes: number;
   activeReturnSlots: number;
+  incomingRedistributionBikes: number;
 }) {
   return Math.max(
     0,
-    station.totalCapacity - station.totalBikes - station.activeReturnSlots,
+    station.totalCapacity
+      - station.totalInStationBikes
+      - station.transportingBikes
+      - station.activeReturnSlots
+      - station.incomingRedistributionBikes
   );
 }
 

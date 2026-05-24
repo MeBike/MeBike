@@ -11,6 +11,7 @@ import {
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
   BikeSupplierNotFound,
+  BikeSystemCapacityExceeded,
 } from "../../domain-errors";
 import { makeBikeRepository } from "../../repository/bike.repository";
 import {
@@ -18,6 +19,7 @@ import {
   isBikeCreateDomainPassThroughError,
   lockStationRow,
 } from "./bike-command.helpers";
+import { countInStationBikes } from "@/domain/stations/repository/station.repository.counts";
 
 export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInput) {
   return Effect.tryPromise({
@@ -29,11 +31,23 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
       // cùng nhìn thấy một lượng chỗ trống rồi ghi vượt sức chứa thực tế.
       await lockStationRow(tx, input.stationId);
 
-      const [stationOpt, supplier] = await Promise.all([
+      const [stationOpt, supplier, activeBikesCount, sumCapacity] = await Promise.all([
         Effect.runPromise(txStationRepo.getById(input.stationId)),
         tx.supplier.findUnique({
           where: { id: input.supplierId },
           select: { id: true },
+        }),
+        tx.bike.count({
+          where: {
+            status: {
+              notIn: ["LOST", "DISABLED"],
+            },
+          },
+        }),
+        tx.station.aggregate({
+          _sum: {
+            totalCapacity: true,
+          },
         }),
       ]);
 
@@ -43,6 +57,14 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
 
       if (!supplier) {
         throw new BikeSupplierNotFound({ supplierId: input.supplierId });
+      }
+
+      const totalCapacity = sumCapacity._sum.totalCapacity ?? 0;
+      if (activeBikesCount >= totalCapacity) {
+        throw new BikeSystemCapacityExceeded({
+          activeBikesCount,
+          totalCapacity,
+        });
       }
 
       const station = stationOpt.value;

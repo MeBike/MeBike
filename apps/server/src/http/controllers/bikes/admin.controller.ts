@@ -58,6 +58,15 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
             requiredPlacementSlots,
           },
         }, 400)),
+      Match.tag("BikeSystemCapacityExceeded", ({ activeBikesCount, totalCapacity }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SYSTEM_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SYSTEM_CAPACITY_EXCEEDED,
+            activeBikesCount,
+            totalCapacity,
+          },
+        }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
