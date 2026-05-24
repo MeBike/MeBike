@@ -134,6 +134,7 @@ export const ENDPOINT = {
         AGENCY_VIEW : "/agency/redistribution-requests",
         AGENCY_VIEW_HISTORY : "/agency/redistribution-requests/history",
         AGENCY_VIEW_DETAIL : (id:string) => `/agency/redistribution-requests/${id}`,
+        REVERT_REMAINING_BIKE : (requestId:string) => `/redistribution-requests/${requestId}/revert-remaining`,
     },
     ENVIRONMENT : {
         POLICY : "/environment/policies",

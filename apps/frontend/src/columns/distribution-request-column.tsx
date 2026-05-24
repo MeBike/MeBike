@@ -16,6 +16,7 @@ const REQUEST_STATUS_VI: Record<string, string> = {
   PENDING_APPROVAL: "Chờ phê duyệt",
   APPROVED: "Đã phê duyệt",
   IN_TRANSIT: "Đang vận chuyển",
+  REVERTED : "Đã hoàn xe",
   PARTIALLY_COMPLETED: "Hoàn tất một phần",
   COMPLETED: "Đã hoàn thành",
   REJECTED: "Bị từ chối",
@@ -45,6 +46,8 @@ export const getRequestStatusColor = (status: RedistributionRequestStatus) => {
       return "bg-indigo-100 text-indigo-800 border-indigo-200";
     case "COMPLETED":
       return "bg-green-100 text-green-800 border-green-200";
+    case "REVERTED":
+      return "bg-orange-100 text-orange-800 border-orange-300";
     case "REJECTED":
     case "CANCELLED":
       return "bg-red-100 text-red-800 border-red-200";

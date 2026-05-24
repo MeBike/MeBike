@@ -1,5 +1,5 @@
 export type RedistributionRequestStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | "IN_TRANSIT"
-| "PARTIALLY_COMPLETED";
+| "PARTIALLY_COMPLETED" | "REVERTED";
 export type RedistributionRequest = {
   id: string;
   reason: string;
