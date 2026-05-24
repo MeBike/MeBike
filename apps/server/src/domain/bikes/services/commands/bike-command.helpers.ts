@@ -92,7 +92,8 @@ export function isBikeUpdateDomainPassThroughError(
 | BikeNotFound
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound {
+| BikeSupplierNotFound
+| BikeSystemCapacityExceeded {
   return (
     cause instanceof BikeCurrentlyRented
     || cause instanceof BikeCurrentlyReserved
@@ -101,7 +102,34 @@ export function isBikeUpdateDomainPassThroughError(
     || cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
     || cause instanceof BikeSupplierNotFound
+    || cause instanceof BikeSystemCapacityExceeded
   );
+}
+
+export async function validateSystemCapacity(tx: PrismaClient | Prisma.TransactionClient) {
+  const [activeBikesCount, sumCapacity] = await Promise.all([
+    tx.bike.count({
+      where: {
+        status: {
+          notIn: ["LOST", "DISABLED"],
+        },
+      },
+    }),
+    tx.station.aggregate({
+      _sum: {
+        totalCapacity: true,
+      },
+    }),
+  ]);
+
+  const totalCapacity = sumCapacity._sum.totalCapacity ?? 0;
+
+  if (activeBikesCount >= totalCapacity) {
+    throw new BikeSystemCapacityExceeded({
+      activeBikesCount,
+      totalCapacity,
+    });
+  }
 }
 
 /**
@@ -119,10 +147,10 @@ export function getAvailablePlacementSlots(station: {
   return Math.max(
     0,
     station.totalCapacity
-      - station.totalInStationBikes
-      - station.transportingBikes
-      - station.activeReturnSlots
-      - station.incomingRedistributionBikes
+    - station.totalInStationBikes
+    - station.transportingBikes
+    - station.activeReturnSlots
+    - station.incomingRedistributionBikes,
   );
 }
 

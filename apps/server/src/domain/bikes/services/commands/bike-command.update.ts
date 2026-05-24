@@ -23,6 +23,7 @@ import {
   isBikeUpdateDomainPassThroughError,
   lockBikeRow,
   lockStationRow,
+  validateSystemCapacity,
 } from "./bike-command.helpers";
 
 export function adminUpdateBikeWithGuards(
@@ -49,6 +50,12 @@ export function adminUpdateBikeWithGuards(
             status: patch.status,
             allowed,
           });
+        }
+
+        const isCurrentActive = !["LOST", "DISABLED"].includes(current.value.status);
+        const isTargetActive = !["LOST", "DISABLED"].includes(patch.status);
+        if (!isCurrentActive && isTargetActive) {
+          await validateSystemCapacity(tx);
         }
       }
 

@@ -61,6 +61,7 @@ export type BikeCommandService = {
     | BikeStationPlacementCapacityExceeded
     | BikeStationNotFound
     | BikeSupplierNotFound
+    | BikeSystemCapacityExceeded
   >;
 
   updateBikeStatusInStationScope: (
