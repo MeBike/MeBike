@@ -624,22 +624,21 @@ export const DistributionRequestDetailClient = ({
                           Xe hoàn trả (Nhập lại)
                         </span>
                         <span className="font-bold text-emerald-600">
-                          +
-                          {isReverted
-                            ? data.requestedQuantity
-                            : data.revertedBikes}{" "}
-                          xe
+                          +{isReverted && data.revertedBikes} xe
                         </span>
                       </div>
                     )}
 
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">
+                        Hiện tại / Sau ĐP
+                      </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes ?? 
-                         ((data.sourceAvailableBikesBefore ?? 0) - 
-                          (data.requestedQuantity ?? 0) + 
-                          (isReverted ? data.requestedQuantity : (data.revertedBikes ?? 0)))} xe
+                        {data.sourceStation?.actualAvailableBikes ??
+                          (data.sourceAvailableBikesBefore ?? 0) -
+                            (data.requestedQuantity ?? 0) +
+                            data.revertedBikes}{" "}
+                        xe
                       </span>
                     </div>
                   </div>
@@ -728,7 +727,7 @@ export const DistributionRequestDetailClient = ({
                       Xe bị hoàn trả
                     </span>
                     <span className="text-red-700 font-bold text-2xl">
-                      {isReverted ? data.requestedQuantity : data.revertedBikes}{" "}
+                      {isReverted && data.revertedBikes}{" "}
                       <span className="text-sm">xe</span>
                     </span>
                   </div>

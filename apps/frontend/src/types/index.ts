@@ -19,3 +19,4 @@ export * from "./Subscription";
 export * from "./TechnicianTeam";
 export * from "./PricingPolicy";
 export * from "./NFC";
+export * from "./SystemConfig"

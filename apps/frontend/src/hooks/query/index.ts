@@ -18,3 +18,4 @@ export * from "./Staff/index";
 export * from "./TechnicianTeam/index";
 export * from "./PricingPolicy/index";
 export * from "./NFC/index";
+export * from "./SystemConfig/index"
