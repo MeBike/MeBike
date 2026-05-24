@@ -180,4 +180,8 @@ export const ENDPOINT = {
         UNASSIGN : (id:string) => `/admin/nfc-cards/${id}/unassign`,
         STATUS : (id:string) => `/admin/nfc-cards/${id}/status`,
     },
+    CONFIG  : {
+        BASE : "/admin/system-configs",
+        UPDATE : (key:string) => `/admin/system-configs/${key}`,
+    }
 } as const;

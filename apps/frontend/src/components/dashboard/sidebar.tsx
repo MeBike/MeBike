@@ -166,6 +166,7 @@ export function Sidebar() {
         roles: ["ADMIN"],
         children: [
           { title: "Chính sách CO2", href: "/admin/environment-policy" },
+          { title: "Chính sách điều phối", href: "/admin/system-config" },
           { title: "Tác động CO2", href: "/admin/environment-impact" },
           { title: "Đánh giá & Phản hồi", href: `/${role.toLowerCase()}/ratings` },
         ],
