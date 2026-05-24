@@ -498,10 +498,11 @@ export const DistributionRequestDetailClient = ({
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
                       <span className="font-bold text-slate-900 text-base">
-                        {/* Ưu tiên số liệu thực tế từ backend, nếu không có thì tự tính: Trước + Thực nhận */}
-                        {data.targetStation?.actualAvailableBikes ?? 
-                         data.targetStation?.availableBikesAfter ?? 
-                         ((data.targetAvailableBikesBefore ?? 0) + successfulBikes)} xe
+                        {data.sourceStation?.actualAvailableBikes ??
+                          (data.sourceAvailableBikesBefore ?? 0) -
+                            (data.requestedQuantity ?? 0) +
+                            data.revertedBikes}{" "}
+                        xe
                       </span>
                     </div>
                   </div>
