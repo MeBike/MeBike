@@ -107,16 +107,12 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
   ];
 };
 export default function SystemConfigPage() {
-  const hasToken = true; 
-  
   const { 
     systemConfigs, 
     isLoading, 
     updateSystemConfig, 
     updateSystemConfigMutation 
-  } = useSystemConfigActions({ hasToken, key: "system-configs" });
-
-  // Hàm bóc tách data
+  } = useSystemConfigActions({ hasToken : true, key: "system-configs" });
   const getConfigsArray = (raw: any): SystemConfig[] => {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
@@ -126,9 +122,6 @@ export default function SystemConfigPage() {
   };
 
   const configsList = getConfigsArray(systemConfigs);
-
-  // States
-  const [searchQuery, setSearchQuery] = useState(""); // Thêm state cho ô tìm kiếm
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<SystemConfig | null>(null);
   const [editValue, setEditValue] = useState<string>("");
