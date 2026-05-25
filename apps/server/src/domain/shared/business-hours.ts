@@ -130,7 +130,7 @@ export class FixedSlotTemplateStartOutsideOperatingHours extends Data.TaggedErro
     readonly slotStart: string;
     readonly windowStart: string;
     readonly windowEnd: string;
-  }> {}
+  }> { }
 
 export function makeOvernightOperationsClosedError(now: Date): OvernightOperationsClosed {
   return new OvernightOperationsClosed({
@@ -149,4 +149,51 @@ export function makeFixedSlotTemplateStartOutsideOperatingHoursError(
     windowStart: OVERNIGHT_OPERATIONS_WINDOW_START_LABEL,
     windowEnd: OVERNIGHT_OPERATIONS_WINDOW_END_LABEL,
   });
+}
+
+export function createVietnamHourDate(year: number, month: number, day: number, hour: number): Date {
+  return new Date(Date.UTC(year, month - 1, day, hour - 7, 0, 0, 0));
+}
+
+export type ForecastWindow = {
+  start: Date;
+  end: Date;
+  hStart: number;
+  hEnd: number;
+  year: number;
+  month: number;
+  day: number;
+};
+
+export function getVietnamForecastWindow(startHour?: number, endHour?: number): ForecastWindow {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone: VIETNAM_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    hour12: false
+  });
+
+  const parts = formatter.formatToParts(now);
+  const getVal = (type: string) => Number(parts.find(p => p.type === type)?.value ?? 0);
+
+  const year = getVal("year");
+  const month = getVal("month");
+  const day = getVal("day");
+  const currentHour = getVal("hour") % 24;
+
+  const hStart = startHour !== undefined ? startHour : Math.max(5, Math.min(22, currentHour + 1));
+  const hEnd = endHour !== undefined ? endHour : 23;
+
+  return {
+    year,
+    month,
+    day,
+    hStart,
+    hEnd,
+    start: createVietnamHourDate(year, month, day, hStart),
+    end: createVietnamHourDate(year, month, day, hEnd),
+  };
 }
