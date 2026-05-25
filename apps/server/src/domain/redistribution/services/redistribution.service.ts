@@ -254,7 +254,7 @@ function makeRedistributionService(
     const source = req.sourceStation;
     const target = req.targetStation;
 
-    if (!source || !target || source.latitude === undefined || target.latitude === undefined) {
+    if (!source?.latitude || !target?.latitude || !source?.longitude || !target?.longitude) {
       return Effect.succeed(0);
     }
 
