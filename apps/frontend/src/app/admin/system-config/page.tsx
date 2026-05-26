@@ -38,6 +38,7 @@ interface SystemConfigColumnActions {
 const SYSTEM_CONFIG_KEY_VI: Record<string, string> = {
   "min_available_bikes_at_station": "Số xe khả dụng tối thiểu tại trạm",
   "redistribution_pending_expire_hours": "Thời gian tự động hủy yêu cầu điều phối",
+  "min_bikes_for_redistribution_alert": "Số xe tối thiểu để kích hoạt cảnh báo điều phối"
 };
 
 export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): ColumnDef<SystemConfig>[] => {
@@ -63,10 +64,9 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
       accessorKey: "value",
       header: "Giá trị hiện tại",
       cell: ({ row }) => {
-        const isTimeConfig = row.original.key.includes("hours") || row.original.key.includes("time");
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-bold bg-blue-50 text-blue-700 border border-blue-100">
-            {row.original.value} {isTimeConfig && !row.original.value.includes(":") ? "giờ" : ""}
+            {row.original.value}
           </span>
         )
       },
@@ -127,41 +127,60 @@ export default function SystemConfigPage() {
 
   const isUpdating = updateSystemConfigMutation.isPending;
 
-  // Cờ kiểm tra xem cấu hình đang chọn có phải là thời gian hay không
+  // Lấy giá trị thời gian quy định từ mảng cấu hình (Mặc định 23 nếu không tìm thấy)
+  const expireConfig = configsList.find(c => c.key === "redistribution_pending_expire_hours");
+  const expireTimeStr = expireConfig?.value || "23:00";
+  const allowedHour = parseInt(expireTimeStr.split(":")[0] || expireTimeStr, 10);
+
   const isSelectedTimeConfig = selectedConfig?.key.includes("hours") || selectedConfig?.key.includes("time");
 
   const handleEditClick = (config: SystemConfig) => {
     setSelectedConfig(config);
-    setEditValue(config.value);
+    
+    const isTime = config.key.includes("hours") || config.key.includes("time");
+    
+    if (isTime && config.value) {
+      let val = config.value;
+      // Trải nghiệm mượt hơn: Nếu API lỡ trả về "9" thì gán lại "09:00" để input nhận được, nếu trả "09:00" thì giữ nguyên
+      if (!val.includes(":")) {
+        const numVal = Number(val);
+        if (!isNaN(numVal)) {
+          const hh = Math.floor(numVal);
+          val = `${String(hh).padStart(2, '0')}:00`;
+        }
+      }
+      setEditValue(val);
+    } else {
+      setEditValue(config.value);
+    }
+
     setErrorText("");
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!selectedConfig) return;
-
-    // 1. Kiểm tra múi giờ hiện tại (Ép chuẩn về UTC+7 - Asia/Ho_Chi_Minh)
-    // Áp dụng cho TOÀN BỘ cấu hình
+    
     const now = new Date();
     const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
     const currentHour = vnTime.getHours();
 
-    if (currentHour !== 23) {
-      setErrorText("Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ 23:00 - 23:59 (UTC+7).");
+    // CHẶN BẰNG GIÁ TRỊ ĐỘNG
+    if (currentHour !== allowedHour) {
+      setErrorText(`Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ ${allowedHour}:00 - ${allowedHour}:59 (UTC+7).`);
       return;
     }
 
-    // 2. Validate tùy theo loại cấu hình
     let finalValue = editValue;
 
     if (isSelectedTimeConfig) {
-      // Nếu là Time (Giờ:Phút)
       if (!editValue || editValue.trim() === "") {
         setErrorText("Vui lòng chọn thời gian hợp lệ.");
         return;
       }
+      // Vì API bây giờ đã trả "09:00", ta không cần parse về "9" nữa. Gửi nguyên giá trị text này lên.
+      finalValue = editValue; 
     } else {
-      // Nếu là Số (Number)
       const numericValue = Number(editValue);
       if (isNaN(numericValue) || editValue.trim() === "" || numericValue < 0) {
         setErrorText("Vui lòng nhập một số hợp lệ (lớn hơn hoặc bằng 0).");
@@ -221,7 +240,7 @@ export default function SystemConfigPage() {
               Cập nhật cấu hình
             </DialogTitle>
             <DialogDescription>
-              Hệ thống chỉ chấp nhận lưu thay đổi trong khung giờ 23:00 đến 23:59 (theo giờ Việt Nam).
+              Hệ thống chỉ chấp nhận lưu thay đổi trong khung giờ {allowedHour}:00 đến {allowedHour}:59 (theo giờ Việt Nam).
             </DialogDescription>
           </DialogHeader>
 
@@ -238,7 +257,6 @@ export default function SystemConfigPage() {
                 {isSelectedTimeConfig ? "Giá trị thời gian" : "Giá trị cấu hình (Số lượng)"} <span className="text-rose-500">*</span>
               </Label>
               
-              {/* Ô Input Tự Động Định Dạng */}
               <Input
                 id="config-value"
                 type={isSelectedTimeConfig ? "time" : "number"}
