@@ -6,7 +6,6 @@ import { stationStaffColumns } from "@/columns/station-column";
 import { Button } from "@/components/ui/button";
 import { Pagination, Station } from "@/types";
 interface StationTableSectionProps {
-  distributionConfig : string;
   stations: Station[];
   pagination?: Pagination;
   setPage: (page: number) => void;
@@ -19,7 +18,6 @@ export function StationTableSection({
   setPage,
   onView,
   isLoading = false,
-  distributionConfig,
 }: StationTableSectionProps) {
   return (
     <div className="space-y-4">
@@ -31,7 +29,7 @@ export function StationTableSection({
             onView : ({id}) => {
               onView(id);
             },
-            distributionConfig
+            
           })}
           isLoading={isLoading}
           data={stations ?? []}

@@ -12,6 +12,7 @@ export interface Worker {
   technicianTeamName : string | null;
 }
 export interface Station {
+  needsRedistribution: boolean;
   id: string;
   name: string;
   address: string;

@@ -922,3 +922,9 @@ export const NFC = {
   VALIDATION_ERROR: "Không tìm thấy người dùng",
   NFC_CARD_NOT_ASSIGNED: "Thẻ NFC chưa được gán",
 };
+export const SYSTEM_CONFIG_MESSAGE = {
+  VALIDATION_ERROR : "Thông tin cấu hình không hợp lệ",
+  SYSTEM_CONFIG_NOT_FOUND : "Không tìm thấy chính sách hệ thống",
+  SYSTEM_CONFIG_ALREADY_EXISTS : "Chính sách hệ thống đã tồn tại",
+  
+}

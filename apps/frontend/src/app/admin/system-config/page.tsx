@@ -41,6 +41,7 @@ interface SystemConfigColumnActions {
 const SYSTEM_CONFIG_KEY_VI: Record<string, string> = {
   "min_available_bikes_at_station": "Số xe khả dụng tối thiểu tại trạm",
   "redistribution_pending_expire_hours": "Thời gian tự động hủy yêu cầu điều phối (giờ)",
+  "min_bikes_for_redistribution_alert": "Số xe tối thiểu để kích hoạt cảnh báo điều phối"
 };
 export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): ColumnDef<SystemConfig>[] => {
   return [
@@ -60,7 +61,6 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
           <div className="flex flex-col">
             <span className="font-bold text-slate-800">{formatKeyName(key)}</span>
             <code className="text-xs text-slate-400 mt-0.5 bg-slate-100 w-fit px-1.5 py-0.5 rounded font-mono">
-              {key}
             </code>
           </div>
         );
@@ -211,7 +211,7 @@ export default function SystemConfigPage() {
             <div className="space-y-2">
               <Label className="text-slate-500 text-xs font-bold uppercase tracking-wider">Khóa tham số</Label>
               <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-mono font-bold text-slate-700">
-                {selectedConfig?.key}
+                {SYSTEM_CONFIG_KEY_VI[selectedConfig?.key as keyof typeof SYSTEM_CONFIG_KEY_VI]}
               </div>
             </div>
 

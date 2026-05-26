@@ -20,11 +20,9 @@ import {
 } from "@/components/ui/dialog";
 
 export const stationColumns = ({
-  distributionConfig,
   onEdit,
   onDelete,
 }: {
-  distributionConfig : string;
   onEdit?: ({ id }: { id: string }) => void;
   onDelete?: ({ id }: { id: string }) => void;
 }): ColumnDef<Station>[] => [
@@ -43,7 +41,7 @@ export const stationColumns = ({
     header: "Số xe hiện tại",
     cell: ({ row }) => {
       const currentBikes = row.original.bikes.total;
-      const needsRedistribution = Number(distributionConfig) < 10;
+      const needsRedistribution = row.original.needsRedistribution;
       return (
         <div className="flex items-center gap-2">
           <span className={needsRedistribution ? "font-bold text-orange-600" : "font-medium"}>
@@ -138,12 +136,10 @@ export const stationStaffColumns = ({
   onView,
   onEdit,
   onDelete,
-  distributionConfig,
 }: {
   onView?: ({ id }: { id: string }) => void;
   onEdit?: ({ id }: { id: string }) => void;
   onDelete?: ({ id }: { id: string }) => void;
-  distributionConfig ?: string;
 }): ColumnDef<Station>[] => [
   {
     accessorKey: "name",
@@ -160,7 +156,7 @@ export const stationStaffColumns = ({
     header: "Số xe hiện tại",
     cell: ({ row }) => {
       const currentBikes = row.original.bikes.total;
-      const needsRedistribution = Number(distributionConfig) < 10;
+      const needsRedistribution = row.original.needsRedistribution;
 
       return (
         <div className="flex items-center gap-2">

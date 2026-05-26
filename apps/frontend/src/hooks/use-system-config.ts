@@ -7,7 +7,7 @@ import { useGetAllSystemConfigsQuery } from "@queries";
 import { useUpdateSystemConfigMutation } from "@mutations";
 import {HTTP_STATUS} from "@/constants";
 import { useCallback } from "react";
-import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
+import { getErrorMessageFromSystemConfigCode , getAxiosErrorCodeMessage } from "@utils";
 export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , key ?: string}) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -34,7 +34,7 @@ export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , ke
         return result;
       } catch (error) {
         const code_error = getAxiosErrorCodeMessage(error);
-        toast.error(getErrorMessageFromSupplierCode(code_error));
+        toast.error(getErrorMessageFromSystemConfigCode(code_error));
         throw error; 
       }
     },
