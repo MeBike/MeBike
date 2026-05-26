@@ -12,11 +12,12 @@ import type {
   UpdateAgencyInput,
   UpdateAgencyStatusInput,
 } from "../models";
+import { StationRepositoryError } from "@/domain/stations";
 
 export type AgencyRepo = {
   readonly create: (input: CreateAgencyInput) => Effect.Effect<AgencyRow, AgencyRepositoryError>;
   readonly getById: (id: string) => Effect.Effect<Option.Option<AgencyRow>, AgencyRepositoryError>;
-  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError>;
+  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError | StationRepositoryError>;
   readonly listWithOffset: (
     filter: AgencyFilter,
     pageReq: PageRequest<AgencySortField>,
