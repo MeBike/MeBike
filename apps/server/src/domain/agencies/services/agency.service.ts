@@ -4,6 +4,7 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { AgencyRepositoryError } from "@/domain/agencies/domain-errors";
 import { defectOn } from "@/domain/shared";
+import { StationRepositoryError } from "@/domain/stations";
 
 import type { AgencyDetailRow, AgencyFilter, AgencyRow, AgencySortField, CreateAgencyInput, UpdateAgencyInput, UpdateAgencyStatusInput } from "../models";
 import type { AgencyRepo } from "../repository/agency.repository";
@@ -50,6 +51,7 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
       Effect.gen(function* () {
         const agencyOpt = yield* repo.getDetailById(id).pipe(
           defectOn(AgencyRepositoryError),
+          defectOn(StationRepositoryError),
         );
 
         if (Option.isNone(agencyOpt)) {
@@ -76,6 +78,7 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
         // After update, fetch with full station counts
         const detailOpt = yield* repo.getDetailById(id).pipe(
           defectOn(AgencyRepositoryError),
+          defectOn(StationRepositoryError),
         );
 
         if (Option.isNone(detailOpt)) {
@@ -97,6 +100,7 @@ export function makeAgencyService(repo: AgencyRepo): AgencyService {
         // After update, fetch with full station counts
         const detailOpt = yield* repo.getDetailById(id).pipe(
           defectOn(AgencyRepositoryError),
+          defectOn(StationRepositoryError),
         );
 
         if (Option.isNone(detailOpt)) {
