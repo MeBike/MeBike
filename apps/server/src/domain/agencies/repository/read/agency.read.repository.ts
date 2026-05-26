@@ -1,5 +1,6 @@
 import { Effect, Option } from "effect";
 
+import type { StationRepositoryError } from "@/domain/stations";
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
@@ -15,7 +16,7 @@ import {
 } from "@/domain/stations/repository/station.repository.counts";
 import { stationSelect } from "@/domain/stations/repository/station.repository.select";
 
-import type { AgencyDetailRow, AgencyRow } from "../../models";
+import type { AgencyDetailRow } from "../../models";
 import type { AgencyRepo } from "../agency.repository.types";
 
 import { AgencyRepositoryError } from "../../domain-errors";
@@ -25,10 +26,9 @@ import {
   toAgencyRow,
   toAgencyWhere,
 } from "../agency.repository.helpers";
-import { StationRepositoryError } from "@/domain/stations";
 
 export type AgencyReadRepo = Pick<AgencyRepo, "getById" | "listWithOffset"> & {
-  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError | StationRepositoryError >;
+  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError | StationRepositoryError>;
 };
 
 export function makeAgencyReadRepository(
