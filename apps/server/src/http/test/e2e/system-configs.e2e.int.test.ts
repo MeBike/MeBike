@@ -180,7 +180,7 @@ describe("system configs & redistribution alert e2e", () => {
       const adminToken = await createAdminToken();
       await seedExpireConfig();
       const res = await updateExpireHours(adminToken, "24:30");
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(400);
     });
 
     it("accepts H:M with only minutes (e.g. '0:45')", async () => {
