@@ -466,7 +466,7 @@ export const DistributionRequestDetailClient = ({
                       </div>
                     )}
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">Hiện tại / Sau điều phối</span>
                       <span className="font-bold text-slate-900 text-base">
                         <span className="font-bold text-slate-900 text-base">
                         {data.sourceStation?.actualAvailableBikes ??
@@ -508,7 +508,7 @@ export const DistributionRequestDetailClient = ({
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">Hiện tại / Sau điều phối</span>
                       <span className="font-bold text-slate-900 text-base">
                         {data.targetStation?.actualAvailableBikes ?? 
                          ((data.targetStation?.availableBikesBefore ?? data.targetAvailableBikesBefore ?? 0) + 
@@ -547,7 +547,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="text-right">
                     <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Thực nhận</span>
-                    <span className="text-emerald-700 font-bold text-2xl">{isReverted ? 0 : successfulBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-emerald-700 font-bold text-2xl">{data.targetStation.actualReceivedBikes} <span className="text-sm">xe</span></span>
                   </div>
                 </div>
               )}

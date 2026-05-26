@@ -305,7 +305,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                     )}
 
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">Hiện tại / Sau điều phối</span>
                       <span className="font-bold text-slate-900 text-base">
                         {data.sourceStation?.actualAvailableBikes ??
                           (data.sourceAvailableBikesBefore ?? 0) -
@@ -343,7 +343,7 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                       </div>
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
-                      <span className="text-slate-600 font-medium">Hiện tại / Sau ĐP</span>
+                      <span className="text-slate-600 font-medium">Hiện tại / Sau điều phối</span>
                       <span className="font-bold text-slate-900 text-base">
                         {(data.targetStation as any)?.actualAvailableBikes ?? 
                          (((data.targetStation as any)?.availableBikesBefore ?? data.targetAvailableBikesBefore ?? 0) + 
@@ -374,11 +374,11 @@ export const DistributionRequestDetailClient = ({ data }: Props) => {
                 <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
                   <div>
                     <span className="text-red-600/80 text-xs font-bold uppercase tracking-wider block">Xe bị hoàn trả</span>
-                    <span className="text-red-700 font-bold text-2xl">{isReverted ? data.requestedQuantity : data.revertedBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-red-700 font-bold text-2xl">{data.revertedBikes} <span className="text-sm">xe</span></span>
                   </div>
                   <div className="text-right">
                     <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Bàn giao thực tế</span>
-                    <span className="text-emerald-700 font-bold text-2xl">{isReverted ? 0 : successfulBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-emerald-700 font-bold text-2xl">{data.targetStation.actualReceivedBikes} <span className="text-sm">xe</span></span>
                   </div>
                 </div>
               )}

@@ -51,7 +51,7 @@ interface DataTableProps<TData, TValue> {
   filterOptions?: FilterOptionsProps[];
   callBackFunction?: (status?: FilterOptionsProps["status"]) => void;
   status?: string;
-
+  distributionConfig?: string;
   filterPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
@@ -68,6 +68,7 @@ export function DataTable<TData, TValue>({
   onSearchChange,
   title,
   tableClassName,
+  distributionConfig,
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);

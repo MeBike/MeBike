@@ -8,10 +8,10 @@ import { useUpdateSystemConfigMutation } from "@mutations";
 import {HTTP_STATUS} from "@/constants";
 import { useCallback } from "react";
 import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
-export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , key : string}) => {
+export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , key ?: string}) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data : systemConfigs , isLoading , refetch} = useGetAllSystemConfigsQuery();
+  const { data : systemConfigs , isLoading , refetch } = useGetAllSystemConfigsQuery();
   const getAllSystemConfigs = useCallback(() => {
       if (!hasToken) {
         router.push("/login");
@@ -46,5 +46,6 @@ export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , ke
     updateSystemConfig,
     getAllSystemConfigs,
     updateSystemConfigMutation,
+    refetch
   };
 };

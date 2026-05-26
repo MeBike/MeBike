@@ -631,7 +631,7 @@ export const DistributionRequestDetailClient = ({
 
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">
-                        Hiện tại / Sau ĐP
+                        Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
                         {data.sourceStation?.actualAvailableBikes ??
@@ -684,7 +684,7 @@ export const DistributionRequestDetailClient = ({
                     </div>
                     <div className="flex justify-between items-center text-sm pt-1">
                       <span className="text-slate-600 font-medium">
-                        Hiện tại / Sau ĐP
+                        Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
                         {data.targetStation?.actualAvailableBikes ??
@@ -736,7 +736,7 @@ export const DistributionRequestDetailClient = ({
                       Thực nhận
                     </span>
                     <span className="text-emerald-700 font-bold text-2xl">
-                      {isReverted ? 0 : successfulBikes}{" "}
+                      {data.targetStation.actualReceivedBikes}{" "}
                       <span className="text-sm">xe</span>
                     </span>
                   </div>

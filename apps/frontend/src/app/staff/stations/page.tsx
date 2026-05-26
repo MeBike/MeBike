@@ -11,6 +11,7 @@ import { ReportSkeleton } from "./components/loading-skeleton";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { useDebounce } from "@/utils/useDebounce";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 export default function StationsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
@@ -18,6 +19,7 @@ export default function StationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
   const debounceSearchQuery = useDebounce(searchQuery, 500);
+  const { systemConfigs , getAllSystemConfigs , refetch } = useSystemConfigActions({hasToken:true});
   const {
     getMyStation,
     myStation,
@@ -111,6 +113,7 @@ export default function StationsPage() {
             <TableSkeleton />
           ) : (
             <StationTableSection
+              distributionConfig={systemConfigs?.find((config) => config.key === "min_available_bikes_at_station")?.value || ""}
               stations={myStation}
               pagination={paginationMyStation}
               setPage={setPage}

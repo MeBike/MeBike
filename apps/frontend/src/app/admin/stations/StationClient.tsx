@@ -12,6 +12,7 @@ import { Pagination, Station, StationStatisticsResponse } from "@custom-types";
 import type { StationBikeRevenue } from "@custom-types";
 interface StationClientProps {
   data: {
+    distributionConfig : string;
     stations: Station[];
     paginationStations?: Pagination;
     responseStationRevenue?: StationBikeRevenue;
@@ -32,6 +33,7 @@ interface StationClientProps {
 }
 export default function StationClient({
   data: {
+    distributionConfig,
     stations,
     paginationStations,
     responseStationRevenue,
@@ -108,6 +110,7 @@ export default function StationClient({
               </p>
             </div>
             <StationTableSection
+              distributionConfig={distributionConfig as string}
               stations={stations}
               pagination={paginationStations}
               setPage={setPage}
