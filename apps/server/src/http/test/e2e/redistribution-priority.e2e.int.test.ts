@@ -114,8 +114,6 @@ describe("redistribution requests prioritisation e2e", () => {
     const body = await response.json() as RedistributionContracts.RedistributionRequestList;
     const items = body.data;
 
-    console.log("DEBUG ITEMS:", JSON.stringify(items, null, 2));
-
     // We should receive all three requests
     expect(items.length).toBe(3);
 

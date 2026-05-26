@@ -1,7 +1,6 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { BikeRepository, BikeRepositoryError } from "@/domain/bikes";
-import { makePageResult } from "@/domain/shared/pagination";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { UserRow } from "@/domain/users";
 import type {
@@ -10,6 +9,7 @@ import type {
 } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { makePageResult } from "@/domain/shared/pagination";
 import {
   makeStationQueryRepository,
   StationQueryServiceTag,
@@ -297,7 +297,7 @@ function makeRedistributionService(
     }
 
     return Effect.all(
-      pending.map(req => {
+      pending.map((req) => {
         if (req.priorityScore !== null && req.priorityScore !== undefined) {
           return Effect.succeed(req);
         }

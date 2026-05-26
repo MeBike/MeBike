@@ -13,6 +13,14 @@ export async function seedDefaultSystemConfigs(
     },
   });
   await prisma.systemConfig.upsert({
+    where: { key: "min_bikes_for_redistribution_alert" },
+    update: {},
+    create: {
+      key: "min_bikes_for_redistribution_alert",
+      value: "5",
+    },
+  });
+  await prisma.systemConfig.upsert({
     where: { key: "redistribution_pending_expire_hours" },
     update: {},
     create: {

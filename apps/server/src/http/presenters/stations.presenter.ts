@@ -60,6 +60,7 @@ export function toContractStationReadSummary(
       available: station.availableReturnSlots,
     },
     redistributionSlots: station.incomingRedistributionBikes,
+    needsRedistribution: station.needsRedistribution,
     ...(station.workers
       ? {
           workers: station.workers.map(worker => ({

@@ -42,5 +42,5 @@ export const subscriptionEnvSchema = z.object({
 });
 
 export const redistributionEnvSchema = z.object({
-  REDISTRIBUTION_PENDING_EXPIRE_SWEEP_CRON: z.string().default("0 * * * *"),
+  REDISTRIBUTION_PENDING_EXPIRE_SWEEP_CRON: z.string().default("* * * * *"),
 });
