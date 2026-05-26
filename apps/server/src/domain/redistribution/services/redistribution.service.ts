@@ -9,11 +9,13 @@ import type {
 } from "generated/prisma/client";
 
 import { makeBikeRepository } from "@/domain/bikes";
+import { makePageResult } from "@/domain/shared/pagination";
 import {
   makeStationQueryRepository,
   StationQueryServiceTag,
 } from "@/domain/stations";
 import { UserQueryServiceTag } from "@/domain/users";
+import { MapboxRouting } from "@/infrastructure/mapbox";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { BikeStatus, RedistributionStatus } from "generated/prisma/client";
@@ -211,8 +213,9 @@ const makeRedistributionServiceEffect = Effect.gen(function* () {
   const repo = yield* RedistributionRepository;
   const userService = yield* UserQueryServiceTag;
   const stationService = yield* StationQueryServiceTag;
+  const mapbox = yield* MapboxRouting;
   const { client } = yield* Prisma;
-  return makeRedistributionService(repo, userService, stationService, client);
+  return makeRedistributionService(repo, userService, stationService, client, mapbox);
 });
 
 export class RedistributionServiceTag extends Effect.Service<RedistributionServiceTag>()(
@@ -227,6 +230,7 @@ function makeRedistributionService(
   userService: UserQueryServiceTag,
   stationService: StationQueryServiceTag,
   client: PrismaClient,
+  mapbox: MapboxRouting,
 ): RedistributionService {
   const TERMINAL_STATUSES: RedistributionStatus[] = [
     RedistributionStatus.COMPLETED,
@@ -234,6 +238,95 @@ function makeRedistributionService(
     RedistributionStatus.REJECTED,
     RedistributionStatus.REVERTED,
   ];
+
+  const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371000; // meters
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a
+      = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const calculatePriorityScore = (req: any) => {
+    const source = req.sourceStation;
+    const target = req.targetStation;
+
+    if (!source?.latitude || !target?.latitude || !source?.longitude || !target?.longitude) {
+      return Effect.succeed(0);
+    }
+
+    const lat1 = Number(source.latitude);
+    const lon1 = Number(source.longitude);
+    const lat2 = Number(target.latitude);
+    const lon2 = Number(target.longitude);
+
+    return mapbox
+      .getRoute({
+        origin: { latitude: lat1, longitude: lon1 },
+        destination: { latitude: lat2, longitude: lon2 },
+        profile: "driving",
+      })
+      .pipe(
+        Effect.map((route) => {
+          const D = route.distanceMeters;
+          const T = route.durationSeconds;
+          const Q = req.requestedQuantity;
+          return (Q * 1000) - D - (T * 2);
+        }),
+        Effect.catchAll(() => {
+          const D = getHaversineDistance(lat1, lon1, lat2, lon2);
+          const T = D / 8.33; // 30 km/h fallback
+          const Q = req.requestedQuantity;
+          return Effect.succeed((Q * 1000) - D - (T * 2));
+        }),
+      );
+  };
+
+  const prioritizeRequests = <T extends { status: RedistributionStatus; createdAt: Date; priorityScore?: number | null; sourceStation: any; targetStation: any; requestedQuantity: number }>(
+    requests: T[],
+  ): Effect.Effect<T[], never> => {
+    const pending = requests.filter(r => r.status === RedistributionStatus.PENDING_APPROVAL);
+    const others = requests.filter(r => r.status !== RedistributionStatus.PENDING_APPROVAL);
+
+    if (pending.length === 0) {
+      return Effect.succeed(requests);
+    }
+
+    return Effect.all(
+      pending.map((req) => {
+        if (req.priorityScore !== null && req.priorityScore !== undefined) {
+          return Effect.succeed(req);
+        }
+        return calculatePriorityScore(req).pipe(
+          Effect.map((score) => {
+            req.priorityScore = score;
+            return req;
+          }),
+        );
+      }),
+    ).pipe(
+      Effect.map((prioritizedPending) => {
+        const now = new Date();
+        const getEffectiveScore = (item: T) => {
+          const score = item.priorityScore ?? 0;
+          const pendingMs = now.getTime() - item.createdAt.getTime();
+          const pendingMins = Math.max(0, pendingMs / (60 * 1000));
+          return score + pendingMins * 1000;
+        };
+
+        // Sort the pending requests by effectiveScore descending:
+        prioritizedPending.sort((a, b) => {
+          return getEffectiveScore(b) - getEffectiveScore(a);
+        });
+
+        return [...prioritizedPending, ...others];
+      }),
+    );
+  };
 
   const assertUserExists = (userId: string) =>
     Effect.gen(function* () {
@@ -349,7 +442,33 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
-        return yield* repo.listWithOffset(
+
+        const isPendingOnly = filter.status === RedistributionStatus.PENDING_APPROVAL;
+
+        if (isPendingOnly) {
+          // Fetch all matching pending requests to ensure global in-memory prioritization/pagination
+          const allResult = yield* repo.listWithOffset(
+            toRedistributionWhere({
+              ...filter,
+              OR: [
+                { sourceStationId: stationId },
+                { targetStationId: stationId },
+              ],
+            }),
+            { page: 1, pageSize: 1000000, sortBy: page.sortBy, sortDir: page.sortDir },
+          );
+
+          const prioritizedItems = yield* prioritizeRequests(allResult.items);
+
+          const total = prioritizedItems.length;
+          const start = (page.page - 1) * page.pageSize;
+          const end = start + page.pageSize;
+          const paginatedItems = prioritizedItems.slice(start, end);
+
+          return makePageResult(paginatedItems, total, page.page, page.pageSize);
+        }
+
+        const pageResult = yield* repo.listWithOffset(
           toRedistributionWhere({
             ...filter,
             OR: [
@@ -359,6 +478,13 @@ function makeRedistributionService(
           }),
           page,
         );
+
+        const prioritizedItems = yield* prioritizeRequests(pageResult.items);
+
+        return {
+          ...pageResult,
+          items: prioritizedItems,
+        };
       }),
 
     getRequestInStation: ({ userId, requestId }) =>
@@ -390,6 +516,11 @@ function makeRedistributionService(
               targetStationId: req.targetStation.id,
             }),
           );
+        }
+
+        if (req.status === RedistributionStatus.PENDING_APPROVAL && !req.priorityScore) {
+          const score = yield* calculatePriorityScore(req);
+          req.priorityScore = score;
         }
 
         return req;
@@ -452,6 +583,12 @@ function makeRedistributionService(
             }),
           );
         }
+
+        const priorityScore = yield* calculatePriorityScore({
+          sourceStation,
+          targetStation,
+          requestedQuantity: args.requestedQuantity,
+        });
 
         const now = new Date();
         const bikeIds: string[] = [];
@@ -539,6 +676,7 @@ function makeRedistributionService(
               bikeIds,
               sourceAvailableBikesBefore: totalAvailableCount,
               targetAvailableBikesBefore: targetAvailableCount,
+              priorityScore,
             });
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),

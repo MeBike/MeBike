@@ -72,6 +72,7 @@ export const StationReadSummarySchema = z.object({
   bikes: StationBikesSchema,
   returnSlots: StationReturnSlotsSchema,
   redistributionSlots: z.number(),
+  needsRedistribution: z.boolean().optional(),
   workers: z.array(z.object({
     userId: z.uuidv7(),
     fullName: z.string(),

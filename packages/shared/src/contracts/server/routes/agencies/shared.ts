@@ -7,6 +7,7 @@ import {
   SortDirectionSchema,
 } from "../../schemas";
 import {
+  AgencyDetailSchema,
   AgencyOperationalStatsSchema,
   AgencySummarySchema,
 } from "../../agencies";
@@ -54,7 +55,7 @@ export const AgencyListResponseSchema = z
     description: "Paginated agency listing for admin",
   });
 
-export const AgencyDetailResponseSchema = AgencySummarySchema.openapi(
+export const AgencyDetailResponseSchema = AgencyDetailSchema.openapi(
   "AgencyDetailResponse",
   {
     description: "Agency details for admin",
@@ -134,14 +135,14 @@ export const UpdateAgencyStatusBodySchema = z
     },
   });
 
-export const AgencyUpdateResponseSchema = AgencySummarySchema.openapi(
+export const AgencyUpdateResponseSchema = AgencyDetailSchema.openapi(
   "AgencyUpdateResponse",
   {
     description: "Updated agency details for admin",
   },
 );
 
-export const AgencyUpdateStatusResponseSchema = AgencySummarySchema.openapi(
+export const AgencyUpdateStatusResponseSchema = AgencyDetailSchema.openapi(
   "AgencyUpdateStatusResponse",
   {
     description: "Updated agency details after status change",

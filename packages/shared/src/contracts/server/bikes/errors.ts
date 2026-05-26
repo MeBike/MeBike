@@ -5,11 +5,14 @@ export const bikeErrorCodes = [
   "BIKE_NOT_FOUND",
   "BIKE_STATION_NOT_FOUND",
   "BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED",
+  "BIKE_SYSTEM_CAPACITY_EXCEEDED",
   "BIKE_SUPPLIER_NOT_ACTIVE",
   "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
+  "BIKE_CURRENTLY_REDISTRIBUTING",
+  "BIKE_CURRENTLY_INCIDENT_REPORTED",
   "INVALID_QUERY_PARAMS",
 ] as const;
 
@@ -24,6 +27,8 @@ export const BikeErrorDetailSchema = ServerErrorDetailSchema.extend({
   status: z.string().optional(),
   availablePlacementSlots: z.number().int().nonnegative().optional(),
   requiredPlacementSlots: z.number().int().positive().optional(),
+  activeBikesCount: z.number().int().nonnegative().optional(),
+  totalCapacity: z.number().int().nonnegative().optional(),
 }).openapi({
   description: "Bike-specific error detail",
   example: {
@@ -37,11 +42,14 @@ export const BikeNotFoundCodeSchema = z.enum(["BIKE_NOT_FOUND"]);
 export const BikeUpdateConflictCodeSchema = z.enum([
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
+  "BIKE_CURRENTLY_REDISTRIBUTING",
   "BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED",
+  "BIKE_SYSTEM_CAPACITY_EXCEEDED",
   "BIKE_STATION_NOT_FOUND",
   "BIKE_SUPPLIER_NOT_ACTIVE",
   "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
+  "BIKE_CURRENTLY_INCIDENT_REPORTED",
 ]);
 
 export type BikeErrorCode = (typeof bikeErrorCodes)[number];
@@ -88,10 +96,13 @@ export const bikeErrorMessages: Record<BikeErrorCode, string> = {
   BIKE_NOT_FOUND: "Bike not found",
   BIKE_STATION_NOT_FOUND: "Station not found",
   BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED: "Station has no physical space available after honoring active return reservations",
+  BIKE_SYSTEM_CAPACITY_EXCEEDED: "Total active bikes (excluding LOST and DISABLED) cannot exceed the total capacity of all stations",
   BIKE_SUPPLIER_NOT_ACTIVE: "Supplier is not active",
   BIKE_SUPPLIER_NOT_FOUND: "Supplier not found",
   INVALID_BIKE_STATUS: "Invalid bike status transition",
   BIKE_CURRENTLY_RENTED: "Bike is currently rented and cannot be modified/deleted",
   BIKE_CURRENTLY_RESERVED: "Bike is currently reserved and cannot be modified/deleted",
+  BIKE_CURRENTLY_REDISTRIBUTING: "Bike is currently being redistributed and cannot be modified/deleted",
+  BIKE_CURRENTLY_INCIDENT_REPORTED: "Bike is currently incident reported and cannot be modified/deleted",
   INVALID_QUERY_PARAMS: "Invalid query parameters",
 };

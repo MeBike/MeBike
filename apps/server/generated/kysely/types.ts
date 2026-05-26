@@ -553,6 +553,7 @@ export type RedistributionRequest = {
     target_available_bikes_before: number | null;
     requested_quantity: number;
     status: Generated<RedistributionStatus>;
+    priority_score: number | null;
     started_at: Timestamp | null;
     completed_at: Timestamp | null;
     created_at: Generated<Timestamp>;

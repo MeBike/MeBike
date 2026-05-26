@@ -18,6 +18,7 @@ import {
   getAvailablePlacementSlots,
   isBikeCreateDomainPassThroughError,
   lockStationRow,
+  validateSystemCapacity,
 } from "./bike-command.helpers";
 
 export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInput) {
@@ -52,6 +53,11 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
         });
       }
 
+      const targetStatus = input.status ?? "AVAILABLE";
+      if (!["LOST", "DISABLED"].includes(targetStatus)) {
+        await validateSystemCapacity(tx);
+      }
+
       const station = stationOpt.value;
       // Rule đặt thêm xe phải bám theo sức chứa đang bị chiếm thực tế của station,
       // không chỉ nhìn `totalCapacity` thô. Hết chỗ thì fail trước khi ghi.
@@ -67,7 +73,7 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
       return await Effect.runPromise(txBikeRepo.create({
         stationId: input.stationId,
         supplierId: input.supplierId,
-        status: input.status ?? "AVAILABLE",
+        status: targetStatus,
       }));
     }),
     catch: cause =>

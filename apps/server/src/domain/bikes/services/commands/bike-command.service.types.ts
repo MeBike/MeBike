@@ -3,6 +3,8 @@ import type { Effect, Option } from "effect";
 import type { BikeStatus } from "generated/prisma/client";
 
 import type {
+  BikeCurrentlyIncidentReported,
+  BikeCurrentlyRedistributing,
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
@@ -11,6 +13,7 @@ import type {
   BikeStationPlacementCapacityExceeded,
   BikeSupplierNotActive,
   BikeSupplierNotFound,
+  BikeSystemCapacityExceeded,
   InvalidBikeStatus,
 } from "../../domain-errors";
 import type { BikeRow } from "../../models";
@@ -44,6 +47,7 @@ export type BikeCommandService = {
     | BikeRepositoryError
     | BikeStationNotFound
     | BikeStationPlacementCapacityExceeded
+    | BikeSystemCapacityExceeded
     | BikeSupplierNotActive
     | BikeSupplierNotFound
   >;
@@ -55,6 +59,8 @@ export type BikeCommandService = {
     Option.Option<BikeRow>,
     | BikeCurrentlyRented
     | BikeCurrentlyReserved
+    | BikeCurrentlyRedistributing
+    | BikeCurrentlyIncidentReported
     | BikeNotFound
     | BikeRepositoryError
     | InvalidBikeStatus
@@ -62,6 +68,7 @@ export type BikeCommandService = {
     | BikeSupplierNotActive
     | BikeStationNotFound
     | BikeSupplierNotFound
+    | BikeSystemCapacityExceeded
   >;
 
   updateBikeStatusInStationScope: (

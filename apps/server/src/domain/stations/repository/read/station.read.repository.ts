@@ -36,6 +36,8 @@ type StationNearestRowDb = PrismaTypes.StationGetPayload<{
   distance_meters: number;
 };
 
+const DEFAULT_THRESHOLD = 5;
+
 export type StationReadRepo = Pick<
   StationQueryRepo,
   | "listWithOffset"
@@ -62,22 +64,42 @@ export function makeStationReadRepository(
   ) =>
     Effect.gen(function* () {
       const stationIds = rows.map(row => row.id);
-      const [countsMap, returnSlotCountsMap, incomingRedistributionCountsMap] = yield* Effect.all([
+      const [countsMap, returnSlotCountsMap, incomingRedistributionCountsMap, alertThresholdConfig] = yield* Effect.all([
         getBikeCounts(client, stationIds),
         getActiveReturnSlotCounts(client, stationIds),
         getIncomingRedistributionCounts(client, stationIds),
+        Effect.tryPromise({
+          try: () => client.systemConfig.findUnique({
+            where: { key: "min_bikes_for_redistribution_alert" },
+          }),
+          catch: () => null,
+        }).pipe(
+          Effect.catchAll(() => Effect.succeed(null)),
+        ),
       ]);
 
-      return rows.map(row =>
-        mapRow(
-          row,
-          resolveStationCounts({
-            countsMap,
-            returnSlotCountsMap,
-            incomingRedistributionCountsMap,
-            stationId: row.id,
-          }),
-        ));
+      const threshold = alertThresholdConfig ? Number(alertThresholdConfig.value) : DEFAULT_THRESHOLD;
+
+      return rows.map((row) => {
+        const counts = resolveStationCounts({
+          countsMap,
+          returnSlotCountsMap,
+          incomingRedistributionCountsMap,
+          stationId: row.id,
+        });
+        const mapped = mapRow(row, counts) as any;
+        if (mapped && typeof mapped === "object") {
+          const inStationBikes
+            = counts.availableBikes
+              + counts.reservedBikes
+              + counts.pendingDispatchBikes
+              + counts.brokenBikes
+              + counts.fixedBikes;
+
+          mapped.needsRedistribution = inStationBikes < threshold;
+        }
+        return mapped as TMapped;
+      });
     });
 
   const loadWorkers = (stationId: string) =>

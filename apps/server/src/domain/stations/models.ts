@@ -47,6 +47,7 @@ export type StationRow = {
   availableReturnSlots: number;
   emptySlots: number;
   incomingRedistributionBikes: number;
+  needsRedistribution?: boolean;
   workers?: readonly StationWorkerRow[];
 };
 

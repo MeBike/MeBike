@@ -1,7 +1,7 @@
 import { z } from "../../../zod";
 
 import { AccountStatusSchema } from "../users";
-import { StationTypeSchema } from "../stations";
+import { StationBikesSchema, StationReadSummarySchema, StationTypeSchema } from "../stations";
 
 export const AgencyStationSummarySchema = z.object({
   id: z.uuidv7(),
@@ -10,6 +10,14 @@ export const AgencyStationSummarySchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   stationType: StationTypeSchema,
+});
+
+// Full station data for agency detail (excludes agencyId, workers, and fixed bikes)
+export const AgencyDetailStationSchema = StationReadSummarySchema.omit({
+  agencyId: true,
+  workers: true,
+}).extend({
+  bikes: StationBikesSchema.omit({ fixed: true }),
 });
 
 export const AgencySummarySchema = z.object({
@@ -21,6 +29,16 @@ export const AgencySummarySchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 }).openapi("AgencySummary");
+
+export const AgencyDetailSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  contactPhone: z.string().nullable(),
+  status: AccountStatusSchema,
+  station: AgencyDetailStationSchema.nullable(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+}).openapi("AgencyDetail");
 
 export const AgencyOperationalPeriodSchema = z.object({
   from: z.iso.datetime(),
@@ -80,4 +98,6 @@ export const AgencyOperationalStatsSchema = z.object({
 }).openapi("AgencyOperationalStats");
 
 export type AgencySummary = z.infer<typeof AgencySummarySchema>;
+export type AgencyDetail = z.infer<typeof AgencyDetailSchema>;
+export type AgencyDetailStation = z.infer<typeof AgencyDetailStationSchema>;
 export type AgencyOperationalStats = z.infer<typeof AgencyOperationalStatsSchema>;
