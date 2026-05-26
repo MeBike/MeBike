@@ -241,6 +241,7 @@ export const SUPPLIER_MESSAGE = {
 
 export const BIKES_MESSAGES = {
   // create bike
+  BIKE_SYSTEM_CAPACITY_EXCEEDED : "Hệ thống hiện đã vượt quá sức chứa cho phép", 
   CREATE_BIKE_SUCCESS: "Tạo xe đạp mới thành công",
   GET_BIKES_SUCCESS: "Lấy danh sách xe đạp thành công",
   BIKE_NOT_FOUND: "Không tìm thấy xe đạp",

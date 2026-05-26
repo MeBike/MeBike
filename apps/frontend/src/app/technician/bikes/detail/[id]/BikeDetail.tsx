@@ -14,27 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatToVNTime } from "@/lib/formatVNDate";
 import type { BikeRentalHistory, BikeActivityStats, BikeStats, Bike as BikeType, BikeStatus } from "@/types";
-
-// Mở rộng type Bike để khớp với UI bạn đang hiển thị 
-export const getStatusConfig = (status: BikeStatus) => {
-  switch (status) {
-    case "BOOKED":
-      return { label: "Đã đặt", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
-    case "MAINTENANCE":
-      return { label: "Đang bảo trì", color: "bg-blue-100 text-blue-800 border-blue-200" };
-    case "BROKEN":
-      return { label: "Đang hỏng", color: "bg-red-100 text-red-800 border-red-200" };
-    case "AVAILABLE":
-      return { label: "Sẵn sàng", color: "bg-green-100 text-green-800 border-green-200" };
-    case "FIXED":
-      return { label: "Đã sửa xong", color: "bg-slate-200 text-slate-800" };      
-    case "RESERVED":
-      return { label: "Đã giữ chỗ", color: "bg-orange-100 text-orange-800 border-orange-200" };
-    default:
-      return { label: status, color: "bg-gray-100 text-gray-800 border-gray-200" };
-  }
-};
-// (vì interface gốc bạn đưa thiếu name, type, station, totalDistance...)
+import { getStatusConfig } from "@/columns/bike-colums";
 function SectionCard({
   icon: Icon,
   title,
@@ -68,15 +48,6 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
     </div>
   );
 }
-
-function bikeStatusVariant(status: string) {
-  const s = status?.toUpperCase() || "";
-  if (s.includes("AVAILABLE") || s.includes("SẴN SÀNG")) return "success";
-  if (s.includes("RENTED") || s.includes("ĐANG THUÊ")) return "warning";
-  if (s.includes("MAINTENANCE") || s.includes("BẢO TRÌ")) return "destructive";
-  return "secondary";
-}
-
 export function BikeDetailView({ 
   bike, 
 }: { 

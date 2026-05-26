@@ -17,10 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { formatToVNTime } from "@/lib/formatVNDate";
+import { getStatusConfig } from "@/columns/bike-colums";
 import type {
-  BikeRentalHistory,
-  BikeActivityStats,
-  BikeStats,
   Bike,
 } from "@/types";
 function SectionCard({
@@ -87,6 +85,8 @@ export function BikeDetailView({
   // const totalHours = activity
   //   ? Math.floor(activity.totalMinutesActive / 60)
   //   : 0;
+  const statusInfo = getStatusConfig(bike.status);
+  
   return (
     <>
       <div className="">
@@ -139,7 +139,6 @@ export function BikeDetailView({
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            {/* Thông tin cơ bản */}
             <SectionCard icon={BikeIcon} title="Thông tin cơ bản">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
@@ -150,10 +149,12 @@ export function BikeDetailView({
                   label="Trạng thái"
                   value={
                     <Badge
-                      variant={bikeStatusVariant(bike.status)}
-                      className="rounded-full"
+                      className={cn(
+                        "rounded-full px-3 py-1 font-semibold border shadow-none",
+                        statusInfo.color,
+                      )}
                     >
-                      {bike.status}
+                      {statusInfo.label}
                     </Badge>
                   }
                 />
@@ -161,8 +162,6 @@ export function BikeDetailView({
                   label="Nhà cung cấp"
                   value={bike.supplier?.name || "Hệ thống"}
                 />
-
-                {/* Thêm hiển thị Ratings vào đây */}
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Đánh giá khách hàng
@@ -195,94 +194,8 @@ export function BikeDetailView({
                 }
               />
             </SectionCard>
-
-            {/* <SectionCard icon={Activity} title="Thống kê">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Tổng số chuyến
-                  </span>
-                  <span className="font-bold">
-                    {statisticData?.totalRentals || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Hoạt động
-                  </span>
-                  <span className="font-bold">
-                    {totalHours}h{" "}
-                    {activity ? activity.totalMinutesActive % 60 : 0}m
-                  </span>
-                </div>
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span className="text-sm text-muted-foreground">
-                    Doanh thu
-                  </span>
-                  <span className="font-bold text-primary">
-                    {(statisticData?.totalRevenue || 0).toLocaleString("vi-VN")}
-                    đ
-                  </span>
-                </div>
-              </div>
-            </SectionCard> */}
           </div>
         </div>
-        {/* <SectionCard icon={History} title="Lịch sử thuê xe gần đây">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="text-xs font-medium uppercase text-muted-foreground">
-                <tr className="border-b border-border/60">
-                  <th className="pb-3 pr-4 font-semibold">Khách hàng</th>
-                  <th className="pb-3 pr-4 font-semibold">Hành trình</th>
-                  <th className="pb-3 pr-4 font-semibold">Thời gian</th>
-                  <th className="pb-3 text-right font-semibold">Tổng tiền</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                {rentals.length > 0 ? (
-                  rentals.map((rental) => (
-                    <tr
-                      key={rental.id}
-                      className="group hover:bg-muted/30 transition-colors"
-                    >
-                      <td className="py-4 pr-4">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-[10px]">
-                            {rental.user.fullname.charAt(0)}
-                          </div>
-                          <p className="font-medium">{rental.user.fullname}</p>
-                        </div>
-                      </td>
-                      <td className="py-4 pr-4 text-xs">
-                        <div className="flex items-center gap-1.5 font-medium">
-                          {rental.startStation.name}{" "}
-                          <ArrowRight className="h-3 w-3 text-muted-foreground" />{" "}
-                          {rental.endStation.name}
-                        </div>
-                      </td>
-                      <td className="py-4 pr-4 text-xs text-muted-foreground">
-                        {formatToVNTime(rental.startTime)}
-                      </td>
-                      <td className="py-4 text-right font-bold text-primary">
-                        {rental.totalPrice.toLocaleString("vi-VN")}đ
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-8 text-center text-muted-foreground"
-                    >
-                      Chưa có dữ liệu lịch sử.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard> */}
       </div>
     </>
   );
