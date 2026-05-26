@@ -1,6 +1,7 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { BikeRepository, BikeRepositoryError } from "@/domain/bikes";
+import { makePageResult } from "@/domain/shared/pagination";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { UserRow } from "@/domain/users";
 import type {
@@ -285,7 +286,7 @@ function makeRedistributionService(
       );
   };
 
-  const prioritizeRequests = <T extends { status: RedistributionStatus; createdAt: Date; priorityScore?: number }>(
+  const prioritizeRequests = <T extends { status: RedistributionStatus; createdAt: Date; priorityScore?: number | null; sourceStation: any; targetStation: any; requestedQuantity: number }>(
     requests: T[],
   ): Effect.Effect<T[], never> => {
     const pending = requests.filter(r => r.status === RedistributionStatus.PENDING_APPROVAL);
@@ -296,25 +297,30 @@ function makeRedistributionService(
     }
 
     return Effect.all(
-      pending.map(req =>
-        calculatePriorityScore(req).pipe(
+      pending.map(req => {
+        if (req.priorityScore !== null && req.priorityScore !== undefined) {
+          return Effect.succeed(req);
+        }
+        return calculatePriorityScore(req).pipe(
           Effect.map((score) => {
             req.priorityScore = score;
             return req;
           }),
-        ),
-      ),
+        );
+      }),
     ).pipe(
       Effect.map((prioritizedPending) => {
-        // Sort the pending requests by priority:
+        const now = new Date();
+        const getEffectiveScore = (item: T) => {
+          const score = item.priorityScore ?? 0;
+          const pendingMs = now.getTime() - item.createdAt.getTime();
+          const pendingMins = Math.max(0, pendingMs / (60 * 1000));
+          return score + pendingMins * 1000;
+        };
+
+        // Sort the pending requests by effectiveScore descending:
         prioritizedPending.sort((a, b) => {
-          const diffMs = a.createdAt.getTime() - b.createdAt.getTime();
-          // If sent more than 5 minutes apart, earliest gets priority
-          if (Math.abs(diffMs) > 5 * 60 * 1000) {
-            return diffMs;
-          }
-          // Within 5 minutes, highest score gets priority
-          return (b.priorityScore ?? 0) - (a.priorityScore ?? 0);
+          return getEffectiveScore(b) - getEffectiveScore(a);
         });
 
         return [...prioritizedPending, ...others];
@@ -436,6 +442,32 @@ function makeRedistributionService(
       Effect.gen(function* () {
         const user = yield* assertUserExists(userId);
         const stationId = getUserStationId(user)!;
+
+        const isPendingOnly = filter.status === RedistributionStatus.PENDING_APPROVAL;
+
+        if (isPendingOnly) {
+          // Fetch all matching pending requests to ensure global in-memory prioritization/pagination
+          const allResult = yield* repo.listWithOffset(
+            toRedistributionWhere({
+              ...filter,
+              OR: [
+                { sourceStationId: stationId },
+                { targetStationId: stationId },
+              ],
+            }),
+            { page: 1, pageSize: 1000000, sortBy: page.sortBy, sortDir: page.sortDir },
+          );
+
+          const prioritizedItems = yield* prioritizeRequests(allResult.items);
+
+          const total = prioritizedItems.length;
+          const start = (page.page - 1) * page.pageSize;
+          const end = start + page.pageSize;
+          const paginatedItems = prioritizedItems.slice(start, end);
+
+          return makePageResult(paginatedItems, total, page.page, page.pageSize);
+        }
+
         const pageResult = yield* repo.listWithOffset(
           toRedistributionWhere({
             ...filter,
@@ -486,7 +518,7 @@ function makeRedistributionService(
           );
         }
 
-        if (req.status === RedistributionStatus.PENDING_APPROVAL) {
+        if (req.status === RedistributionStatus.PENDING_APPROVAL && !req.priorityScore) {
           const score = yield* calculatePriorityScore(req);
           req.priorityScore = score;
         }
@@ -551,6 +583,12 @@ function makeRedistributionService(
             }),
           );
         }
+
+        const priorityScore = yield* calculatePriorityScore({
+          sourceStation,
+          targetStation,
+          requestedQuantity: args.requestedQuantity,
+        });
 
         const now = new Date();
         const bikeIds: string[] = [];
@@ -638,6 +676,7 @@ function makeRedistributionService(
               bikeIds,
               sourceAvailableBikesBefore: totalAvailableCount,
               targetAvailableBikesBefore: targetAvailableCount,
+              priorityScore,
             });
           })).pipe(
           Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),

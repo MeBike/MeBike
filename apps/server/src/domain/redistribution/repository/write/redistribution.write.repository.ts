@@ -47,6 +47,7 @@ export function makeRedistributionWriteRepository(
             reason: data.reason,
             sourceAvailableBikesBefore: data.sourceAvailableBikesBefore,
             targetAvailableBikesBefore: data.targetAvailableBikesBefore,
+            priorityScore: data.priorityScore,
             status: "PENDING_APPROVAL" as RedistributionStatus,
             items: data.bikeIds
               ? {

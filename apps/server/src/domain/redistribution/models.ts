@@ -83,6 +83,7 @@ export type RedistributionRequestRow = {
   completedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  priorityScore?: number | null;
 };
 
 export type RedistributionRequestSummaryRow = {
