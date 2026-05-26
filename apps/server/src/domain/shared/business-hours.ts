@@ -173,7 +173,7 @@ export function getVietnamForecastWindow(startHour?: number, endHour?: number): 
     month: "numeric",
     day: "numeric",
     hour: "numeric",
-    hour12: false
+    hour12: false,
   });
 
   const parts = formatter.formatToParts(now);

@@ -1,3 +1,5 @@
+import type { StatsContracts } from "@mebike/shared";
+
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setupHttpE2eFixture } from "@/test/http/e2e-fixture";
@@ -74,7 +76,7 @@ describe("reservation forecast e2e", () => {
 
     expect(response.status).toBe(200);
 
-    const body = await response.json();
+    const body = await response.json() as StatsContracts.ReservationForecast;
     expect(body.windowStart).toBe("2026-05-25T09:00:00.000Z"); // 16:00:00 UTC
     expect(body.windowEnd).toBe("2026-05-25T16:00:00.000Z"); // 23:00:00 UTC
     expect(body.station).toEqual({
@@ -135,7 +137,7 @@ describe("reservation forecast e2e", () => {
 
     expect(response.status).toBe(200);
 
-    const body = await response.json();
+    const body = await response.json() as StatsContracts.ReservationForecast;
     expect(body.windowStart).toBe("2026-05-24T22:00:00.000Z"); // 5:00:00 UTC
     expect(body.windowEnd).toBe("2026-05-25T08:00:00.000Z"); // 15:00:00 UTC
 

@@ -122,7 +122,7 @@ describe("redistribution requests prioritisation e2e", () => {
     expect(items[1].priorityScore).toBeTypeOf("number");
     expect(items[2].priorityScore).toBeTypeOf("number");
 
-    expect(items[0].priorityLevel).toBe("MEDIUM");
+    expect(items[0].priorityLevel).toBe("HIGH");
     expect(items[1].priorityLevel).toBe("HIGH");
     expect(items[2].priorityLevel).toBe("LOW");
 

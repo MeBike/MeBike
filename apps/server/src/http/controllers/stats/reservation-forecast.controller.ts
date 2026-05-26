@@ -3,7 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect } from "effect";
 
 import { ReservationQueryServiceTag } from "@/domain/reservations";
-import { createVietnamHourDate, getVietnamForecastWindow } from "@/domain/shared/business-hours";
+import { createVietnamHourDate, getTimePartsInTimeZone, getVietnamForecastWindow } from "@/domain/shared/business-hours";
 import { Prisma } from "@/infrastructure/prisma";
 
 type StatsRoutes = typeof import("@mebike/shared")["serverRoutes"]["stats"];
@@ -46,7 +46,7 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
   const reservationCountByHour = new Map<number, number>();
   for (const r of reservations) {
     if (r.station.id === station.id) {
-      const hour = r.startTime.getHours();
+      const hour = getTimePartsInTimeZone(r.startTime).hour;
       reservationCountByHour.set(hour, (reservationCountByHour.get(hour) ?? 0) + 1);
     }
   }
