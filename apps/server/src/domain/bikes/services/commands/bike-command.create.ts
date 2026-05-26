@@ -10,6 +10,7 @@ import {
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
 } from "../../domain-errors";
 import { makeBikeRepository } from "../../repository/bike.repository";
@@ -34,7 +35,7 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
         Effect.runPromise(txStationRepo.getById(input.stationId)),
         tx.supplier.findUnique({
           where: { id: input.supplierId },
-          select: { id: true },
+          select: { id: true, status: true },
         }),
       ]);
 
@@ -44,6 +45,12 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
 
       if (!supplier) {
         throw new BikeSupplierNotFound({ supplierId: input.supplierId });
+      }
+      if (supplier.status !== "ACTIVE") {
+        throw new BikeSupplierNotActive({
+          supplierId: supplier.id,
+          status: supplier.status,
+        });
       }
 
       const targetStatus = input.status ?? "AVAILABLE";

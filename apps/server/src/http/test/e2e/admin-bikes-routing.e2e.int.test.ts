@@ -118,4 +118,36 @@ describe("admin bikes routing e2e", () => {
     expect(body.details?.availablePlacementSlots).toBe(0);
     expect(body.details?.requiredPlacementSlots).toBe(1);
   });
+
+  it("rejects bike creation with a terminated supplier", async () => {
+    const { token } = await createToken("ADMIN");
+    const station = await fixture.factories.station({ capacity: 5 });
+    const supplier = await fixture.factories.supplier({ status: "TERMINATED" });
+
+    const response = await fixture.app.request("http://test/v1/bikes", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: station.id,
+        supplierId: supplier.id,
+        status: "AVAILABLE",
+      }),
+    });
+
+    const body = await response.json() as {
+      details?: {
+        code?: string;
+        supplierId?: string;
+        supplierStatus?: string;
+      };
+    };
+
+    expect(response.status).toBe(400);
+    expect(body.details?.code).toBe("BIKE_SUPPLIER_NOT_ACTIVE");
+    expect(body.details?.supplierId).toBe(supplier.id);
+    expect(body.details?.supplierStatus).toBe("TERMINATED");
+  });
 });
