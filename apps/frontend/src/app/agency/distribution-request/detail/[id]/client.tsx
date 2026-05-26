@@ -736,7 +736,7 @@ export const DistributionRequestDetailClient = ({
                       Thực nhận
                     </span>
                     <span className="text-emerald-700 font-bold text-2xl">
-                      {data.targetStation.actualReceivedBikes}{" "}
+                      {data.targetStation?.actualReceivedBikes ?? 0}{" "}
                       <span className="text-sm">xe</span>
                     </span>
                   </div>

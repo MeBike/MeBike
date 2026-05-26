@@ -162,9 +162,13 @@ export default function SystemConfigPage() {
     if (!selectedConfig) return;
     
     const now = new Date();
-    const vnTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
-    const currentHour = vnTime.getHours();
-
+    const currentHour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        hour: "numeric",
+        hour12: false,
+      }).format(now)
+    );
     // CHẶN BẰNG GIÁ TRỊ ĐỘNG
     if (currentHour !== allowedHour) {
       setErrorText(`Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ ${allowedHour}:00 - ${allowedHour}:59 (UTC+7).`);
