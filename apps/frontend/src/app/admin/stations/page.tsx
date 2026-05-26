@@ -60,7 +60,6 @@ export default function Page() {
   return (
     <StationClient
       data={{
-        distributionConfig : systemConfigs?.find((config) => config.key === "min_available_bikes_at_station")?.value || "",
         stations,
         paginationStations,
         responseStationRevenue,

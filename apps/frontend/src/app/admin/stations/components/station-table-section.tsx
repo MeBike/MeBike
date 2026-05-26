@@ -5,9 +5,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationStaffColumns } from "@/columns/station-column";
 import { Button } from "@/components/ui/button";
 import { Pagination, Station } from "@/types";
-import { string } from "zod";
 interface StationTableSectionProps {
-  distributionConfig : string;
   stations: Station[];
   pagination?: Pagination;
   setPage: (page: number) => void;
@@ -20,7 +18,6 @@ interface StationTableSectionProps {
 }
 export function StationTableSection({
   stations,
-  distributionConfig,
   pagination,
   setPage,
   onView,
@@ -39,7 +36,6 @@ export function StationTableSection({
             onView: ({ id }) => {
               onView(id);
             },
-            distributionConfig : distributionConfig
           })}
           isLoading={isLoading}
           data={stations ?? []}

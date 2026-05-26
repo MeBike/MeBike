@@ -146,8 +146,8 @@ export default function CreateBikeClient({
                                       <SelectItem key={station.id} value={station.id} disabled={station.capacity.emptyPhysicalSlots <= 0}>
                                         <div className="flex flex-col gap-0.5">
                                           <span className="font-medium text-sm">{station.name}</span>
-                                          <span className={`text-xs ${station.capacity.emptyPhysicalSlots > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
-                                            {station.capacity.emptyPhysicalSlots > 0 
+                                           <span className={`text-xs ${station.returnSlots.available > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                            {station.returnSlots.available > 0 
                                               ? `Còn ${station.returnSlots.available} chỗ trống` 
                                               : "Đã hết chỗ trống"}
                                           </span>
