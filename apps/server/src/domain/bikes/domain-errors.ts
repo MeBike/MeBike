@@ -1,6 +1,7 @@
 import { Data } from "effect";
 
 import type { WithGenericError } from "@/domain/shared";
+import type { SupplierStatus } from "generated/prisma/client";
 
 export class BikeRepositoryError extends Data.TaggedError("BikeRepositoryError")<
   WithGenericError
@@ -22,6 +23,11 @@ export class BikeStationPlacementCapacityExceeded extends Data.TaggedError("Bike
 
 export class BikeSupplierNotFound extends Data.TaggedError("BikeSupplierNotFound")<{
   readonly supplierId: string;
+}> {}
+
+export class BikeSupplierNotActive extends Data.TaggedError("BikeSupplierNotActive")<{
+  readonly supplierId: string;
+  readonly status: SupplierStatus;
 }> {}
 
 export class InvalidBikeStatus extends Data.TaggedError("InvalidBikeStatus")<{
