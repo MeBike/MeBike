@@ -79,6 +79,32 @@ describe("bikeService Integration", () => {
     expectLeftTag(result, "BikeSupplierNotFound");
   });
 
+  it("fails with BikeSupplierNotActive when creating with inactive supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier({ status: "INACTIVE" });
+
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
+  it("fails with BikeSupplierNotActive when creating with terminated supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier({ status: "TERMINATED" });
+
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
   it("creates bike when station and supplier both exist", async () => {
     const station = await fixture.factories.station();
     const supplier = await fixture.factories.supplier();
@@ -131,6 +157,32 @@ describe("bikeService Integration", () => {
     });
 
     expectLeftTag(result, "BikeSupplierNotFound");
+  });
+
+  it("update fails with BikeSupplierNotActive when changing to inactive supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const inactiveSupplier = await fixture.factories.supplier({ status: "INACTIVE" });
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      supplierId: inactiveSupplier.id,
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
+  it("update fails with BikeSupplierNotActive when changing to terminated supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const terminatedSupplier = await fixture.factories.supplier({ status: "TERMINATED" });
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      supplierId: terminatedSupplier.id,
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
   });
 
   it("update succeeds when changing to another valid station and supplier", async () => {

@@ -9,6 +9,7 @@ import type {
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
   InvalidBikeStatus,
 } from "../../domain-errors";
@@ -40,7 +41,11 @@ export type BikeCommandService = {
     input: CreateBikeInput,
   ) => Effect.Effect<
     BikeRow,
-    BikeRepositoryError | BikeStationNotFound | BikeStationPlacementCapacityExceeded | BikeSupplierNotFound
+    | BikeRepositoryError
+    | BikeStationNotFound
+    | BikeStationPlacementCapacityExceeded
+    | BikeSupplierNotActive
+    | BikeSupplierNotFound
   >;
 
   adminUpdateBike: (
@@ -54,6 +59,7 @@ export type BikeCommandService = {
     | BikeRepositoryError
     | InvalidBikeStatus
     | BikeStationPlacementCapacityExceeded
+    | BikeSupplierNotActive
     | BikeStationNotFound
     | BikeSupplierNotFound
   >;
