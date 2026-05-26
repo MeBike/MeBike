@@ -131,8 +131,8 @@ export default function SystemConfigPage() {
   const expireConfig = configsList.find(c => c.key === "redistribution_pending_expire_hours");
   const expireTimeStr = expireConfig?.value || "23:00";
   const allowedHour = parseInt(expireTimeStr.split(":")[0] || expireTimeStr, 10);
-
   const isSelectedTimeConfig = selectedConfig?.key.includes("hours") || selectedConfig?.key.includes("time");
+
 
   const handleEditClick = (config: SystemConfig) => {
     setSelectedConfig(config);
