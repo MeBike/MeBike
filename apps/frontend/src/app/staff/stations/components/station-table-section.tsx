@@ -28,7 +28,8 @@ export function StationTableSection({
           columns={stationStaffColumns({
             onView : ({id}) => {
               onView(id);
-            }
+            },
+            
           })}
           isLoading={isLoading}
           data={stations ?? []}

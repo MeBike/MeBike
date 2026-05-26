@@ -41,7 +41,10 @@ const BIKE_STATUS_LABELS: Record<BikeStatus, string> = {
   UNAVAILABLE: "Không khả dụng",
   DISABLED: "Hư",
   LOST: "Mất xe",
-  REDISTRIBUTING: "Đang điều phối",
+  PENDING_DISPATCH: "Đang điều phối",
+  TRANSPORTING : "Đang vận chuyển",
+  SWAPPING : "Hỗ trợ sự cố",
+  FIXED : "Đã sửa",
   "": "Không xác định",
 };
 
@@ -143,9 +146,9 @@ export default function CreateBikeClient({
                                       <SelectItem key={station.id} value={station.id} disabled={station.capacity.emptyPhysicalSlots <= 0}>
                                         <div className="flex flex-col gap-0.5">
                                           <span className="font-medium text-sm">{station.name}</span>
-                                          <span className={`text-xs ${station.capacity.emptyPhysicalSlots > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
-                                            {station.capacity.emptyPhysicalSlots > 0 
-                                              ? `Còn ${station.capacity.emptyPhysicalSlots} chỗ trống` 
+                                           <span className={`text-xs ${station.returnSlots.available > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                            {station.returnSlots.available > 0 
+                                              ? `Còn ${station.returnSlots.available} chỗ trống` 
                                               : "Đã hết chỗ trống"}
                                           </span>
                                         </div>
@@ -170,7 +173,7 @@ export default function CreateBikeClient({
                                           <span className="font-medium text-sm">{station.name}</span>
                                           <span className={`text-xs ${station.capacity.emptyPhysicalSlots > 0 ? "text-muted-foreground" : "text-destructive font-medium"}`}>
                                             {station.capacity.emptyPhysicalSlots > 0 
-                                              ? `Còn ${station.capacity.emptyPhysicalSlots} chỗ trống` 
+                                              ? `Còn ${station.returnSlots.available} chỗ trống` 
                                               : "Đã hết chỗ trống"}
                                           </span>
                                         </div>

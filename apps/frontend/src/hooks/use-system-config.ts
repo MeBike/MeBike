@@ -7,11 +7,11 @@ import { useGetAllSystemConfigsQuery } from "@queries";
 import { useUpdateSystemConfigMutation } from "@mutations";
 import {HTTP_STATUS} from "@/constants";
 import { useCallback } from "react";
-import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
-export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , key : string}) => {
+import { getErrorMessageFromSystemConfigCode , getAxiosErrorCodeMessage } from "@utils";
+export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , key ?: string}) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data : systemConfigs , isLoading , refetch} = useGetAllSystemConfigsQuery();
+  const { data : systemConfigs , isLoading , refetch } = useGetAllSystemConfigsQuery();
   const getAllSystemConfigs = useCallback(() => {
       if (!hasToken) {
         router.push("/login");
@@ -34,7 +34,7 @@ export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , ke
         return result;
       } catch (error) {
         const code_error = getAxiosErrorCodeMessage(error);
-        toast.error(getErrorMessageFromSupplierCode(code_error));
+        toast.error(getErrorMessageFromSystemConfigCode(code_error));
         throw error; 
       }
     },
@@ -46,5 +46,6 @@ export const useSystemConfigActions = ({hasToken,key} : {hasToken : boolean , ke
     updateSystemConfig,
     getAllSystemConfigs,
     updateSystemConfigMutation,
+    refetch
   };
 };

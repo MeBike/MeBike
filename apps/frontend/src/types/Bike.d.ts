@@ -85,10 +85,14 @@ export interface BikeHasHighestRevenue {
 export interface BikeStatistics {
   RESERVED: number;
   AVAILABLE: number;
-  BOOKED: number;
-  UNAVAILABLE: number;
-  BROKEN: number;
   RENTED : number;
+  FIXED : number;
+  PENDING_DISPATCH : number;
+  TRANSPORTING : number;
+  SWAPPING : number;
+  LOST : number;
+  DISABLED : number;
+  BROKEN: number;
 }
 export interface BikeActionProps {
   hasToken: boolean;

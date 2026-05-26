@@ -200,16 +200,6 @@ export default function StationDetailPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {station.id !== listStation?.currentStation?.id && (
-                <Button
-                  onClick={() =>
-                    router.push(`/technician/distribution-request/create?targetStationId=${station.id}`)
-                  }
-                  className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm rounded-full"
-                >
-                  <Repeat className="w-4 h-4 mr-2" /> Điều phối xe đến trạm này
-                </Button>
-              )}
               <Button variant="outline" className="shadow-sm rounded-full" onClick={() => router.push("/technician/stations")}>
                 Quay lại danh sách
               </Button>

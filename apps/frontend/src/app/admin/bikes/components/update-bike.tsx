@@ -35,18 +35,18 @@ import {
 import { cn } from "@/lib/utils";
 import type { Bike, Station, BikeStatus, Supplier } from "@/types";
 
-const ALLOWED_TRANSITIONS: Record<string, BikeStatus[]> = {
-  AVAILABLE: ["BROKEN", "MAINTENANCE", "UNAVAILABLE"],
-  BROKEN: ["AVAILABLE"],
-  MAINTENANCE: ["AVAILABLE"],
-  UNAVAILABLE: ["AVAILABLE"],
+// Chỉ cho phép chuyển đổi giữa 3 trạng thái: AVAILABLE, BROKEN, DISABLED
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  AVAILABLE: ["BROKEN", "DISABLED"],
+  BROKEN: ["AVAILABLE", "DISABLED"],
+  DISABLED: ["AVAILABLE", "BROKEN"],
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   AVAILABLE: { label: "Sẵn sàng", color: "bg-green-500" },
   BROKEN: { label: "Hỏng hóc", color: "bg-red-500" },
-  MAINTENANCE: { label: "Bảo trì", color: "bg-amber-500" },
-  UNAVAILABLE: { label: "Không khả dụng", color: "bg-slate-500" },
+  DISABLED: { label: "Vô hiệu hóa", color: "bg-slate-500" },
+  // Vẫn giữ để map UI cho các trạng thái bị khóa (isRestricted)
   RENTED: { label: "Đang được thuê", color: "bg-blue-500" },
   BOOKED: { label: "Đã đặt chỗ", color: "bg-purple-500" },
   RESERVED: { label: "Đã giữ chỗ", color: "bg-orange-500" }
@@ -85,9 +85,6 @@ export function UpdateBikeDialog({
 
   // Reset form mỗi khi bike thay đổi hoặc Dialog được mở
   useEffect(() => {
-    console.log("Dữ liệu nhà cung cấp của xe:", bike?.supplier);
-    console.log("Dữ liệu trạm của xe:", bike?.station);
-    console.log("Dữ liệu trạng thái của xe:", bike?.status);
     if (open) {
       reset({
         stationId: bike?.station?.id ? String(bike.station.id) : "",
@@ -98,8 +95,10 @@ export function UpdateBikeDialog({
   }, [open, bike, reset]);
 
   const statusOptions = useMemo(() => {
-    const current = bike?.status as BikeStatus;
+    const current = bike?.status as string;
     const allowed = ALLOWED_TRANSITIONS[current] || [];
+    // Nếu trạng thái hiện tại không nằm trong 3 trạng thái kia (vd: đang BOOKED), 
+    // danh sách sổ xuống sẽ chỉ lấy trạng thái hiện hành đó để hiển thị
     return Array.from(new Set([current, ...allowed]));
   }, [bike?.status]);
 
@@ -127,7 +126,6 @@ export function UpdateBikeDialog({
         </Button>
       </DialogTrigger>
 
-      {/* Tăng max-width để layout không bị chật */}
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle className="text-xl">
@@ -139,7 +137,6 @@ export function UpdateBikeDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
-          {/* Grid Layout thoáng hơn với gap-6 */}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {/* Trạm xe */}
             <div className="space-y-2">
@@ -221,7 +218,7 @@ export function UpdateBikeDialog({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value}
-                    disabled={isRestricted} // <--- Điểm mấu chốt là cái này
+                    disabled={isRestricted}
                   >
                     <SelectTrigger
                       className={cn(
@@ -238,11 +235,11 @@ export function UpdateBikeDialog({
                             <span
                               className={cn(
                                 "h-2.5 w-2.5 rounded-full",
-                                STATUS_CONFIG[status]?.color,
+                                STATUS_CONFIG[status]?.color || "bg-gray-400"
                               )}
                             />
                             <span className="font-medium">
-                              {STATUS_CONFIG[status]?.label}
+                              {STATUS_CONFIG[status]?.label || status}
                             </span>
                           </div>
                         </SelectItem>
@@ -253,14 +250,13 @@ export function UpdateBikeDialog({
               )}
             />
 
-            {/* Câu cảnh báo hiện ra khi bị khóa */}
             {isRestricted && (
               <div className="flex items-start gap-2 text-[11px] font-medium text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-100 mt-2">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>
                   Xe đang trong trạng thái{" "}
                   <strong>
-                    {STATUS_CONFIG[bike?.status]?.label.toLowerCase()}
+                    {STATUS_CONFIG[bike?.status]?.label?.toLowerCase() || bike?.status}
                   </strong>
                   . Không thể thay đổi trạng thái kỹ thuật lúc này.
                 </span>

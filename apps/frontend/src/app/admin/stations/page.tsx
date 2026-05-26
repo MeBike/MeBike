@@ -5,12 +5,14 @@ import StationClient from "./StationClient";
 import { useDebounce } from "@/utils/useDebounce";
 import { useStationActions } from "@/hooks/use-station";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 export default function Page() {
   const [page, setPage] = useState<number>(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showRevenueReport, setShowRevenueReport] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
   const limit = 7;
+  const { systemConfigs , getAllSystemConfigs , refetch } = useSystemConfigActions({hasToken:true});
   const {
     getAllStations,
     stations,
@@ -27,6 +29,7 @@ export default function Page() {
   });
   useEffect(() => {
     getAllStations();
+    getAllSystemConfigs();
   }, [page, limit, searchQuery, getAllStations]);
   useEffect(() => {
     setPage(1);

@@ -29,19 +29,18 @@ import {
   X
 } from "lucide-react";
 
-// ==========================================
-// 1. ĐỊNH NGHĨA CỘT CHO DATATABLE
-// Bác có thể tách đoạn này ra file riêng (vd: system-config-columns.tsx)
-// ==========================================
 import { ColumnDef } from "@tanstack/react-table";
 
 interface SystemConfigColumnActions {
   onEdit: (config: SystemConfig) => void;
 }
+
 const SYSTEM_CONFIG_KEY_VI: Record<string, string> = {
   "min_available_bikes_at_station": "Số xe khả dụng tối thiểu tại trạm",
-  "redistribution_pending_expire_hours": "Thời gian tự động hủy yêu cầu điều phối (giờ)",
+  "redistribution_pending_expire_hours": "Thời gian tự động hủy yêu cầu điều phối",
+  "min_bikes_for_redistribution_alert": "Số xe tối thiểu để kích hoạt cảnh báo điều phối"
 };
+
 export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): ColumnDef<SystemConfig>[] => {
   return [
     {
@@ -49,8 +48,6 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
       header: "Khóa cấu hình (Key)",
       cell: ({ row }) => {
         const key = row.original.key;
-        
-        // Hàm dịch key, nếu không có trong từ điển thì format viết hoa chữ cái đầu
         const formatKeyName = (k: string) => {
           if (SYSTEM_CONFIG_KEY_VI[k]) return SYSTEM_CONFIG_KEY_VI[k];
           return k.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
@@ -59,9 +56,6 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
         return (
           <div className="flex flex-col">
             <span className="font-bold text-slate-800">{formatKeyName(key)}</span>
-            <code className="text-xs text-slate-400 mt-0.5 bg-slate-100 w-fit px-1.5 py-0.5 rounded font-mono">
-              {key}
-            </code>
           </div>
         );
       },
@@ -69,11 +63,13 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
     {
       accessorKey: "value",
       header: "Giá trị hiện tại",
-      cell: ({ row }) => (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-bold bg-blue-50 text-blue-700 border border-blue-100">
-          {row.original.value}
-        </span>
-      ),
+      cell: ({ row }) => {
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-bold bg-blue-50 text-blue-700 border border-blue-100">
+            {row.original.value}
+          </span>
+        )
+      },
     },
     {
       accessorKey: "updatedAt",
@@ -106,6 +102,7 @@ export const getSystemConfigColumns = ({ onEdit }: SystemConfigColumnActions): C
     },
   ];
 };
+
 export default function SystemConfigPage() {
   const { 
     systemConfigs, 
@@ -113,6 +110,7 @@ export default function SystemConfigPage() {
     updateSystemConfig, 
     updateSystemConfigMutation 
   } = useSystemConfigActions({ hasToken : true, key: "system-configs" });
+
   const getConfigsArray = (raw: any): SystemConfig[] => {
     if (!raw) return [];
     if (Array.isArray(raw)) return raw;
@@ -129,28 +127,76 @@ export default function SystemConfigPage() {
 
   const isUpdating = updateSystemConfigMutation.isPending;
 
-  // Xử lý mở Modal Edit (được truyền vào Columns)
+  // Lấy giá trị thời gian quy định từ mảng cấu hình (Mặc định 23 nếu không tìm thấy)
+  const expireConfig = configsList.find(c => c.key === "redistribution_pending_expire_hours");
+  const expireTimeStr = expireConfig?.value || "23:00";
+  const allowedHour = parseInt(expireTimeStr.split(":")[0] || expireTimeStr, 10);
+  const isSelectedTimeConfig = selectedConfig?.key.includes("hours") || selectedConfig?.key.includes("time");
+
+
   const handleEditClick = (config: SystemConfig) => {
     setSelectedConfig(config);
-    setEditValue(config.value);
+    
+    const isTime = config.key.includes("hours") || config.key.includes("time");
+    
+    if (isTime && config.value) {
+      let val = config.value;
+      // Trải nghiệm mượt hơn: Nếu API lỡ trả về "9" thì gán lại "09:00" để input nhận được, nếu trả "09:00" thì giữ nguyên
+      if (!val.includes(":")) {
+        const numVal = Number(val);
+        if (!isNaN(numVal)) {
+          const hh = Math.floor(numVal);
+          val = `${String(hh).padStart(2, '0')}:00`;
+        }
+      }
+      setEditValue(val);
+    } else {
+      setEditValue(config.value);
+    }
+
     setErrorText("");
     setIsModalOpen(true);
   };
 
-  // Xử lý Submit
   const handleSave = async () => {
     if (!selectedConfig) return;
-
-    const numericValue = Number(editValue);
-    if (isNaN(numericValue) || editValue.trim() === "") {
-      setErrorText("Vui lòng nhập một số hợp lệ.");
+    
+    const now = new Date();
+    const currentHour = Number(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        hour: "numeric",
+        hour12: false,
+      }).format(now)
+    );
+    // CHẶN BẰNG GIÁ TRỊ ĐỘNG
+    if (currentHour !== allowedHour) {
+      setErrorText(`Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ ${allowedHour}:00 - ${allowedHour}:59 (UTC+7).`);
       return;
+    }
+
+    let finalValue = editValue;
+
+    if (isSelectedTimeConfig) {
+      if (!editValue || editValue.trim() === "") {
+        setErrorText("Vui lòng chọn thời gian hợp lệ.");
+        return;
+      }
+      // Vì API bây giờ đã trả "09:00", ta không cần parse về "9" nữa. Gửi nguyên giá trị text này lên.
+      finalValue = editValue; 
+    } else {
+      const numericValue = Number(editValue);
+      if (isNaN(numericValue) || editValue.trim() === "" || numericValue < 0) {
+        setErrorText("Vui lòng nhập một số hợp lệ (lớn hơn hoặc bằng 0).");
+        return;
+      }
+      finalValue = String(numericValue);
     }
 
     try {
       await updateSystemConfig({
         key: selectedConfig.key,
-        data: { value: String(numericValue) },
+        data: { value: finalValue },
       });
       setIsModalOpen(false);
     } catch (error) {
@@ -160,8 +206,6 @@ export default function SystemConfigPage() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 bg-slate-50/30 min-h-screen">
-      
-      {/* Header */}
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
           <div className="p-2 bg-blue-600 rounded-xl text-white shadow-sm">
@@ -174,10 +218,8 @@ export default function SystemConfigPage() {
         </p>
       </div>
 
-      {/* Main Content - Đã đổi sang DataTable */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         {isLoading ? (
-          // Bạn có thể chèn Skeleton vào đây nếu DataTable của bạn không tự xử lý isLoading
           <div className="p-8 text-center text-slate-500 flex flex-col items-center justify-center">
              <Loader2 className="h-8 w-8 animate-spin mb-4 text-blue-500" />
              <p>Đang tải cấu hình...</p>
@@ -194,7 +236,6 @@ export default function SystemConfigPage() {
         )}
       </div>
 
-      {/* Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
@@ -203,7 +244,7 @@ export default function SystemConfigPage() {
               Cập nhật cấu hình
             </DialogTitle>
             <DialogDescription>
-              Nhập giá trị mới cho tham số hệ thống. Lưu ý giá trị phải là định dạng số.
+              Hệ thống chỉ chấp nhận lưu thay đổi trong khung giờ {allowedHour}:00 đến {allowedHour}:59 (theo giờ Việt Nam).
             </DialogDescription>
           </DialogHeader>
 
@@ -211,23 +252,25 @@ export default function SystemConfigPage() {
             <div className="space-y-2">
               <Label className="text-slate-500 text-xs font-bold uppercase tracking-wider">Khóa tham số</Label>
               <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-mono font-bold text-slate-700">
-                {selectedConfig?.key}
+                {SYSTEM_CONFIG_KEY_VI[selectedConfig?.key as keyof typeof SYSTEM_CONFIG_KEY_VI] || selectedConfig?.key}
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="config-value" className="text-slate-700 font-bold">
-                Giá trị cấu hình <span className="text-rose-500">*</span>
+                {isSelectedTimeConfig ? "Giá trị thời gian" : "Giá trị cấu hình (Số lượng)"} <span className="text-rose-500">*</span>
               </Label>
+              
               <Input
                 id="config-value"
-                type="number"
+                type={isSelectedTimeConfig ? "time" : "number"}
+                min={!isSelectedTimeConfig ? "0" : undefined}
                 value={editValue}
                 onChange={(e) => {
                   setEditValue(e.target.value);
                   if (errorText) setErrorText("");
                 }}
-                placeholder="Nhập giá trị số..."
+                placeholder={isSelectedTimeConfig ? "--:--" : "Nhập số lượng..."}
                 className={`rounded-xl focus-visible:ring-blue-500 ${errorText ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
                 disabled={isUpdating}
               />

@@ -41,7 +41,7 @@ export const stationColumns = ({
     header: "Số xe hiện tại",
     cell: ({ row }) => {
       const currentBikes = row.original.bikes.total;
-      const needsRedistribution = currentBikes < 10;
+      const needsRedistribution = row.original.needsRedistribution;
       return (
         <div className="flex items-center gap-2">
           <span className={needsRedistribution ? "font-bold text-orange-600" : "font-medium"}>
@@ -156,7 +156,7 @@ export const stationStaffColumns = ({
     header: "Số xe hiện tại",
     cell: ({ row }) => {
       const currentBikes = row.original.bikes.total;
-      const needsRedistribution = currentBikes < 10;
+      const needsRedistribution = row.original.needsRedistribution;
 
       return (
         <div className="flex items-center gap-2">

@@ -30,7 +30,7 @@ export const updateBikeSchema = z.object({
     .refine(isValidUUID, {
       message: "Mã trạm phải là một UUID hợp lệ",
     }),
-  status: z.enum(["AVAILABLE", "RENTED", "BROKEN", "MAINTENANCE", "BOOKED", "UNAVAILABLE"] as BikeStatus[]),
+  status: z.enum(["AVAILABLE", "DISABLED", "BROKEN"] as BikeStatus[]),
   supplierId: z
     .string()
     .refine(isValidUUID, {
