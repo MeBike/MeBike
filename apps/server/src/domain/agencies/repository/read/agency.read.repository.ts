@@ -6,7 +6,16 @@ import type {
 } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import {
+  applyCounts,
+  getActiveReturnSlotCounts,
+  getBikeCounts,
+  getIncomingRedistributionCounts,
+  resolveStationCounts,
+} from "@/domain/stations/repository/station.repository.counts";
+import { stationSelect } from "@/domain/stations/repository/station.repository.select";
 
+import type { AgencyDetailRow, AgencyRow } from "../../models";
 import type { AgencyRepo } from "../agency.repository.types";
 
 import { AgencyRepositoryError } from "../../domain-errors";
@@ -16,8 +25,11 @@ import {
   toAgencyRow,
   toAgencyWhere,
 } from "../agency.repository.helpers";
+import { StationRepositoryError } from "@/domain/stations";
 
-export type AgencyReadRepo = Pick<AgencyRepo, "getById" | "listWithOffset">;
+export type AgencyReadRepo = Pick<AgencyRepo, "getById" | "listWithOffset"> & {
+  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError | StationRepositoryError >;
+};
 
 export function makeAgencyReadRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
@@ -74,6 +86,120 @@ export function makeAgencyReadRepository(
         ]);
 
         return makePageResult(items.map(toAgencyRow), total, page, pageSize);
+      });
+    },
+
+    getDetailById(id) {
+      return Effect.gen(function* () {
+        const agencyRow = yield* Effect.tryPromise({
+          try: () =>
+            client.agency.findUnique({
+              where: { id },
+              select: selectAgencyRow,
+            }),
+          catch: cause =>
+            new AgencyRepositoryError({
+              operation: "getDetailById.agency",
+              cause,
+            }),
+        });
+
+        if (!agencyRow) {
+          return Option.none<AgencyDetailRow>();
+        }
+
+        // If no station linked, return agency with null station
+        if (!agencyRow.station) {
+          return Option.some<AgencyDetailRow>({
+            id: agencyRow.id,
+            name: agencyRow.name,
+            contactPhone: agencyRow.contactPhone,
+            status: agencyRow.status,
+            station: null,
+            createdAt: agencyRow.createdAt,
+            updatedAt: agencyRow.updatedAt,
+          });
+        }
+
+        const stationId = agencyRow.station.id;
+
+        // Fetch full station row
+        const stationBaseRow = yield* Effect.tryPromise({
+          try: () =>
+            client.station.findUnique({
+              where: { id: stationId },
+              select: stationSelect,
+            }),
+          catch: cause =>
+            new AgencyRepositoryError({
+              operation: "getDetailById.station",
+              cause,
+            }),
+        });
+
+        if (!stationBaseRow) {
+          return Option.some<AgencyDetailRow>({
+            id: agencyRow.id,
+            name: agencyRow.name,
+            contactPhone: agencyRow.contactPhone,
+            status: agencyRow.status,
+            station: null,
+            createdAt: agencyRow.createdAt,
+            updatedAt: agencyRow.updatedAt,
+          });
+        }
+
+        // Fetch all live counts in parallel
+        const [countsMap, returnSlotCountsMap, incomingRedistributionCountsMap] = yield* Effect.all([
+          getBikeCounts(client, [stationId]),
+          getActiveReturnSlotCounts(client, [stationId]),
+          getIncomingRedistributionCounts(client, [stationId]),
+        ]);
+
+        const counts = resolveStationCounts({
+          countsMap,
+          returnSlotCountsMap,
+          incomingRedistributionCountsMap,
+          stationId,
+        });
+
+        const stationRow = applyCounts(stationBaseRow, counts);
+
+        return Option.some<AgencyDetailRow>({
+          id: agencyRow.id,
+          name: agencyRow.name,
+          contactPhone: agencyRow.contactPhone,
+          status: agencyRow.status,
+          station: {
+            id: stationRow.id,
+            name: stationRow.name,
+            address: stationRow.address,
+            stationType: stationRow.stationType,
+            totalCapacity: stationRow.totalCapacity,
+            returnSlotLimit: stationRow.returnSlotLimit,
+            latitude: stationRow.latitude,
+            longitude: stationRow.longitude,
+            createdAt: stationRow.createdAt,
+            updatedAt: stationRow.updatedAt,
+            totalBikes: stationRow.totalBikes,
+            totalInStationBikes: stationRow.totalInStationBikes,
+            availableBikes: stationRow.availableBikes,
+            bookedBikes: stationRow.bookedBikes,
+            brokenBikes: stationRow.brokenBikes,
+            reservedBikes: stationRow.reservedBikes,
+            pendingDispatchBikes: stationRow.pendingDispatchBikes,
+            transportingBikes: stationRow.transportingBikes,
+            swappingBikes: stationRow.swappingBikes,
+            lostBikes: stationRow.lostBikes,
+            disabledBikes: stationRow.disabledBikes,
+            activeReturnSlots: stationRow.activeReturnSlots,
+            availableReturnSlots: stationRow.availableReturnSlots,
+            emptySlots: stationRow.emptySlots,
+            incomingRedistributionBikes: stationRow.incomingRedistributionBikes,
+          },
+          createdAt: agencyRow.createdAt,
+          updatedAt: agencyRow.updatedAt,
+        });
       });
     },
   };

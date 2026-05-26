@@ -12,12 +12,52 @@ export type AgencyStationRow = {
   readonly returnSlotLimit: number;
 };
 
+// Full station row used in agency detail responses (no agencyId, no workers, no fixedBikes)
+export type AgencyDetailStationRow = {
+  readonly id: string;
+  readonly name: string;
+  readonly address: string;
+  readonly stationType: StationType;
+  readonly totalCapacity: number;
+  readonly returnSlotLimit: number;
+  readonly latitude: number;
+  readonly longitude: number;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly totalBikes: number;
+  readonly totalInStationBikes: number;
+  readonly availableBikes: number;
+  readonly bookedBikes: number;
+  readonly brokenBikes: number;
+  readonly reservedBikes: number;
+  readonly pendingDispatchBikes: number;
+  readonly transportingBikes: number;
+  readonly swappingBikes: number;
+  readonly lostBikes: number;
+  readonly disabledBikes: number;
+  readonly activeReturnSlots: number;
+  readonly availableReturnSlots: number;
+  readonly emptySlots: number;
+  readonly incomingRedistributionBikes: number;
+  readonly needsRedistribution?: boolean;
+};
+
 export type AgencyRow = {
   readonly id: string;
   readonly name: string;
   readonly contactPhone: string | null;
   readonly status: AccountStatus;
   readonly station: AgencyStationRow | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
+
+export type AgencyDetailRow = {
+  readonly id: string;
+  readonly name: string;
+  readonly contactPhone: string | null;
+  readonly status: AccountStatus;
+  readonly station: AgencyDetailStationRow | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 };

@@ -4,6 +4,7 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type { AgencyRepositoryError } from "../domain-errors";
 import type {
+  AgencyDetailRow,
   AgencyFilter,
   AgencyRow,
   AgencySortField,
@@ -15,6 +16,7 @@ import type {
 export type AgencyRepo = {
   readonly create: (input: CreateAgencyInput) => Effect.Effect<AgencyRow, AgencyRepositoryError>;
   readonly getById: (id: string) => Effect.Effect<Option.Option<AgencyRow>, AgencyRepositoryError>;
+  readonly getDetailById: (id: string) => Effect.Effect<Option.Option<AgencyDetailRow>, AgencyRepositoryError>;
   readonly listWithOffset: (
     filter: AgencyFilter,
     pageReq: PageRequest<AgencySortField>,

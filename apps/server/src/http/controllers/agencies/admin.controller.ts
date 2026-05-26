@@ -54,7 +54,7 @@ const listAgencies: RouteHandler<AgenciesRoutes["adminList"]> = async (c) => {
 const getAgencyById: RouteHandler<AgenciesRoutes["adminGet"]> = async (c) => {
   const { id } = c.req.valid("param");
 
-  const eff = Effect.flatMap(AgencyServiceTag, service => service.getAgencyById(id));
+  const eff = Effect.flatMap(AgencyServiceTag, service => service.getAgencyDetailById(id));
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
