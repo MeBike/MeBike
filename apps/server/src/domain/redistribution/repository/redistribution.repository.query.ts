@@ -34,7 +34,9 @@ function mapStationSummary(station: any): StationSummary | null {
   return {
     id: station.id,
     name: station.name,
-  };
+    latitude: station.latitude,
+    longitude: station.longitude,
+  } as any;
 }
 
 function mapStationDetail(station: any): StationDetail | null {
@@ -148,6 +150,8 @@ const summaryUserSelect = {
 const summaryStationSelect = {
   id: true,
   name: true,
+  latitude: true,
+  longitude: true,
 };
 
 export const detailedRedistributionRequestSelect = {
@@ -178,6 +182,7 @@ export const detailedRedistributionRequestSelect = {
     select: redistributionRequestItemSelect,
   },
   status: true,
+  priorityScore: true,
   startedAt: true,
   completedAt: true,
   createdAt: true,
@@ -220,6 +225,7 @@ export const summaryRedistributionRequestSelect = {
     select: summaryRedistributionRequestItemSelect,
   },
   status: true,
+  priorityScore: true,
   startedAt: true,
   completedAt: true,
   createdAt: true,
@@ -242,6 +248,7 @@ export const redistributionRequestSelect = {
     select: summaryRedistributionRequestItemSelect,
   },
   status: true,
+  priorityScore: true,
   startedAt: true,
   completedAt: true,
   createdAt: true,
@@ -280,6 +287,7 @@ export function mapToRedistributionRequestDetail(
     reason: raw.reason ?? "",
     items: raw.items ?? [],
     status: raw.status,
+    priorityScore: raw.priorityScore ?? undefined,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
     createdAt: raw.createdAt,
@@ -305,6 +313,7 @@ export function mapToRedistributionRequestSummaryRow(
     reason: raw.reason ?? "",
     items: raw.items ?? [],
     status: raw.status,
+    priorityScore: raw.priorityScore ?? undefined,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
     createdAt: raw.createdAt,
@@ -329,6 +338,7 @@ export function mapToRedistributionRequestRow(
     reason: raw.reason ?? "",
     items: raw.items ?? [],
     status: raw.status,
+    priorityScore: raw.priorityScore ?? null,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
     createdAt: raw.createdAt,

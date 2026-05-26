@@ -20,6 +20,7 @@ export type CreateRedistributionRequestInput = {
   bikeIds?: string[];
   sourceAvailableBikesBefore?: number | null;
   targetAvailableBikesBefore?: number | null;
+  priorityScore?: number | null;
 };
 
 export type UpdateRedistributionRequestData = {

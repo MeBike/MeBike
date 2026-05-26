@@ -79,6 +79,32 @@ describe("bikeService Integration", () => {
     expectLeftTag(result, "BikeSupplierNotFound");
   });
 
+  it("fails with BikeSupplierNotActive when creating with inactive supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier({ status: "INACTIVE" });
+
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
+  it("fails with BikeSupplierNotActive when creating with terminated supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier({ status: "TERMINATED" });
+
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
   it("creates bike when station and supplier both exist", async () => {
     const station = await fixture.factories.station();
     const supplier = await fixture.factories.supplier();
@@ -133,6 +159,32 @@ describe("bikeService Integration", () => {
     expectLeftTag(result, "BikeSupplierNotFound");
   });
 
+  it("update fails with BikeSupplierNotActive when changing to inactive supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const inactiveSupplier = await fixture.factories.supplier({ status: "INACTIVE" });
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      supplierId: inactiveSupplier.id,
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
+  it("update fails with BikeSupplierNotActive when changing to terminated supplier", async () => {
+    const station = await fixture.factories.station();
+    const supplier = await fixture.factories.supplier();
+    const terminatedSupplier = await fixture.factories.supplier({ status: "TERMINATED" });
+    const bike = await createBike({ stationId: station.id, supplierId: supplier.id });
+
+    const result = await runAdminUpdateBikeEither(bike.id, {
+      supplierId: terminatedSupplier.id,
+    });
+
+    expectLeftTag(result, "BikeSupplierNotActive");
+  });
+
   it("update succeeds when changing to another valid station and supplier", async () => {
     const originalStation = await fixture.factories.station();
     const nextStation = await fixture.factories.station();
@@ -181,5 +233,134 @@ describe("bikeService Integration", () => {
     });
 
     expectLeftTag(result, "BikeStationPlacementCapacityExceeded");
+  });
+
+  it("fails with BikeSystemCapacityExceeded when total active bikes meets or exceeds total capacity of all stations", async () => {
+    // 1. Create a station with totalCapacity = 1
+    const station = await fixture.factories.station({ capacity: 1 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (total active = 1, capacity = 1)
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    // 3. Try to create another bike - should fail with BikeSystemCapacityExceeded
+    const result = await runCreateBikeEither({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSystemCapacityExceeded");
+  });
+
+  it("succeeds in creating bike if active bikes count is less than total capacity even if total bikes (including LOST/DISABLED) exceeds total capacity", async () => {
+    // 1. Create a station with totalCapacity = 5
+    const station = await fixture.factories.station({ capacity: 5 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (AVAILABLE) and two inactive ones (LOST, DISABLED)
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "LOST",
+    });
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "DISABLED",
+    });
+
+    // Total capacity = 5.
+    // Total active bikes = 1 (AVAILABLE). LOST and DISABLED are not counted.
+    // Since 1 < 5, we should be able to create a new bike!
+    const created = await runCreateBike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    expect(created.status).toBe("AVAILABLE");
+  });
+
+  it("fails with BikeSystemCapacityExceeded when updating inactive bike to active state and total active bikes meets or exceeds system capacity", async () => {
+    // 1. Create a station with totalCapacity = 1
+    const station = await fixture.factories.station({ capacity: 1 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (total active = 1, capacity = 1)
+    await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    // 3. Create one inactive bike (DISABLED)
+    const inactiveBike = await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "DISABLED",
+    });
+
+    // 4. Try to update the DISABLED bike to AVAILABLE - should fail with BikeSystemCapacityExceeded
+    const result = await runAdminUpdateBikeEither(inactiveBike.id, {
+      status: "AVAILABLE",
+    });
+
+    expectLeftTag(result, "BikeSystemCapacityExceeded");
+  });
+
+  it("succeeds when updating active bike status to another active status even if system capacity is met", async () => {
+    // 1. Create a station with totalCapacity = 1
+    const station = await fixture.factories.station({ capacity: 1 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one active bike (total active = 1, capacity = 1)
+    const activeBike = await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "AVAILABLE",
+    });
+
+    // 3. Update the AVAILABLE bike to BROKEN (both are active status) - should succeed
+    const result = await runAdminUpdateBike(activeBike.id, {
+      status: "BROKEN",
+    });
+
+    expect(result._tag).toBe("Some");
+    if (result._tag === "Some") {
+      expect(result.value.status).toBe("BROKEN");
+    }
+  });
+
+  it("succeeds when updating inactive bike to active state when system capacity is not met", async () => {
+    // 1. Create a station with totalCapacity = 2
+    const station = await fixture.factories.station({ capacity: 2 });
+    const supplier = await fixture.factories.supplier();
+
+    // 2. Create one inactive bike (DISABLED)
+    const inactiveBike = await fixture.factories.bike({
+      stationId: station.id,
+      supplierId: supplier.id,
+      status: "DISABLED",
+    });
+
+    // 3. Update the DISABLED bike to AVAILABLE - should succeed (active count becomes 1 <= 2)
+    const result = await runAdminUpdateBike(inactiveBike.id, {
+      status: "AVAILABLE",
+    });
+
+    expect(result._tag).toBe("Some");
+    if (result._tag === "Some") {
+      expect(result.value.status).toBe("AVAILABLE");
+    }
   });
 });

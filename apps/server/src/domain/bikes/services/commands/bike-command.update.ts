@@ -7,12 +7,15 @@ import { makeStationQueryRepository } from "@/domain/stations/repository/station
 import type { AdminBikeUpdatePatch } from "./bike-command.service.types";
 
 import {
+  BikeCurrentlyIncidentReported,
+  BikeCurrentlyRedistributing,
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
   InvalidBikeStatus,
 } from "../../domain-errors";
@@ -23,6 +26,7 @@ import {
   isBikeUpdateDomainPassThroughError,
   lockBikeRow,
   lockStationRow,
+  validateSystemCapacity,
 } from "./bike-command.helpers";
 
 export function adminUpdateBikeWithGuards(
@@ -50,6 +54,12 @@ export function adminUpdateBikeWithGuards(
             allowed,
           });
         }
+
+        const isCurrentActive = !["LOST", "DISABLED"].includes(current.value.status);
+        const isTargetActive = !["LOST", "DISABLED"].includes(patch.status);
+        if (!isCurrentActive && isTargetActive) {
+          await validateSystemCapacity(tx);
+        }
       }
 
       if (patch.stationId && patch.stationId !== current.value.stationId) {
@@ -69,6 +79,22 @@ export function adminUpdateBikeWithGuards(
         });
         if (pendingReservation) {
           throw new BikeCurrentlyReserved({ bikeId, action: "update_station" });
+        }
+
+        const redistributionBike = await tx.bike.findFirst({
+          where: { id: bikeId, status: { in: ["PENDING_DISPATCH", "TRANSPORTING"] } },
+          select: { id: true },
+        });
+        if (redistributionBike) {
+          throw new BikeCurrentlyRedistributing({ bikeId, action: "update_station" });
+        }
+
+        const incidentBike = await tx.bike.findFirst({
+          where: { id: bikeId, status: "SWAPPING" },
+          select: { id: true },
+        });
+        if (incidentBike) {
+          throw new BikeCurrentlyIncidentReported({ bikeId, action: "update_station" });
         }
 
         await lockStationRow(tx, patch.stationId);
@@ -94,10 +120,16 @@ export function adminUpdateBikeWithGuards(
       if (typeof patch.supplierId === "string" && patch.supplierId !== current.value.supplierId) {
         const supplier = await tx.supplier.findUnique({
           where: { id: patch.supplierId },
-          select: { id: true },
+          select: { id: true, status: true },
         });
         if (!supplier) {
           throw new BikeSupplierNotFound({ supplierId: patch.supplierId });
+        }
+        if (supplier.status !== "ACTIVE") {
+          throw new BikeSupplierNotActive({
+            supplierId: supplier.id,
+            status: supplier.status,
+          });
         }
       }
 

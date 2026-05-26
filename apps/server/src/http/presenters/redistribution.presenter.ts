@@ -1,4 +1,4 @@
-import type { RedistributionContracts } from "@mebike/shared";
+import { RedistributionContracts } from "@mebike/shared";
 
 import type {
   RedistributionRequestDetailRow,
@@ -153,6 +153,16 @@ export function toContractRedistributionRequest(
   };
 }
 
+function getPriorityLevel(score: number | null | undefined): RedistributionContracts.PriorityLevel | undefined {
+  if (score === null || score === undefined)
+    return undefined;
+  if (score > RedistributionContracts.PRIORITY_THRESHOLDS.HIGH_SCORE_MIN)
+    return RedistributionContracts.PriorityLevel.HIGH;
+  if (score >= RedistributionContracts.PRIORITY_THRESHOLDS.MEDIUM_SCORE_MIN)
+    return RedistributionContracts.PriorityLevel.MEDIUM;
+  return RedistributionContracts.PriorityLevel.LOW;
+}
+
 export function toContractRedistributionRequestListItem(
   row: RedistributionRequestSummaryRow,
 ): RedistributionContracts.RedistributionRequestListItem {
@@ -175,6 +185,8 @@ export function toContractRedistributionRequestListItem(
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    priorityScore: row.priorityScore,
+    priorityLevel: getPriorityLevel(row.priorityScore),
   };
 }
 
@@ -210,5 +222,7 @@ export function toContractRedistributionRequestDetail(
     completedAt: row.completedAt ? row.completedAt.toISOString() : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    priorityScore: row.priorityScore,
+    priorityLevel: getPriorityLevel(row.priorityScore),
   };
 }

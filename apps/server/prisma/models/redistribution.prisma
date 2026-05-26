@@ -24,6 +24,7 @@ model RedistributionRequest {
   targetAvailableBikesBefore Int?                 @map("target_available_bikes_before")
   requestedQuantity Int                 @map("requested_quantity")
   status            RedistributionStatus @default(PENDING_APPROVAL)
+  priorityScore     Float?               @map("priority_score")
   startedAt         DateTime?            @map("started_at") @db.Timestamptz
   completedAt       DateTime?            @map("completed_at") @db.Timestamptz
   createdAt         DateTime             @default(now()) @map("created_at") @db.Timestamptz

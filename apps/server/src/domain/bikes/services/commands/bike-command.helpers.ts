@@ -11,7 +11,9 @@ import {
   BikeNotFound,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
+  BikeSystemCapacityExceeded,
   InvalidBikeStatus,
 } from "../../domain-errors";
 
@@ -72,11 +74,15 @@ export function isBikeCreateDomainPassThroughError(
 ): cause is
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
+| BikeSystemCapacityExceeded
+| BikeSupplierNotActive
 | BikeSupplierNotFound {
   return (
     cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotActive
     || cause instanceof BikeSupplierNotFound
+    || cause instanceof BikeSystemCapacityExceeded
   );
 }
 
@@ -89,6 +95,8 @@ export function isBikeUpdateDomainPassThroughError(
 | BikeNotFound
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
+| BikeSystemCapacityExceeded
+| BikeSupplierNotActive
 | BikeSupplierNotFound {
   return (
     cause instanceof BikeCurrentlyRented
@@ -97,8 +105,50 @@ export function isBikeUpdateDomainPassThroughError(
     || cause instanceof BikeNotFound
     || cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotActive
     || cause instanceof BikeSupplierNotFound
+    || cause instanceof BikeSystemCapacityExceeded
   );
+}
+
+async function lockSystemConfigRow(tx: PrismaClient | Prisma.TransactionClient) {
+  await tx.$queryRaw`
+    SELECT 1
+    FROM "system_configs"
+    WHERE key = 'min_available_bikes_at_station'
+    FOR UPDATE
+  `;
+}
+
+export async function validateSystemCapacity(tx: PrismaClient | Prisma.TransactionClient) {
+  // Serialize concurrent capacity checks via an exclusive row lock so that
+  // no two transactions can both read the counts and decide to activate a
+  // bike at the same time.
+  await lockSystemConfigRow(tx);
+
+  const [activeBikesCount, sumCapacity] = await Promise.all([
+    tx.bike.count({
+      where: {
+        status: {
+          notIn: ["LOST", "DISABLED"],
+        },
+      },
+    }),
+    tx.station.aggregate({
+      _sum: {
+        totalCapacity: true,
+      },
+    }),
+  ]);
+
+  const totalCapacity = sumCapacity._sum.totalCapacity ?? 0;
+
+  if (activeBikesCount >= totalCapacity) {
+    throw new BikeSystemCapacityExceeded({
+      activeBikesCount,
+      totalCapacity,
+    });
+  }
 }
 
 /**
@@ -108,12 +158,18 @@ export function isBikeUpdateDomainPassThroughError(
  */
 export function getAvailablePlacementSlots(station: {
   totalCapacity: number;
-  totalBikes: number;
+  totalInStationBikes: number;
+  transportingBikes: number;
   activeReturnSlots: number;
+  incomingRedistributionBikes: number;
 }) {
   return Math.max(
     0,
-    station.totalCapacity - station.totalBikes - station.activeReturnSlots,
+    station.totalCapacity
+    - station.totalInStationBikes
+    - station.transportingBikes
+    - station.activeReturnSlots
+    - station.incomingRedistributionBikes,
   );
 }
 

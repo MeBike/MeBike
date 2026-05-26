@@ -10,6 +10,7 @@ import {
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
 } from "../../domain-errors";
 import { makeBikeRepository } from "../../repository/bike.repository";
@@ -17,6 +18,7 @@ import {
   getAvailablePlacementSlots,
   isBikeCreateDomainPassThroughError,
   lockStationRow,
+  validateSystemCapacity,
 } from "./bike-command.helpers";
 
 export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInput) {
@@ -33,7 +35,7 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
         Effect.runPromise(txStationRepo.getById(input.stationId)),
         tx.supplier.findUnique({
           where: { id: input.supplierId },
-          select: { id: true },
+          select: { id: true, status: true },
         }),
       ]);
 
@@ -43,6 +45,17 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
 
       if (!supplier) {
         throw new BikeSupplierNotFound({ supplierId: input.supplierId });
+      }
+      if (supplier.status !== "ACTIVE") {
+        throw new BikeSupplierNotActive({
+          supplierId: supplier.id,
+          status: supplier.status,
+        });
+      }
+
+      const targetStatus = input.status ?? "AVAILABLE";
+      if (!["LOST", "DISABLED"].includes(targetStatus)) {
+        await validateSystemCapacity(tx);
       }
 
       const station = stationOpt.value;
@@ -60,7 +73,7 @@ export function createBikeWithGuards(client: PrismaClient, input: CreateBikeInpu
       return await Effect.runPromise(txBikeRepo.create({
         stationId: input.stationId,
         supplierId: input.supplierId,
-        status: input.status ?? "AVAILABLE",
+        status: targetStatus,
       }));
     }),
     catch: cause =>

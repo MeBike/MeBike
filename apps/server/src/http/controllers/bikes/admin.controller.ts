@@ -58,12 +58,30 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
             requiredPlacementSlots,
           },
         }, 400)),
+      Match.tag("BikeSystemCapacityExceeded", ({ activeBikesCount, totalCapacity }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SYSTEM_CAPACITY_EXCEEDED,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SYSTEM_CAPACITY_EXCEEDED,
+            activeBikesCount,
+            totalCapacity,
+          },
+        }, 400)),
       Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
           details: {
             code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_FOUND,
             supplierId,
+          },
+        }, 400)),
+      Match.tag("BikeSupplierNotActive", ({ supplierId, status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_ACTIVE,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_ACTIVE,
+            supplierId,
+            supplierStatus: status,
           },
         }, 400)),
       Match.orElse((err) => {
@@ -110,6 +128,16 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
           details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
         }, 400)),
+      Match.tag("BikeCurrentlyRedistributing", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_REDISTRIBUTING,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_REDISTRIBUTING },
+        }, 400)),
+      Match.tag("BikeCurrentlyIncidentReported", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_INCIDENT_REPORTED,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_INCIDENT_REPORTED },
+        }, 400)),
       Match.tag("BikeNotFound", () =>
         c.json<BikeNotFoundResponse, 404>({
           error: bikeErrorMessages.BIKE_NOT_FOUND,
@@ -149,6 +177,15 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
             supplierId,
           },
         }, 400)),
+      Match.tag("BikeSupplierNotActive", ({ supplierId, status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_ACTIVE,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_ACTIVE,
+            supplierId,
+            supplierStatus: status,
+          },
+        }, 400)),
       Match.orElse((err) => {
         throw err;
       }),
@@ -181,6 +218,16 @@ const deleteBike: RouteHandler<BikesRoutes["deleteBike"]> = async (c) => {
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
           details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
+        }, 400)),
+      Match.tag("BikeCurrentlyRedistributing", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_REDISTRIBUTING,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_REDISTRIBUTING },
+        }, 400)),
+      Match.tag("BikeCurrentlyIncidentReported", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_INCIDENT_REPORTED,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_INCIDENT_REPORTED },
         }, 400)),
       Match.tag("BikeNotFound", () =>
         c.json<BikeNotFoundResponse, 404>({

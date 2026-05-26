@@ -5,7 +5,7 @@ import {
   RedistributionServiceLive,
 } from "@/domain/redistribution";
 
-import { PrismaLive } from "../infra.layers";
+import { MapboxRoutingLive, PrismaLive, RedisLive } from "../infra.layers";
 import { StationQueryServiceLayer } from "./station.layers";
 import { UserQueryServiceLayer } from "./user.layers";
 
@@ -18,6 +18,7 @@ export const RedistributionRequestServiceLayer = RedistributionServiceLive.pipe(
   Layer.provide(UserQueryServiceLayer),
   Layer.provide(StationQueryServiceLayer),
   Layer.provide(PrismaLive),
+  Layer.provide(MapboxRoutingLive.pipe(Layer.provide(RedisLive))),
 );
 
 export const RedistributionRequestDepsLive = Layer.mergeAll(
