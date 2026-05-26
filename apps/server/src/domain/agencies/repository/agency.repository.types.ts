@@ -1,6 +1,7 @@
 import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { StationRepositoryError } from "@/domain/stations";
 
 import type { AgencyRepositoryError } from "../domain-errors";
 import type {
@@ -12,7 +13,6 @@ import type {
   UpdateAgencyInput,
   UpdateAgencyStatusInput,
 } from "../models";
-import { StationRepositoryError } from "@/domain/stations";
 
 export type AgencyRepo = {
   readonly create: (input: CreateAgencyInput) => Effect.Effect<AgencyRow, AgencyRepositoryError>;

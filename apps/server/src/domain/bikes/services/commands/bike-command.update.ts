@@ -7,6 +7,8 @@ import { makeStationQueryRepository } from "@/domain/stations/repository/station
 import type { AdminBikeUpdatePatch } from "./bike-command.service.types";
 
 import {
+  BikeCurrentlyIncidentReported,
+  BikeCurrentlyRedistributing,
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
@@ -77,6 +79,22 @@ export function adminUpdateBikeWithGuards(
         });
         if (pendingReservation) {
           throw new BikeCurrentlyReserved({ bikeId, action: "update_station" });
+        }
+
+        const redistributionBike = await tx.bike.findFirst({
+          where: { id: bikeId, status: { in: ["PENDING_DISPATCH", "TRANSPORTING"] } },
+          select: { id: true },
+        });
+        if (redistributionBike) {
+          throw new BikeCurrentlyRedistributing({ bikeId, action: "update_station" });
+        }
+
+        const incidentBike = await tx.bike.findFirst({
+          where: { id: bikeId, status: "SWAPPING" },
+          select: { id: true },
+        });
+        if (incidentBike) {
+          throw new BikeCurrentlyIncidentReported({ bikeId, action: "update_station" });
         }
 
         await lockStationRow(tx, patch.stationId);

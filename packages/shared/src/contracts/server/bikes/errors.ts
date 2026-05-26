@@ -11,6 +11,8 @@ export const bikeErrorCodes = [
   "INVALID_BIKE_STATUS",
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
+  "BIKE_CURRENTLY_REDISTRIBUTING",
+  "BIKE_CURRENTLY_INCIDENT_REPORTED",
   "INVALID_QUERY_PARAMS",
 ] as const;
 
@@ -40,12 +42,14 @@ export const BikeNotFoundCodeSchema = z.enum(["BIKE_NOT_FOUND"]);
 export const BikeUpdateConflictCodeSchema = z.enum([
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
+  "BIKE_CURRENTLY_REDISTRIBUTING",
   "BIKE_STATION_PLACEMENT_CAPACITY_EXCEEDED",
   "BIKE_SYSTEM_CAPACITY_EXCEEDED",
   "BIKE_STATION_NOT_FOUND",
   "BIKE_SUPPLIER_NOT_ACTIVE",
   "BIKE_SUPPLIER_NOT_FOUND",
   "INVALID_BIKE_STATUS",
+  "BIKE_CURRENTLY_INCIDENT_REPORTED",
 ]);
 
 export type BikeErrorCode = (typeof bikeErrorCodes)[number];
@@ -98,5 +102,7 @@ export const bikeErrorMessages: Record<BikeErrorCode, string> = {
   INVALID_BIKE_STATUS: "Invalid bike status transition",
   BIKE_CURRENTLY_RENTED: "Bike is currently rented and cannot be modified/deleted",
   BIKE_CURRENTLY_RESERVED: "Bike is currently reserved and cannot be modified/deleted",
+  BIKE_CURRENTLY_REDISTRIBUTING: "Bike is currently being redistributed and cannot be modified/deleted",
+  BIKE_CURRENTLY_INCIDENT_REPORTED: "Bike is currently incident reported and cannot be modified/deleted",
   INVALID_QUERY_PARAMS: "Invalid query parameters",
 };

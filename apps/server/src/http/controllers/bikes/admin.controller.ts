@@ -128,6 +128,16 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
           details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
         }, 400)),
+      Match.tag("BikeCurrentlyRedistributing", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_REDISTRIBUTING,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_REDISTRIBUTING },
+        }, 400)),
+      Match.tag("BikeCurrentlyIncidentReported", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_INCIDENT_REPORTED,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_INCIDENT_REPORTED },
+        }, 400)),
       Match.tag("BikeNotFound", () =>
         c.json<BikeNotFoundResponse, 404>({
           error: bikeErrorMessages.BIKE_NOT_FOUND,
@@ -208,6 +218,16 @@ const deleteBike: RouteHandler<BikesRoutes["deleteBike"]> = async (c) => {
         c.json<BikeUpdateConflictResponse, 400>({
           error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
           details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
+        }, 400)),
+      Match.tag("BikeCurrentlyRedistributing", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_REDISTRIBUTING,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_REDISTRIBUTING },
+        }, 400)),
+      Match.tag("BikeCurrentlyIncidentReported", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_CURRENTLY_INCIDENT_REPORTED,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_INCIDENT_REPORTED },
         }, 400)),
       Match.tag("BikeNotFound", () =>
         c.json<BikeNotFoundResponse, 404>({

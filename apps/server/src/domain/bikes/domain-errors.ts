@@ -49,3 +49,13 @@ export class BikeSystemCapacityExceeded extends Data.TaggedError("BikeSystemCapa
   readonly activeBikesCount: number;
   readonly totalCapacity: number;
 }> {}
+
+export class BikeCurrentlyRedistributing extends Data.TaggedError("BikeCurrentlyRedistributing")<{
+  readonly bikeId: string;
+  readonly action: "update_station" | "delete";
+}> {}
+
+export class BikeCurrentlyIncidentReported extends Data.TaggedError("BikeCurrentlyIncidentReported")<{
+  readonly bikeId: string;
+  readonly action: "update_station" | "delete";
+}> {}

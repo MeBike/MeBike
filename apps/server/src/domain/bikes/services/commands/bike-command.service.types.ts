@@ -3,6 +3,8 @@ import type { Effect, Option } from "effect";
 import type { BikeStatus } from "generated/prisma/client";
 
 import type {
+  BikeCurrentlyIncidentReported,
+  BikeCurrentlyRedistributing,
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
@@ -57,6 +59,8 @@ export type BikeCommandService = {
     Option.Option<BikeRow>,
     | BikeCurrentlyRented
     | BikeCurrentlyReserved
+    | BikeCurrentlyRedistributing
+    | BikeCurrentlyIncidentReported
     | BikeNotFound
     | BikeRepositoryError
     | InvalidBikeStatus

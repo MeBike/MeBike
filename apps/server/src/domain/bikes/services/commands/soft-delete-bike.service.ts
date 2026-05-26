@@ -5,6 +5,8 @@ import { Prisma } from "@/infrastructure/prisma";
 import type { BikeRow } from "../../models";
 
 import {
+  BikeCurrentlyIncidentReported,
+  BikeCurrentlyRedistributing,
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
@@ -13,7 +15,11 @@ import { BikeRepository } from "../../repository/bike.repository";
 
 export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
   Option.Option<BikeRow>,
-  BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound,
+  | BikeCurrentlyIncidentReported
+  | BikeCurrentlyRedistributing
+  | BikeCurrentlyRented
+  | BikeCurrentlyReserved
+  | BikeNotFound,
   BikeRepository | Prisma
 > {
   return Effect.gen(function* () {
@@ -47,6 +53,30 @@ export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
     }).pipe(Effect.catchAll(cause => Effect.die(cause)));
     if (pendingReservation) {
       return yield* Effect.fail(new BikeCurrentlyReserved({ bikeId, action: "delete" }));
+    }
+
+    const redistributionBike = yield* Effect.tryPromise({
+      try: () =>
+        client.bike.findFirst({
+          where: { id: bikeId, status: { in: ["PENDING_DISPATCH", "TRANSPORTING"] } },
+          select: { id: true },
+        }),
+      catch: cause => cause,
+    }).pipe(Effect.catchAll(cause => Effect.die(cause)));
+    if (redistributionBike) {
+      return yield* Effect.fail(new BikeCurrentlyRedistributing({ bikeId, action: "delete" }));
+    }
+
+    const incidentBike = yield* Effect.tryPromise({
+      try: () =>
+        client.bike.findFirst({
+          where: { id: bikeId, status: "SWAPPING" },
+          select: { id: true },
+        }),
+      catch: cause => cause,
+    }).pipe(Effect.catchAll(cause => Effect.die(cause)));
+    if (incidentBike) {
+      return yield* Effect.fail(new BikeCurrentlyIncidentReported({ bikeId, action: "delete" }));
     }
 
     return yield* repo.updateStatus(bikeId, "DISABLED");
