@@ -9,6 +9,7 @@ import type {
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
   BikeSystemCapacityExceeded,
   InvalidBikeStatus,
@@ -44,8 +45,9 @@ export type BikeCommandService = {
     | BikeRepositoryError
     | BikeStationNotFound
     | BikeStationPlacementCapacityExceeded
-    | BikeSupplierNotFound
     | BikeSystemCapacityExceeded
+    | BikeSupplierNotActive
+    | BikeSupplierNotFound
   >;
 
   adminUpdateBike: (
@@ -59,6 +61,7 @@ export type BikeCommandService = {
     | BikeRepositoryError
     | InvalidBikeStatus
     | BikeStationPlacementCapacityExceeded
+    | BikeSupplierNotActive
     | BikeStationNotFound
     | BikeSupplierNotFound
     | BikeSystemCapacityExceeded

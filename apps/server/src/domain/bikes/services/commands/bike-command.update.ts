@@ -13,6 +13,7 @@ import {
   BikeRepositoryError,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
   InvalidBikeStatus,
 } from "../../domain-errors";
@@ -101,10 +102,16 @@ export function adminUpdateBikeWithGuards(
       if (typeof patch.supplierId === "string" && patch.supplierId !== current.value.supplierId) {
         const supplier = await tx.supplier.findUnique({
           where: { id: patch.supplierId },
-          select: { id: true },
+          select: { id: true, status: true },
         });
         if (!supplier) {
           throw new BikeSupplierNotFound({ supplierId: patch.supplierId });
+        }
+        if (supplier.status !== "ACTIVE") {
+          throw new BikeSupplierNotActive({
+            supplierId: supplier.id,
+            status: supplier.status,
+          });
         }
       }
 

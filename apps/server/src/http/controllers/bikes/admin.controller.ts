@@ -75,6 +75,15 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
             supplierId,
           },
         }, 400)),
+      Match.tag("BikeSupplierNotActive", ({ supplierId, status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_ACTIVE,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_ACTIVE,
+            supplierId,
+            supplierStatus: status,
+          },
+        }, 400)),
       Match.orElse((err) => {
         throw err;
       }),
@@ -156,6 +165,15 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           details: {
             code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_FOUND,
             supplierId,
+          },
+        }, 400)),
+      Match.tag("BikeSupplierNotActive", ({ supplierId, status }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_ACTIVE,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_ACTIVE,
+            supplierId,
+            supplierStatus: status,
           },
         }, 400)),
       Match.orElse((err) => {

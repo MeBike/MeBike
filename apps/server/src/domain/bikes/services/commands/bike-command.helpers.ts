@@ -11,6 +11,7 @@ import {
   BikeNotFound,
   BikeStationNotFound,
   BikeStationPlacementCapacityExceeded,
+  BikeSupplierNotActive,
   BikeSupplierNotFound,
   BikeSystemCapacityExceeded,
   InvalidBikeStatus,
@@ -73,11 +74,13 @@ export function isBikeCreateDomainPassThroughError(
 ): cause is
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound
-| BikeSystemCapacityExceeded {
+| BikeSystemCapacityExceeded
+| BikeSupplierNotActive
+| BikeSupplierNotFound {
   return (
     cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotActive
     || cause instanceof BikeSupplierNotFound
     || cause instanceof BikeSystemCapacityExceeded
   );
@@ -92,8 +95,9 @@ export function isBikeUpdateDomainPassThroughError(
 | BikeNotFound
 | BikeStationNotFound
 | BikeStationPlacementCapacityExceeded
-| BikeSupplierNotFound
-| BikeSystemCapacityExceeded {
+| BikeSystemCapacityExceeded
+| BikeSupplierNotActive
+| BikeSupplierNotFound {
   return (
     cause instanceof BikeCurrentlyRented
     || cause instanceof BikeCurrentlyReserved
@@ -101,6 +105,7 @@ export function isBikeUpdateDomainPassThroughError(
     || cause instanceof BikeNotFound
     || cause instanceof BikeStationNotFound
     || cause instanceof BikeStationPlacementCapacityExceeded
+    || cause instanceof BikeSupplierNotActive
     || cause instanceof BikeSupplierNotFound
     || cause instanceof BikeSystemCapacityExceeded
   );
