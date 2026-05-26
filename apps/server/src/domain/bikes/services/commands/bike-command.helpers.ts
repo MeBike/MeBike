@@ -111,7 +111,21 @@ export function isBikeUpdateDomainPassThroughError(
   );
 }
 
+async function lockSystemConfigRow(tx: PrismaClient | Prisma.TransactionClient) {
+  await tx.$queryRaw`
+    SELECT 1
+    FROM "system_configs"
+    WHERE key = 'min_available_bikes_at_station'
+    FOR UPDATE
+  `;
+}
+
 export async function validateSystemCapacity(tx: PrismaClient | Prisma.TransactionClient) {
+  // Serialize concurrent capacity checks via an exclusive row lock so that
+  // no two transactions can both read the counts and decide to activate a
+  // bike at the same time.
+  await lockSystemConfigRow(tx);
+
   const [activeBikesCount, sumCapacity] = await Promise.all([
     tx.bike.count({
       where: {

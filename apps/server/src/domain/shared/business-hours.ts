@@ -187,6 +187,8 @@ export function getVietnamForecastWindow(startHour?: number, endHour?: number): 
   const hStart = startHour !== undefined ? startHour : Math.max(5, Math.min(22, currentHour + 1));
   const hEnd = endHour !== undefined ? endHour : 23;
 
+  const endDay = hEnd < hStart ? day + 1 : day;
+
   return {
     year,
     month,
@@ -194,6 +196,6 @@ export function getVietnamForecastWindow(startHour?: number, endHour?: number): 
     hStart,
     hEnd,
     start: createVietnamHourDate(year, month, day, hStart),
-    end: createVietnamHourDate(year, month, day, hEnd),
+    end: createVietnamHourDate(year, month, endDay, hEnd),
   };
 }

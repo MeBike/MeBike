@@ -24,21 +24,17 @@ export function parseExpirePeriod(value: string): number | null {
   let totalMinutes: number;
 
   if (trimmed.includes(":")) {
-    // H:M format
-    const parts = trimmed.split(":");
-    if (parts.length !== 2)
+    if (!/^\d+:\d+$/.test(trimmed))
       return null;
+    const parts = trimmed.split(":");
     const hours = Number.parseInt(parts[0], 10);
     const minutes = Number.parseInt(parts[1], 10);
-    if (Number.isNaN(hours) || Number.isNaN(minutes))
-      return null;
     if (hours < 0 || minutes < 0 || minutes >= 60)
       return null;
     totalMinutes = hours * 60 + minutes;
   }
   else {
-    // float / integer hours
-    const hours = Number.parseFloat(trimmed);
+    const hours = Number(trimmed);
     if (Number.isNaN(hours) || hours <= 0)
       return null;
     totalMinutes = Math.round(hours * 60);
