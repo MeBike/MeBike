@@ -307,6 +307,7 @@ export const useDistributionRequest = ({
           toast.success("Hủy bỏ yêu điều phối xe thành công");
           getStaffViewDistributionRequest();
           getStaffViewDistributionRequestDetail();
+          queryClient.invalidateQueries({queryKey:["my","station-detail"]});
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);
@@ -472,6 +473,7 @@ export const useDistributionRequest = ({
           toast.success("Hủy bỏ yêu điều phối xe thành công");
           getAgencyViewDistributionRequest();
           getAgencyViewDistributionRequestDetail();
+          queryClient.invalidateQueries({queryKey:["agency","distribution-request-data"]});
         }
       } catch (error) {
         const error_code = getAxiosErrorCodeMessage(error);

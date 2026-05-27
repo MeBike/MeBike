@@ -170,7 +170,7 @@ export default function SystemConfigPage() {
       }).format(now)
     );
     // CHẶN BẰNG GIÁ TRỊ ĐỘNG
-    if (currentHour !== allowedHour) {
+    if (currentHour !== 14) {
       setErrorText(`Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ ${allowedHour}:00 - ${allowedHour}:59 (UTC+7).`);
       return;
     }
