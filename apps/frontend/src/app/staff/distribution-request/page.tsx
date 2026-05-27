@@ -44,7 +44,7 @@ export default function Page() {
   if (isLoadingListStation || !listStation || isLoading) {
     return <LoadingScreen />;
   }
-  const minBikes = Number(
+  const minAvailableBikeAtStation = Number(
     systemConfigs?.find(
       (item) => item.key === "min_available_bikes_at_station",
     )?.value || 0,
@@ -53,7 +53,7 @@ export default function Page() {
     <DistributionRequestClient
       data={{
         listStation: listStation,
-        minBikeAtStation : Number(minBikes),
+        minAvailableBikeAtStation : Number(minAvailableBikeAtStation),
         requests: requests,
         pagination: staffViewDistributionRequest?.data.pagination,
         isVisualLoading: isFetchingStaffViewDistributionRequest,
