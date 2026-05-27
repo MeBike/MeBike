@@ -32,7 +32,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
-  ClipboardList
+  ClipboardList,
+  Bell, // Thêm icon
+  Repeat, // Thêm icon
 } from "lucide-react";
 import { Station } from "@/types";
 import { cn } from "@/lib/utils";
@@ -43,7 +45,10 @@ import { ROLE_LABELS } from "@/columns/user-columns";
 import { StationLayoutMap } from "@/components/StationLayoutMap";
 import type { RedistributionRequest } from "@/types/DistributionRequest";
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios"; // Đảm bảo import axios
+import { toast } from "sonner"; // Đảm bảo import toast
 
 interface StationReport {
   id: string;
@@ -209,6 +214,70 @@ export default function StationDetailPage() {
 
   const [isVisualLoading, setIsVisualLoading] = useState<boolean>(true);
 
+  // --- THÊM LOGIC PUSH NOTIFICATION ---
+  const [hasNotified, setHasNotified] = useState(false);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    const lastSentStr = localStorage.getItem(`low_bike_notif_sent_${id}`);
+    if (lastSentStr) {
+      const lastSent = parseInt(lastSentStr, 10);
+      const now = Date.now();
+      const COOLDOWN_TIME = 5 * 60 * 1000;
+      if (now - lastSent < COOLDOWN_TIME) {
+        setHasNotified(true);
+        const remaining = COOLDOWN_TIME - (now - lastSent);
+        const timer = setTimeout(() => {
+          setHasNotified(false);
+        }, remaining);
+        return () => clearTimeout(timer);
+      } else {
+        setHasNotified(false);
+      }
+    } else {
+      setHasNotified(false);
+    }
+  }, [id]);
+
+  const handleSendNotification = async () => {
+    if (!myStationDetail) return;
+    const currentStation = myStationDetail as Station;
+    if (
+      currentStation.bikes.available > 10 ||
+      isSendingNotification ||
+      hasNotified
+    )
+      return;
+
+    setIsSendingNotification(true);
+    try {
+      const response = await axios.post("/api/notifications/low-bike", {
+        stationId: currentStation.id,
+        stationName: currentStation.name,
+        availableBikes: currentStation.bikes.available,
+      });
+      if (response.data.success) {
+        setHasNotified(true);
+        localStorage.setItem(
+          `low_bike_notif_sent_${currentStation.id}`,
+          Date.now().toString(),
+        );
+        toast.success(
+          `Đã gửi yêu cầu báo thiếu xe! Trạm hiện chỉ còn ${currentStation.bikes.available} xe.`,
+        );
+      } else {
+        toast.error("Gửi yêu cầu thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi gửi push notification:", error);
+      toast.error("Có lỗi xảy ra khi gửi yêu cầu.");
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+  // -------------------------------------
+
   useEffect(() => {
     if (isLoadingMyStationDetail || isLoadingStationRevenueForManager) {
       setIsVisualLoading(true);
@@ -281,13 +350,46 @@ export default function StationDetailPage() {
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              className="shadow-sm rounded-full"
-              onClick={() => router.push("/manager/stations")}
-            >
-              Quay lại danh sách
-            </Button>
+            {/* NHÓM NÚT ACTION CHO QUẢN LÝ */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                className="shadow-sm rounded-full"
+                onClick={() => router.push("/manager/stations")}
+              >
+                Quay lại danh sách
+              </Button>
+              {isOwnStation && (
+                <Button
+                  onClick={handleSendNotification}
+                  disabled={
+                    station.bikes.available > 10 ||
+                    isSendingNotification ||
+                    hasNotified
+                  }
+                  className={cn(
+                    "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
+                    station.bikes.available <= 10 && !hasNotified
+                      ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
+                      : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed",
+                  )}
+                >
+                  <Bell
+                    className={cn(
+                      "w-4 h-4 mr-2",
+                      station.bikes.available <= 10 &&
+                        !hasNotified &&
+                        "animate-bounce",
+                    )}
+                  />
+                  {isSendingNotification
+                    ? "Đang gửi..."
+                    : hasNotified
+                      ? "Đã thông báo"
+                      : "Báo thiếu xe"}
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
