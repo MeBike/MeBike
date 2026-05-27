@@ -1,5 +1,6 @@
 export type RedistributionRequestStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | "IN_TRANSIT"
 | "PARTIALLY_COMPLETED" | "REVERTED";
+export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW";
 export type RedistributionRequest = {
   id: string;
   reason: string;
@@ -9,6 +10,8 @@ export type RedistributionRequest = {
   completedAt: string;
   createdAt: string;
   updatedAt: string;
+  priorityLevel : PriorityLevel;
+  priorityScore : number;
   requestedByUser: {
     id: string;
     fullName: string;
@@ -49,6 +52,8 @@ export type RedistributionRequestDetail = {
   revertedByUser? : User;
   rejectedByUser? : User;
   sourceStation: Station;
+  priorityLevel : PriorityLevel;
+  priorityScore : number;
   targetStation: Station;
   items: Item[];
 };
