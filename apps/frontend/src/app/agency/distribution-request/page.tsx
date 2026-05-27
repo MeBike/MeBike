@@ -6,6 +6,7 @@ import { RedistributionRequestStatus } from "@/types/DistributionRequest";
 import { useDebounce } from "@/utils/useDebounce";
 import { useStationActions } from "@/hooks/use-station";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 export default function Page() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<
@@ -26,9 +27,11 @@ export default function Page() {
     status: debouncedStatusFilter === "all" ? undefined : debouncedStatusFilter,
     hasToken: true,
   });
-
+    const { systemConfigs, getAllSystemConfigs, isLoading } =
+        useSystemConfigActions({ hasToken: true });
   useEffect(() => {
     getAgencyViewDistributionRequest();
+    getAllSystemConfigs();
   }, [page, debouncedStatusFilter, getAgencyViewDistributionRequest]);
   const requests = agencyViewDistributionRequest?.data || [];
   useEffect(() => {
@@ -48,10 +51,15 @@ export default function Page() {
   if (isVisualLoading || isLoadingListStation || !listStation) {
     return <LoadingScreen />;
   }
-
+  const minAvailableBikeAtStation = Number(
+    systemConfigs?.find(
+      (item) => item.key === "min_available_bikes_at_station",
+    )?.value || 0,
+  );
   return (
     <DistributionRequestClient
       data={{
+        minAvailableBikeAtStation:minAvailableBikeAtStation,
         listStation: listStation,
         requests: requests,
         pagination: agencyViewDistributionRequest?.pagination,

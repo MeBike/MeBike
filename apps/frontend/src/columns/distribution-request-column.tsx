@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/tooltip";
 import type { 
   RedistributionRequest, 
-  RedistributionRequestStatus 
+  RedistributionRequestStatus,
+  PriorityLevel
 } from "@/types/DistributionRequest";
 
 const REQUEST_STATUS_VI: Record<string, string> = {
@@ -56,7 +57,23 @@ export const getRequestStatusColor = (status: RedistributionRequestStatus) => {
   }
 };
 
-// --- 3. COLUMN ĐIỀU PHỐI ---
+const PRIORITY_LEVEL_VI: Record<string, string> = {
+  HIGH: "CAO",
+  MEDIUM: "TRUNG BÌNH",
+  LOW: "THẤP",
+};
+export const getPriorityLevelColor = (status: PriorityLevel) => {
+  switch (status) {
+    case "HIGH":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "MEDIUM":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "LOW":
+      return "bg-green-100 text-green-800 border-green-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
 export const redistributionColumn = ({
   onView,
 }: {
@@ -87,6 +104,20 @@ export const redistributionColumn = ({
     cell: ({ row }) => (
       row.original.requestedQuantity
     ),
+  },
+  {
+    accessorKey: "priorityLevel",
+    header: "Độ ưu tiên",
+    cell: ({ row }) => {
+      const level = row.original.priorityLevel;
+      return (
+        <span
+          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getPriorityLevelColor(level)} uppercase`}
+        >
+          {PRIORITY_LEVEL_VI[level] || level.replace("_", " ")}
+        </span>
+      );
+    },
   },
   {
     accessorKey: "status",

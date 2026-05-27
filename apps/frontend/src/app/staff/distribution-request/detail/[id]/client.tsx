@@ -21,7 +21,8 @@ import {
   User as UserIcon,
   AlertTriangle,
   ArrowDownToLine,
-  ArrowUpFromLine
+  ArrowUpFromLine,
+  Zap // Thêm icon Zap cho mức độ ưu tiên
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -45,10 +46,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { BikeStatus } from "@/types";
 
 // --- UPDATED TYPES ---
-// Đã thêm "REVERTED" vào type
 export type RedistributionRequestStatus = 
   | "PENDING_APPROVAL" | "APPROVED" | "IN_TRANSIT" 
   | "PARTIALLY_COMPLETED" | "COMPLETED" | "REVERTED" | "REJECTED" | "CANCELLED";
+
+export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW";
 
 export type RedistributionRequestDetail = {
   id: string;
@@ -62,15 +64,18 @@ export type RedistributionRequestDetail = {
   completedAt: string;
   createdAt: string;
   updatedAt: string;
+  priorityLevel: PriorityLevel; // Đã thêm
+  priorityScore: number;        // Đã thêm
   requestedByUser: User;
-  approvedByUser: User;
-  revertedByUser: User;
+  approvedByUser?: User;
+  revertedByUser?: User;
+  rejectedByUser?: User;
   sourceStation: Station;
   targetStation: Station;
   items: Item[];
 };
 
-type User = {
+export type User = {
   id: string;
   fullName: string;
   email: string;
@@ -113,7 +118,7 @@ type Item = {
   deliveredAt: string;
 };
 
-// --- CONSTANTS ---
+// --- CONSTANTS & UTILS ---
 const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: string; icon: any }> = {
   PENDING_APPROVAL: { label: "Chờ phê duyệt", style: "bg-amber-100 text-amber-800 border-amber-200", icon: Clock },
   APPROVED: { label: "Đã phê duyệt", style: "bg-blue-100 text-blue-800 border-blue-200", icon: ShieldCheck },
@@ -123,6 +128,25 @@ const STATUS_MAP: Record<RedistributionRequestStatus, { label: string; style: st
   REVERTED: { label: "Đã hoàn xe", style: "bg-orange-100 text-orange-800 border-orange-300", icon: ArrowUpFromLine },
   REJECTED: { label: "Bị từ chối", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
   CANCELLED: { label: "Đã hủy bỏ", style: "bg-red-100 text-red-800 border-red-200", icon: XCircle },
+};
+
+export const getPriorityLevelColor = (status: PriorityLevel) => {
+  switch (status) {
+    case "HIGH":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "MEDIUM":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "LOW":
+      return "bg-green-100 text-green-800 border-green-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+const PRIORITY_LEVEL_VI: Record<string, string> = {
+  HIGH: "Cao",
+  MEDIUM: "Trung bình",
+  LOW: "Thấp",
 };
 
 // --- COMPONENT ---
@@ -172,13 +196,12 @@ export const DistributionRequestDetailClient = ({
   };
   const StatusIcon = statusInfo.icon;
 
-  // --- LOGIC GIAO DIỆN TIMELINE & MÀU SẮC DỰA TRÊN STATUS KẾT THÚC ---
+  // --- LOGIC GIAO DIỆN TIMELINE & MÀU SẮC DỰA TRÊN STATUS ---
   const isCompleted = data.status === "COMPLETED";
   const isReverted = data.status === "REVERTED";
   const isRejectedOrCancelled = data.status === "REJECTED" || data.status === "CANCELLED";
   const isTerminal = isCompleted || isReverted || isRejectedOrCancelled;
 
-  // Cấu hình linh hoạt cho Node cuối cùng trên Timeline
   let TerminalIcon = CheckCircle2;
   let terminalLabel = "Hoàn tất";
   let terminalColorClass = "bg-slate-100 text-slate-400";
@@ -205,7 +228,6 @@ export const DistributionRequestDetailClient = ({
     terminalTimeText = formatToVNTime(data.updatedAt);
   }
 
-  // Cấu hình thanh Progress Bar
   let progressWidth = "w-0";
   let progressColor = "bg-blue-500";
   if (isReverted) { progressWidth = "w-full"; progressColor = "bg-orange-400"; }
@@ -214,7 +236,6 @@ export const DistributionRequestDetailClient = ({
   else if (data.startedAt) { progressWidth = "w-2/3"; progressColor = "bg-blue-500"; }
   else if (data.approvedByUser) { progressWidth = "w-1/3"; progressColor = "bg-blue-500"; }
 
-  // Cấu hình màu cho Hero Stats (Góc phải)
   const getHeroColor = () => {
     switch (data.status) {
       case 'COMPLETED': return 'from-emerald-600 to-emerald-500';
@@ -255,10 +276,20 @@ export const DistributionRequestDetailClient = ({
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
               Yêu cầu #{data.id.substring(0, 8)}
             </h1>
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}>
-              <StatusIcon className="h-3.5 w-3.5" />
-              {statusInfo.label}
-            </span>
+            <div className="flex flex-wrap gap-2">
+              <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}>
+                <StatusIcon className="h-3.5 w-3.5" />
+                {statusInfo.label}
+              </span>
+              
+              {/* === HIỂN THỊ MỨC ĐỘ ƯU TIÊN === */}
+              {data.priorityLevel && (
+                <span className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${getPriorityLevelColor(data.priorityLevel)}`}>
+                  <Zap className="h-3.5 w-3.5" />
+                  Ưu tiên: {PRIORITY_LEVEL_VI[data.priorityLevel] || data.priorityLevel}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -456,7 +487,6 @@ export const DistributionRequestDetailClient = ({
                       </span>
                     </div>
 
-                    {/* HIỂN THỊ DÒNG NÀY NẾU CÓ XE HOÀN TRẢ */}
                     {(data.revertedBikes > 0 || isReverted) && (
                       <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                         <span className="text-slate-500">Xe hoàn trả (Nhập lại)</span>
@@ -537,6 +567,21 @@ export const DistributionRequestDetailClient = ({
                 </div>
                 <Bike className="absolute -bottom-4 -right-2 w-28 h-28 text-white opacity-10 rotate-[-10deg]" />
               </div>
+
+              {/* === BOX ĐIỂM & MỨC ĐỘ ƯU TIÊN === */}
+              {data.priorityLevel && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex justify-between items-center shadow-sm">
+                  <div>
+                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-1">Mức ưu tiên</span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getPriorityLevelColor(data.priorityLevel)} uppercase`}
+                    >
+                      {PRIORITY_LEVEL_VI[data.priorityLevel]}
+                    </span>
+                  </div>
+                  
+                </div>
+              )}
 
               {/* Box Hoàn trả */}
               {(data.revertedBikes > 0 || isReverted) && (

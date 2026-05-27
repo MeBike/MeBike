@@ -49,6 +49,7 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   ArrowUpFromLine,
+  Zap, // Thêm icon Zap
 } from "lucide-react";
 
 import { getStatusConfig } from "@/columns/bike-colums";
@@ -106,9 +107,34 @@ export const STATUS_MAP: Record<
   },
 };
 
+export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW";
+
+export const getPriorityLevelColor = (status: PriorityLevel | string) => {
+  switch (status) {
+    case "HIGH":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "MEDIUM":
+      return "bg-blue-100 text-blue-800 border-blue-200";
+    case "LOW":
+      return "bg-green-100 text-green-800 border-green-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+const PRIORITY_LEVEL_VI: Record<string, string> = {
+  HIGH: "Cao",
+  MEDIUM: "Trung bình",
+  LOW: "Thấp",
+};
+
 // --- COMPONENT ---
 interface Props {
-  data: RedistributionRequestDetail;
+  // Mở rộng data để chứa priority
+  data: RedistributionRequestDetail & {
+    priorityLevel?: PriorityLevel;
+    priorityScore?: number;
+  };
   onApprove: () => Promise<void>;
   onReject: (reason: string) => Promise<void>;
   onComplete: (payload: { completedBikeIds: string[] }) => Promise<void>;
@@ -328,12 +354,25 @@ export const DistributionRequestDetailClient = ({
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
               Yêu cầu #{data.id.substring(0, 8)}
             </h1>
-            <span
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}
-            >
-              <StatusIcon className="h-3.5 w-3.5" />
-              {statusInfo.label}
-            </span>
+            <div className="flex flex-wrap gap-2">
+              <span
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${statusInfo.style}`}
+              >
+                <StatusIcon className="h-3.5 w-3.5" />
+                {statusInfo.label}
+              </span>
+
+              {/* === HIỂN THỊ MỨC ĐỘ ƯU TIÊN === */}
+              {data.priorityLevel && (
+                <span
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border uppercase tracking-wider w-fit flex items-center gap-1.5 shadow-sm ${getPriorityLevelColor(data.priorityLevel)}`}
+                >
+                  <Zap className="h-3.5 w-3.5" />
+                  Ưu tiên:{" "}
+                  {PRIORITY_LEVEL_VI[data.priorityLevel] || data.priorityLevel}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -719,6 +758,22 @@ export const DistributionRequestDetailClient = ({
                 </div>
                 <Bike className="absolute -bottom-4 -right-2 w-28 h-28 text-white opacity-10 rotate-[-10deg]" />
               </div>
+
+              {/* === BOX ĐIỂM & MỨC ĐỘ ƯU TIÊN === */}
+              {data.priorityLevel && (
+                <div className="bg-white border border-slate-200 rounded-2xl p-4 flex justify-between items-center shadow-sm">
+                  <div>
+                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider block mb-1">
+                      Mức ưu tiên
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${getPriorityLevelColor(data.priorityLevel)} uppercase`}
+                    >
+                      {PRIORITY_LEVEL_VI[data.priorityLevel]}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {(data.revertedBikes > 0 || isReverted) && (
                 <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">

@@ -18,6 +18,7 @@ interface DistributionRequestClientProps {
     requests: RedistributionRequest[];
     pagination?: Pagination;
     isVisualLoading: boolean;
+    minAvailableBikeAtStation:number;
   };
   filters: {
     statusFilter: RedistributionRequestStatus | "all";
@@ -30,7 +31,7 @@ interface DistributionRequestClientProps {
 }
 
 export default function DistributionRequestClient({
-  data: { requests, pagination, isVisualLoading, listStation },
+  data: { requests, pagination, isVisualLoading, listStation ,minAvailableBikeAtStation},
   filters: { statusFilter, page },
   actions: { setPage, setStatusFilter },
 }: DistributionRequestClientProps) {
@@ -74,7 +75,7 @@ export default function DistributionRequestClient({
             >
               <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
             </Badge>
-          ) : myStationDetail.bikes?.available <= 10 ? (
+          ) : myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
             <Badge
               variant="destructive"
               className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
@@ -84,7 +85,7 @@ export default function DistributionRequestClient({
           ) : null}
           <Button 
             onClick={() => router.push("/agency/distribution-request/create")}
-            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= 10}
+            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= minAvailableBikeAtStation}
             className="shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
