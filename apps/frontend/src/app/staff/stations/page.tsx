@@ -14,6 +14,7 @@ import { useDebounce } from "@/utils/useDebounce";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 import {
   LineChart,
   Line,
@@ -32,7 +33,8 @@ export default function StationsPage() {
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const debounceSearchQuery = useDebounce(searchQuery, 500);
-
+  const { systemConfigs, getAllSystemConfigs, isLoading } =
+    useSystemConfigActions({ hasToken: true });
   const {
     getMyStation,
     myStation,
@@ -46,50 +48,38 @@ export default function StationsPage() {
     limit: limit,
     name: debounceSearchQuery,
   });
-
+  useEffect(() => {
+    getAllSystemConfigs();
+  }, [getAllSystemConfigs]);
   // Tính toán giờ bắt đầu và kết thúc cho Chart
   const timeParams = useMemo(() => {
     return {
       startHour: new Date().getHours(),
-      endHour: new Date().getHours() + 2,
+      endHour: 23,
     };
   }, []);
-  const fakeChartData = [
-    { time: "15:00", reservedCount: 2, expectedBikes: 25 },
-    { time: "16:00", reservedCount: 5, expectedBikes: 22 },
-    { time: "17:00", reservedCount: 15, expectedBikes: 18 }, // Cao điểm đi làm về
-    { time: "18:00", reservedCount: 20, expectedBikes: 10 }, // Đặt nhiều, xe tại trạm giảm mạnh
-    { time: "19:00", reservedCount: 12, expectedBikes: 8 },
-    { time: "20:00", reservedCount: 8, expectedBikes: 15 }, // Khách bắt đầu trả xe
-    { time: "21:00", reservedCount: 3, expectedBikes: 20 },
-    { time: "22:00", reservedCount: 0, expectedBikes: 25 }, // Trạm rảnh rỗi chờ đóng cửa
-  ];
   const { reservationForecast, isLoadingReservationForecast } =
     useDistributionRequest({
       hasToken: true,
-      // Nếu API hỗ trợ truyền param, uncomment 2 dòng dưới:
       startHour: Number(timeParams.startHour),
       endHour: Number(timeParams.endHour),
     });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
-
-  // --- LOGIC PUSH NOTIFICATION (BÁO THIẾU XE) ---
   const [hasNotified, setHasNotified] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
-
-  // Tìm chi tiết của trạm hiện tại trong danh sách để lấy số lượng xe
   const currentStationId = listStation?.currentStation?.id;
   const currentStationName = listStation?.currentStation?.name;
-
   const currentStationDetails = useMemo(() => {
     return myStation?.find((s: any) => s.id === currentStationId);
   }, [myStation, currentStationId]);
-
-  // Nếu không tìm thấy, mặc định cho số xe > 10 để disable nút
+  const minAvailableBikeAtStation = Number(
+    systemConfigs?.find(
+      (item) => item.key === "min_bikes_for_redistribution_alert",
+    )?.value || 0,
+  );
   const availableBikes = currentStationDetails?.bikes?.available ?? 11;
-  const isLowBikes = availableBikes <= 10;
-
+  const isLowBikes = availableBikes <= minAvailableBikeAtStation;
   useEffect(() => {
     if (!currentStationId) return;
     const lastSentStr = localStorage.getItem(

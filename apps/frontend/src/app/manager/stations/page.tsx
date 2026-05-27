@@ -14,6 +14,7 @@ import { useDebounce } from "@/utils/useDebounce";
 import { LoadingScreen } from "@/components/loading-screen/loading-screen";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useSystemConfigActions } from "@/hooks/use-system-config";
 import {
   LineChart,
   Line,
@@ -24,7 +25,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { getHours } from "date-fns";
 
 export default function StationsPage() {
   const router = useRouter();
@@ -32,7 +32,8 @@ export default function StationsPage() {
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
   const debounceSearchQuery = useDebounce(searchQuery, 500);
-
+  const { systemConfigs, getAllSystemConfigs, isLoading } =
+    useSystemConfigActions({ hasToken: true });
   const {
     getMyStation,
     myStation,
@@ -46,7 +47,10 @@ export default function StationsPage() {
     limit: limit,
     name: debounceSearchQuery,
   });
-
+  useEffect(() => {
+    getAllSystemConfigs();
+  }, [getAllSystemConfigs]);
+  // Tính toán giờ bắt đầu và kết thúc cho Chart
   const timeParams = useMemo(() => {
     return {
       startHour: new Date().getHours(),
@@ -61,20 +65,20 @@ export default function StationsPage() {
     });
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
-
-  // --- LOGIC PUSH NOTIFICATION (BÁO THIẾU XE) ---
   const [hasNotified, setHasNotified] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
   const currentStationId = listStation?.currentStation?.id;
   const currentStationName = listStation?.currentStation?.name;
-
   const currentStationDetails = useMemo(() => {
     return myStation?.find((s: any) => s.id === currentStationId);
   }, [myStation, currentStationId]);
-
+  const minAvailableBikeAtStation = Number(
+    systemConfigs?.find(
+      (item) => item.key === "min_bikes_for_redistribution_alert",
+    )?.value || 0,
+  );
   const availableBikes = currentStationDetails?.bikes?.available ?? 11;
-  const isLowBikes = availableBikes <= 10;
-
+  const isLowBikes = availableBikes <= minAvailableBikeAtStation;
   useEffect(() => {
     if (!currentStationId) return;
     const lastSentStr = localStorage.getItem(
