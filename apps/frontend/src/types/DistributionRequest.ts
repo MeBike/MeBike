@@ -182,8 +182,12 @@ export type ReservationForecast = {
   station: {
     id: string;
     name: string;
-    currentBikes: number;
-    reservedCount: number;
-    expectedBikes: number;
   };
-};
+  hours : [
+    {
+      label: string;
+      timestamp: string;
+      reservedCount : number;
+    }
+  ]
+}

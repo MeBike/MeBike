@@ -281,8 +281,13 @@ export const distributionRequestService = {
     );
     return response;
   },
-  getReservationForecase : async () : Promise<AxiosResponse<ReservationForecast>>=> {
-    const response = await fetchHttpClient.get<ReservationForecast>(ENDPOINT.DISTRIBUTION_REQUEST.RESERVATION_FORECAST);
+  getReservationForecast : async ({startHour ,endHour} : {startHour : number , endHour : number}) : Promise<AxiosResponse<ReservationForecast>>=> {
+    const response = await fetchHttpClient.get<ReservationForecast>(ENDPOINT.DISTRIBUTION_REQUEST.RESERVATION_FORECAST,
+      {
+        startHour : startHour,
+        endHour : endHour,
+      }
+    );
     return response;
   }
 };
