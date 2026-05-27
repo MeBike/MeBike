@@ -9,3 +9,4 @@ export * from "./useGetManagerViewDistributionRequestDetail";
 export * from "./useGetHistoryDistributionStaff";
 export * from "./useGetHistoryDistributionManager";
 export * from "./useGetHistoryDistributionAgency";
+export * from "./useGetReservationForecast";

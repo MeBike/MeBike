@@ -17,6 +17,7 @@ import {
   useGetStaffViewHistoryDistributionRequestQuery,
   useGetAgencyViewHistoryDistributionRequestQuery,
   useGetManagerViewHistoryDistributionRequestQuery,
+  useGetReservationForecastQuery,
 } from "@queries";
 import {
   useApproveDistributionRequestMutation,
@@ -611,7 +612,18 @@ export const useDistributionRequest = ({
       getAgencyViewDistributionRequestDetail,
     ],
   );
-
+  const {
+    data:reservationForecast,
+    refetch:refetchReservationForecase,
+    isFetching:isFetchingReservationForecast,
+    isLoading:isLoadingReservationForecast,
+  } = useGetReservationForecastQuery();
+  const getReservationForecast = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchReservationForecase();
+  }, [refetchReservationForecase,hasToken,router]);
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -667,6 +679,9 @@ export const useDistributionRequest = ({
     isFetchingManagerViewDistributionRequestHistory,
     getManagerViewHistoryDistribution,
     managerRevertRemainingBike,
-    agencyRevertRemainingBike
+    agencyRevertRemainingBike,
+    reservationForecast,
+    getReservationForecast,
+    isLoadingReservationForecast
   };
 };

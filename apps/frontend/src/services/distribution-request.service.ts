@@ -7,7 +7,8 @@ import type {
   RedistributionRequest,
   RedistributionRequestDetail,
   RedistributionRequestStatus,
-  RedistributionRequestDetailForApprove
+  RedistributionRequestDetailForApprove,
+  ReservationForecast
 } from "@/types/DistributionRequest";
 export const distributionRequestService = {
   getAdminViewDistributionRequest: async ({
@@ -279,6 +280,9 @@ export const distributionRequestService = {
       ENDPOINT.DISTRIBUTION_REQUEST.REVERT_REMAINING_BIKE(requestId),
     );
     return response;
+  },
+  getReservationForecase : async () : Promise<AxiosResponse<ReservationForecast>>=> {
+    const response = await fetchHttpClient.get<ReservationForecast>(ENDPOINT.DISTRIBUTION_REQUEST.RESERVATION_FORECAST);
+    return response;
   }
-
 };
