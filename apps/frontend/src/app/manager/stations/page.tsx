@@ -161,7 +161,7 @@ export default function StationsPage() {
 
   // Data cho Chart
   const chartData = useMemo(() => {
-    const rawData = reservationForecast || reservationForecast;
+    const rawData = reservationForecast;
     if (!rawData || !rawData.hours || !Array.isArray(rawData.hours)) {
       return [];
     }
