@@ -363,13 +363,13 @@ export default function StationDetailPage() {
                 <Button
                   onClick={handleSendNotification}
                   disabled={
-                    station.bikes.available > 10 ||
+                    station.needsRedistribution === false ||
                     isSendingNotification ||
                     hasNotified
                   }
                   className={cn(
                     "shadow-sm transition-all duration-200 active:scale-95 rounded-full",
-                    station.bikes.available <= 10 && !hasNotified
+                    station.needsRedistribution && !hasNotified
                       ? "bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 shadow-rose-200 dark:shadow-none"
                       : "bg-muted/50 border border-border text-muted-foreground/60 cursor-not-allowed",
                   )}
@@ -377,7 +377,7 @@ export default function StationDetailPage() {
                   <Bell
                     className={cn(
                       "w-4 h-4 mr-2",
-                      station.bikes.available <= 10 &&
+                      station.needsRedistribution &&
                         !hasNotified &&
                         "animate-bounce",
                     )}
