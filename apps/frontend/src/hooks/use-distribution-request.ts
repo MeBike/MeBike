@@ -627,7 +627,7 @@ export const useDistributionRequest = ({
       router.push("/login");
     }
     refetchReservationForecase();
-  }, [refetchReservationForecase,hasToken,router]);
+  }, [refetchReservationForecase,hasToken,router,startHour,endHour]);
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,

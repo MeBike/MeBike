@@ -16,6 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useSystemConfigActions } from "@/hooks/use-system-config";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // Import thêm Select để làm filter
+import {
   LineChart,
   Line,
   XAxis,
@@ -25,16 +32,40 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { getHours } from "date-fns";
+
+// Định nghĩa cấu hình màu sắc tương ứng với demandLevel
+const DEMAND_CONFIG = {
+  low: {
+    color: "#22c55e",
+    text: "Thấp",
+    badgeBg: "bg-green-500/10 text-green-600 border-green-200",
+  },
+  medium: {
+    color: "#f59e0b",
+    text: "Trung bình",
+    badgeBg: "bg-amber-500/10 text-amber-600 border-amber-200",
+  },
+  high: {
+    color: "#ef4444",
+    text: "Cao",
+    badgeBg: "bg-red-500/10 text-red-600 border-red-200",
+  },
+};
 
 export default function StationsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(7);
   const [searchQuery, setSearchQuery] = useState("");
+  const currentHour = new Date().getHours();
+  const defaultStart = currentHour === 23 ? 5 : currentHour;
+
+  const [startHour, setStartHour] = useState<number>(defaultStart);
+  const [endHour, setEndHour] = useState<number>(23);
   const debounceSearchQuery = useDebounce(searchQuery, 500);
-  const { systemConfigs, getAllSystemConfigs, isLoading } =
-    useSystemConfigActions({ hasToken: true });
+  const { systemConfigs, getAllSystemConfigs } = useSystemConfigActions({
+    hasToken: true,
+  });
   const {
     getMyStation,
     myStation,
@@ -48,38 +79,111 @@ export default function StationsPage() {
     limit: limit,
     name: debounceSearchQuery,
   });
+
   useEffect(() => {
     getAllSystemConfigs();
   }, [getAllSystemConfigs]);
-  // Tính toán giờ bắt đầu và kết thúc cho Chart
-  const timeParams = useMemo(() => {
-    return {
-      startHour: new Date().getHours(),
-      endHour: 23,
-    };
+
+  // Gọi API lấy dữ liệu dự báo theo State giờ đã chọn
+  const {
+    reservationForecast,
+    isLoadingReservationForecast,
+    getReservationForecast,
+  } = useDistributionRequest({
+    hasToken: true,
+    startHour: startHour,
+    endHour: endHour,
+  });
+  useEffect(() => {
+    if (getReservationForecast) {
+      getReservationForecast();
+    }
+  }, [startHour, endHour, getReservationForecast]);
+  // --- 1. TẠO THÊM LIST GIỜ ĐỂ ĐỔ VÀO DROPDOWN SELECT ---
+  const hoursOptions = useMemo(() => {
+    return Array.from({ length: 24 }, (_, i) => ({
+      value: i,
+      label: `${i.toString().padStart(2, "0")}:00`,
+    }));
   }, []);
-  const { reservationForecast, isLoadingReservationForecast } =
-    useDistributionRequest({
-      hasToken: true,
-      startHour: Number(timeParams.startHour),
-      endHour: Number(timeParams.endHour),
-    });
+
+  // --- 3. CẬP NHẬT LẠI FAKE DATA (THÊM +0.5 ĐỂ NẰM GIỮA KHE GIỜ) ---
+  const fakeChartData = useMemo(() => {
+    return [
+      {
+        hourValue: 6.5,
+        time: "06:00",
+        reservedCount: 3,
+        demandLevel: "low" as const,
+      },
+      {
+        hourValue: 7.5,
+        time: "07:00",
+        reservedCount: 15,
+        demandLevel: "medium" as const,
+      },
+      {
+        hourValue: 8.5,
+        time: "08:00",
+        reservedCount: 28,
+        demandLevel: "high" as const,
+      },
+      {
+        hourValue: 9.5,
+        time: "09:00",
+        reservedCount: 12,
+        demandLevel: "medium" as const,
+      },
+      {
+        hourValue: 10.5,
+        time: "10:00",
+        reservedCount: 5,
+        demandLevel: "low" as const,
+      },
+      {
+        hourValue: 11.5,
+        time: "11:00",
+        reservedCount: 2,
+        demandLevel: "low" as const,
+      },
+      {
+        hourValue: 12.5,
+        time: "12:00",
+        reservedCount: 8,
+        demandLevel: "medium" as const,
+      },
+    ];
+  }, []);
+
+  // Tạo danh sách vạch chia trục X chạy động theo startHour và endHour của bộ lọc
+  const xAxisTicks = useMemo(() => {
+    const ticks = [];
+    for (let i = startHour; i <= endHour; i++) {
+      ticks.push(i);
+    }
+    return ticks;
+  }, [startHour, endHour]);
 
   const [isVisualLoading, setIsVisualLoading] = useState(false);
   const [hasNotified, setHasNotified] = useState(false);
   const [isSendingNotification, setIsSendingNotification] = useState(false);
+
   const currentStationId = listStation?.currentStation?.id;
   const currentStationName = listStation?.currentStation?.name;
+
   const currentStationDetails = useMemo(() => {
     return myStation?.find((s: any) => s.id === currentStationId);
   }, [myStation, currentStationId]);
+
   const minAvailableBikeAtStation = Number(
     systemConfigs?.find(
       (item) => item.key === "min_bikes_for_redistribution_alert",
     )?.value || 0,
   );
+
   const availableBikes = currentStationDetails?.bikes?.available ?? 11;
   const isLowBikes = availableBikes <= minAvailableBikeAtStation;
+
   useEffect(() => {
     if (!currentStationId) return;
     const lastSentStr = localStorage.getItem(
@@ -134,7 +238,6 @@ export default function StationsPage() {
       setIsSendingNotification(false);
     }
   };
-  // ----------------------------------------------
 
   useEffect(() => {
     if (isLoadingMyStation) {
@@ -159,17 +262,24 @@ export default function StationsPage() {
     setPage(1);
   }, [searchQuery]);
 
-  // Data cho Chart
+  // --- MAP DATA THẬT TỪ NEW API MODEL (THÊM LẠI +0.5 ĐỂ CĂN GIỮA) ---
   const chartData = useMemo(() => {
     const rawData = reservationForecast;
     if (!rawData || !rawData.hours || !Array.isArray(rawData.hours)) {
       return [];
     }
-    return rawData.hours.map((hourItem: any) => ({
-      time: hourItem.label,
-      reservedCount: hourItem.reservedCount || 0,
-    }));
+    return rawData.hours.map((hourItem: any) => {
+      const currentHour = parseInt(String(hourItem.label).split(":")[0], 10);
+      return {
+        time: hourItem.label,
+        hourValue: currentHour + 0.5, // Logic +0.5 thần thánh giúp chấm nằm giữa khe giờ
+        reservedCount: hourItem.reservedCount || 0,
+        demandLevel: hourItem.demandLevel || "low",
+      };
+    });
   }, [reservationForecast]);
+
+  const activeChartData = chartData.length > 0 ? chartData : fakeChartData;
 
   if (isVisualLoading) {
     return <LoadingScreen />;
@@ -188,7 +298,6 @@ export default function StationsPage() {
               Hệ thống giám sát và vận hành trạm xe đạp thông minh.
             </p>
 
-            {/* BADGE TRẠM HIỆN TẠI & NÚT BÁO THIẾU XE */}
             {listStation?.currentStation && (
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary shadow-sm">
@@ -199,7 +308,6 @@ export default function StationsPage() {
                   </span>
                 </div>
 
-                {/* HIỂN THỊ NÚT NẾU TÌM THẤY SỐ LƯỢNG XE */}
                 {currentStationDetails && (
                   <Button
                     onClick={handleSendNotification}
@@ -231,10 +339,10 @@ export default function StationsPage() {
           </div>
         </div>
 
-        {/* BIỂU ĐỒ */}
+        {/* BIỂU ĐỒ HOÀN CHỈNH KÈM BỘ FILTER */}
         {listStation?.currentStation && (
           <Card className="shadow-sm border-border">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50">
               <CardTitle className="text-xl flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-primary" />
                 Dự báo số lượng đặt xe tại trạm:{" "}
@@ -243,18 +351,87 @@ export default function StationsPage() {
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
               </CardTitle>
+
+              {/* THANH BỘ LỌC THỜI GIAN KHUNG GIỜ */}
+              <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-xl border border-border/40 self-start sm:self-auto">
+                <span className="text-xs font-bold text-muted-foreground px-2">
+                  Khung giờ:
+                </span>
+
+                {/* Chọn Start Hour */}
+                <Select
+                  value={String(startHour)}
+                  onValueChange={(val) => {
+                    const num = Number(val);
+                    setStartHour(num);
+                    // Tự động đẩy endHour nếu start >= end, nhưng chốt chặn thấp nhất luôn là 6h
+                    if (num >= endHour) {
+                      setEndHour(Math.max(Math.min(num + 1, 23), 6));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
+                    <SelectValue placeholder="Từ" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hoursOptions.map((h) => (
+                      <SelectItem
+                        key={`start-${h.value}`}
+                        value={String(h.value)}
+                        disabled={h.value > endHour}
+                      >
+                        {h.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <span className="text-muted-foreground text-xs">➔</span>
+
+                {/* Chọn End Hour */}
+                <Select
+                  value={String(endHour)}
+                  onValueChange={(val) => setEndHour(Number(val))}
+                >
+                  <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
+                    <SelectValue placeholder="Đến" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {hoursOptions.map((h) => (
+                      <SelectItem
+                        key={`end-${h.value}`}
+                        value={String(h.value)}
+                        // KHÓA THÊM: Nếu giờ nhỏ hơn startHour HOẶC nhỏ hơn 6h thì không cho chọn
+                        disabled={h.value < startHour || h.value < 6}
+                      >
+                        {h.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
-              {chartData.length > 0 ? (
-                <div className="h-[250px] w-full rounded-xl border border-border/50 bg-muted/5 p-4 mt-2">
+              {activeChartData.length > 0 ? (
+                <div className="h-[270px] w-full rounded-xl border border-border/50 bg-muted/5 p-4 mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
-                      data={chartData}
-                      margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+                      data={activeChartData}
+                      margin={{ top: 20, right: 40, left: 10, bottom: 20 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
+
                       <XAxis
-                        dataKey="time"
+                        type="number"
+                        dataKey="hourValue"
+                        domain={[
+                          xAxisTicks[0],
+                          xAxisTicks[xAxisTicks.length - 1],
+                        ]} // Chạy động theo mảng ticks mới chọn
+                        ticks={xAxisTicks}
+                        tickFormatter={(value) =>
+                          `${value.toString().padStart(2, "0")}:00`
+                        }
                         axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
                         tickLine={false}
                         tick={{ fontSize: 12 }}
@@ -268,6 +445,7 @@ export default function StationsPage() {
                           fontWeight: 600,
                         }}
                       />
+
                       <YAxis
                         axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
                         tickLine={false}
@@ -285,22 +463,99 @@ export default function StationsPage() {
                           fontWeight: 600,
                         }}
                       />
+
                       <Tooltip
-                        contentStyle={{
-                          borderRadius: "8px",
-                          border: "1px solid #e2e8f0",
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const data = payload[0].payload;
+                            const startHourValue = Math.floor(
+                              Number(data.hourValue),
+                            );
+                            const formatStr = (h: number) =>
+                              h.toString().padStart(2, "0");
+                            const config =
+                              DEMAND_CONFIG[
+                                data.demandLevel as keyof typeof DEMAND_CONFIG
+                              ] || DEMAND_CONFIG.low;
+
+                            return (
+                              <div className="rounded-xl border border-border bg-popover p-3 shadow-md space-y-1.5 text-sm">
+                                <p className="font-bold text-foreground">
+                                  Khung giờ: {formatStr(startHourValue)}:00 -{" "}
+                                  {formatStr(startHourValue)}:59
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">
+                                    Số xe đặt trước:
+                                  </span>
+                                  <span className="font-bold text-amber-500">
+                                    {data.reservedCount} chiếc
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 pt-0.5 border-t border-border/60">
+                                  <span className="text-muted-foreground text-xs">
+                                    Mức độ nhu cầu:
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      "text-[11px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
+                                      config.badgeBg,
+                                    )}
+                                  >
+                                    {config.text}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
                         }}
-                        labelStyle={{ fontWeight: "bold", color: "#0f172a" }}
                       />
+
                       <Legend wrapperStyle={{ paddingTop: "20px" }} />
+
                       <Line
                         type="monotone"
                         dataKey="reservedCount"
                         name="Số xe đặt trước"
-                        stroke="#f59e0b"
-                        strokeWidth={3}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
+                        stroke="#94a3b8"
+                        strokeWidth={2}
+                        dot={(props: any) => {
+                          const { cx, cy, payload } = props;
+                          const config =
+                            DEMAND_CONFIG[
+                              payload.demandLevel as keyof typeof DEMAND_CONFIG
+                            ] || DEMAND_CONFIG.low;
+                          return (
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={5}
+                              fill={config.color}
+                              stroke="#ffffff"
+                              strokeWidth={1.5}
+                              className="shadow-sm"
+                            />
+                          );
+                        }}
+                        activeDot={(props: any) => {
+                          const { cx, cy, payload } = props;
+                          const config =
+                            DEMAND_CONFIG[
+                              payload.demandLevel as keyof typeof DEMAND_CONFIG
+                            ] || DEMAND_CONFIG.low;
+                          return (
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={7}
+                              fill={config.color}
+                              stroke="#ffffff"
+                              strokeWidth={2}
+                              className="drop-shadow-md"
+                            />
+                          );
+                        }}
                       />
                     </LineChart>
                   </ResponsiveContainer>

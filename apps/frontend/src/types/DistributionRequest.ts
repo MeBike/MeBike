@@ -188,6 +188,7 @@ export type ReservationForecast = {
       label: string;
       timestamp: string;
       reservedCount : number;
+      demandLevel : "low" | "high" | "medium";
     }
   ]
 }
