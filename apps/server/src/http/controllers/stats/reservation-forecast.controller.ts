@@ -51,16 +51,30 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
     }
   }
 
-  const hoursList = [];
+  const rawHours = [];
   for (let h = window.hStart; h < window.hEnd; h++) {
     const slotStart = createVietnamHourDate(window.year, window.month, window.day, h);
-
-    hoursList.push({
+    rawHours.push({
       label: `${String(h).padStart(2, "0")}:00`,
       timestamp: slotStart.toISOString(),
       reservedCount: reservationCountByHour.get(h) ?? 0,
     });
   }
+
+  const maxCount = rawHours.reduce((m, r) => Math.max(m, r.reservedCount), 0);
+  const highThreshold = maxCount * 0.66;
+  const medThreshold = maxCount * 0.33;
+
+  const hoursList = rawHours.map(r => ({
+    ...r,
+    demandLevel: (
+      maxCount > 0 && r.reservedCount >= highThreshold
+        ? "high"
+        : maxCount > 0 && r.reservedCount >= medThreshold
+          ? "medium"
+          : "low"
+    ) as "high" | "medium" | "low",
+  }));
 
   return c.json({
     windowStart: window.start.toISOString(),

@@ -17,6 +17,7 @@ import {
   useGetStaffViewHistoryDistributionRequestQuery,
   useGetAgencyViewHistoryDistributionRequestQuery,
   useGetManagerViewHistoryDistributionRequestQuery,
+  useGetReservationForecastQuery,
 } from "@queries";
 import {
   useApproveDistributionRequestMutation,
@@ -45,6 +46,8 @@ interface DistributionRequestActionProps {
   approvedByUserId?: string;
   sourceStationId?: string;
   targetStationId?: string;
+  startHour ?: number;
+  endHour ?: number;
 }
 export const useDistributionRequest = ({
   page,
@@ -57,6 +60,8 @@ export const useDistributionRequest = ({
   sourceStationId,
   targetStationId,
   bike_status,
+  startHour,
+  endHour
 }: DistributionRequestActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -611,7 +616,18 @@ export const useDistributionRequest = ({
       getAgencyViewDistributionRequestDetail,
     ],
   );
-
+  const {
+    data:reservationForecast,
+    refetch:refetchReservationForecase,
+    isFetching:isFetchingReservationForecast,
+    isLoading:isLoadingReservationForecast,
+  } = useGetReservationForecastQuery({startHour:startHour || 5,endHour:endHour || 23});
+  const getReservationForecast = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+    }
+    refetchReservationForecase();
+  }, [refetchReservationForecase,hasToken,router,startHour,endHour]);
   return {
     adminViewDistributionRequest,
     refetchAdminViewDistributionRequest,
@@ -667,6 +683,9 @@ export const useDistributionRequest = ({
     isFetchingManagerViewDistributionRequestHistory,
     getManagerViewHistoryDistribution,
     managerRevertRemainingBike,
-    agencyRevertRemainingBike
+    agencyRevertRemainingBike,
+    reservationForecast,
+    getReservationForecast,
+    isLoadingReservationForecast
   };
 };
