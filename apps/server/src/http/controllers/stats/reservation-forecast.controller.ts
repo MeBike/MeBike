@@ -65,7 +65,7 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
   const highThreshold = maxCount * 0.66;
   const medThreshold = maxCount * 0.33;
 
-  const hoursList = rawHours.map((r) => ({
+  const hoursList = rawHours.map(r => ({
     ...r,
     demandLevel: (
       maxCount > 0 && r.reservedCount >= highThreshold
