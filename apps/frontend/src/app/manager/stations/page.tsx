@@ -612,7 +612,7 @@ export default function StationsPage() {
               setPage={setPage}
               isLoading={isLoadingMyStation}
               onView={(id) => {
-                router.push(`/staff/stations/detail/${id}`);
+                router.push(`/manager/stations/detail/${id}`);
               }}
             />
           )}
