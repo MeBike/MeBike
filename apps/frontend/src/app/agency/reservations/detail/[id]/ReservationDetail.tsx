@@ -160,7 +160,7 @@ export default function ReservationDetailClient() {
           </div>
           <Button
             variant="outline"
-            onClick={() => router.push("/staff/reservations")}
+            onClick={() => router.push("/agency/reservations")}
           >
             Quay lại danh sách
           </Button>
