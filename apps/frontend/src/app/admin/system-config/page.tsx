@@ -127,26 +127,27 @@ export default function SystemConfigPage() {
 
   const isUpdating = updateSystemConfigMutation.isPending;
 
-  // Lấy giá trị thời gian quy định từ mảng cấu hình (Mặc định 23 nếu không tìm thấy)
-  const expireConfig = configsList.find(c => c.key === "redistribution_pending_expire_hours");
-  const expireTimeStr = expireConfig?.value || "23:00";
-  const allowedHour = parseInt(expireTimeStr.split(":")[0] || expireTimeStr, 10);
-  const isSelectedTimeConfig = selectedConfig?.key.includes("hours") || selectedConfig?.key.includes("time");
+  const checkIsTimeConfig = (key: string | undefined) => {
+    if (!key) return false;
+    return key.includes("time") || key.includes("hour");
+  };
 
+  const isSelectedTimeConfig = checkIsTimeConfig(selectedConfig?.key);
 
   const handleEditClick = (config: SystemConfig) => {
     setSelectedConfig(config);
-    
-    const isTime = config.key.includes("hours") || config.key.includes("time");
-    
-    if (isTime && config.value) {
-      let val = config.value;
-      // Trải nghiệm mượt hơn: Nếu API lỡ trả về "9" thì gán lại "09:00" để input nhận được, nếu trả "09:00" thì giữ nguyên
+    const isTimeFormat = checkIsTimeConfig(config.key);
+    if (isTimeFormat && config.value) {
+      let val = config.value.trim();
       if (!val.includes(":")) {
         const numVal = Number(val);
         if (!isNaN(numVal)) {
-          const hh = Math.floor(numVal);
+          const hh = Math.floor(numVal) % 24;
           val = `${String(hh).padStart(2, '0')}:00`;
+        }
+      } else {
+        if (val.startsWith("24:")) {
+          val = val.replace("24:", "00:");
         }
       }
       setEditValue(val);
@@ -169,9 +170,12 @@ export default function SystemConfigPage() {
         hour12: false,
       }).format(now)
     );
-    // CHẶN BẰNG GIÁ TRỊ ĐỘNG
-    if (currentHour !== allowedHour) {
-      setErrorText(`Hệ thống chỉ cho phép cập nhật cấu hình vào đúng khung giờ ${allowedHour}:00 - ${allowedHour}:59 (UTC+7).`);
+
+    
+    const isValidTime = currentHour >= 23 || currentHour < 5;
+
+    if (!isValidTime) {
+      setErrorText("Hệ thống đang trong khung giờ vận hành cao điểm (05:00 - 23:00). Vui lòng quay lại cập nhật sau 23:00.");
       return;
     }
 
@@ -182,8 +186,11 @@ export default function SystemConfigPage() {
         setErrorText("Vui lòng chọn thời gian hợp lệ.");
         return;
       }
-      // Vì API bây giờ đã trả "09:00", ta không cần parse về "9" nữa. Gửi nguyên giá trị text này lên.
-      finalValue = editValue; 
+      const [hours] = editValue.split(":");
+      let hourNum = parseInt(hours, 10);
+      if (hourNum === 0) hourNum = 24; 
+      
+      finalValue = String(hourNum);
     } else {
       const numericValue = Number(editValue);
       if (isNaN(numericValue) || editValue.trim() === "" || numericValue < 0) {
@@ -244,7 +251,7 @@ export default function SystemConfigPage() {
               Cập nhật cấu hình
             </DialogTitle>
             <DialogDescription>
-              Hệ thống chỉ chấp nhận lưu thay đổi trong khung giờ {allowedHour}:00 đến {allowedHour}:59 (theo giờ Việt Nam).
+              Hệ thống chỉ chấp nhận lưu thay đổi trong khung giờ bảo trì từ 23:00 đến 05:00 sáng hôm sau (Múi giờ Việt Nam).
             </DialogDescription>
           </DialogHeader>
 
@@ -270,7 +277,7 @@ export default function SystemConfigPage() {
                   setEditValue(e.target.value);
                   if (errorText) setErrorText("");
                 }}
-                placeholder={isSelectedTimeConfig ? "--:--" : "Nhập số lượng..."}
+                placeholder={isSelectedTimeConfig ? "--:--" : "Nhập giá trị..."}
                 className={`rounded-xl focus-visible:ring-blue-500 ${errorText ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
                 disabled={isUpdating}
               />
@@ -280,7 +287,7 @@ export default function SystemConfigPage() {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setIsModalOpen(false)}
