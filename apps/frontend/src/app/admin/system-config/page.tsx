@@ -142,8 +142,10 @@ export default function SystemConfigPage() {
       if (!val.includes(":")) {
         const numVal = Number(val);
         if (!isNaN(numVal)) {
-          const hh = Math.floor(numVal) % 24;
-          val = `${String(hh).padStart(2, '0')}:00`;
+          const totalMinutes = Math.round(numVal * 60);
+          const hh = Math.floor(totalMinutes / 60) % 24;
+          const mm = totalMinutes % 60;
+          val = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
         }
       } else {
         if (val.startsWith("24:")) {
@@ -151,8 +153,6 @@ export default function SystemConfigPage() {
         }
       }
       setEditValue(val);
-    } else {
-      setEditValue(config.value);
     }
 
     setErrorText("");
@@ -186,11 +186,11 @@ export default function SystemConfigPage() {
         setErrorText("Vui lòng chọn thời gian hợp lệ.");
         return;
       }
-      const [hours] = editValue.split(":");
-      let hourNum = parseInt(hours, 10);
-      if (hourNum === 0) hourNum = 24; 
-      
-      finalValue = String(hourNum);
+      if (editValue === "00:00") {
+        finalValue = "24:00";
+      } else {
+        finalValue = editValue;
+      }
     } else {
       const numericValue = Number(editValue);
       if (isNaN(numericValue) || editValue.trim() === "" || numericValue < 0) {
