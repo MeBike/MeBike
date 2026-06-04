@@ -32,7 +32,7 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
       queryService.getPendingForecastByWindow(window.start, window.end),
       Effect.promise(() => prismaService.client.station.findUnique({
         where: { id: stationScopeId },
-        select: { id: true, name: true },
+        select: { id: true, name: true, totalCapacity: true },
       })),
     ], { concurrency: "unbounded" });
 
@@ -61,16 +61,15 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
     });
   }
 
-  const maxCount = rawHours.reduce((m, r) => Math.max(m, r.reservedCount), 0);
-  const highThreshold = maxCount * 0.66;
-  const medThreshold = maxCount * 0.33;
+  const highThreshold = Math.max(1, (station.totalCapacity * 0.25));
+  const medThreshold = highThreshold * 0.5;
 
   const hoursList = rawHours.map(r => ({
     ...r,
     demandLevel: (
-      maxCount > 0 && r.reservedCount >= highThreshold
+      r.reservedCount >= highThreshold
         ? "high"
-        : maxCount > 0 && r.reservedCount >= medThreshold
+        : r.reservedCount >= medThreshold
           ? "medium"
           : "low"
     ) as "high" | "medium" | "low",
