@@ -31,14 +31,10 @@ export function NotificationBell({ userId }: { userId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // 1. LẮNG NGHE REAL-TIME TỪ FIREBASE DATABASE
-    // Giả sử data của bạn lưu ở node: /notifications/staff_alerts
     const notifRef = ref(database, "notifications");
-
     const unsubscribeDB = onValue(notifRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        // Chuyển object từ Firebase thành Array và sort theo thời gian mới nhất
         const parsedNotifs = Object.keys(data)
           .map((key) => ({
             id: key,
@@ -81,20 +77,14 @@ export function NotificationBell({ userId }: { userId?: string }) {
             });
           }
         }
-
-        // Lưu ý: Không cần update state setNotifications ở đây nữa!
-        // Vì khi có thông báo mới, server ghi vào Database -> onValue ở trên sẽ tự động kích hoạt và render lại UI.
         onMessage(msg, (payload) => {
           console.log("FCM nhận được ở foreground:", payload);
-          // Bạn có thể trigger một toast notification ở đây nếu muốn.
         });
       } catch (err) {
         console.error("Lỗi setup FCM", err);
       }
     };
     setupFCM();
-
-    // Cleanup listener khi component unmount
     return () => unsubscribeDB();
   }, []);
 
@@ -106,12 +96,9 @@ export function NotificationBell({ userId }: { userId?: string }) {
   const handleOpenChange = async (open: boolean) => {
     setIsOpen(open);
     if (open && unreadCount > 0) {
-      // Lấy ra các ID chưa đọc của user này
       const unreadNotifs = notifications.filter((n) =>
         userId ? !n.readBy?.[userId] : !n.read,
       );
-
-      // Tạo một object update nhiều node cùng lúc trên Firebase
       const updates: Record<string, any> = {};
       unreadNotifs.forEach((notif) => {
         if (userId) {
