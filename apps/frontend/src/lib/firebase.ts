@@ -9,7 +9,6 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  // ĐÂY NÀY, DÒNG QUAN TRỌNG NHẤT LÀ DÒNG NÀY NÈ BẠN ƠI:
   databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
 };
 
@@ -21,7 +20,7 @@ export async function uploadImageToFirebase(file: File, folder: string = "sos"):
   try {
     const timestamp = Date.now();
     const filename = `${folder}/${timestamp}_${file.name}`;
-    const storageRef = ref(storage, filename); // Hàm ref này là của Storage
+    const storageRef = ref(storage, filename);
 
     await uploadBytes(storageRef, file);
     const downloadURL = await getDownloadURL(storageRef);
