@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   // ĐÂY NÀY, DÒNG QUAN TRỌNG NHẤT LÀ DÒNG NÀY NÈ BẠN ƠI:
-  databaseURL: "https://uploadimgikoi-default-rtdb.asia-southeast1.firebasedatabase.app"
+  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
 };
 
 export const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
