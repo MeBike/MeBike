@@ -529,7 +529,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      Trạm xuất phát (Lấy xe)
+                      Trạm nhận xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.sourceStation.name}
@@ -553,7 +553,7 @@ export const DistributionRequestDetailClient = ({
                     <p
                       className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? "text-orange-600" : "text-blue-600"}`}
                     >
-                      Trạm tiếp nhận (Trả xe)
+                      Trạm cho xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.targetStation.name}
@@ -583,7 +583,7 @@ export const DistributionRequestDetailClient = ({
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Cho
+                      Trạm Cho Xe
                     </span>
                   </div>
 
@@ -650,7 +650,7 @@ export const DistributionRequestDetailClient = ({
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Nhận
+                      Trạm Nhận Xe
                     </span>
                   </div>
 
@@ -686,9 +686,9 @@ export const DistributionRequestDetailClient = ({
                         Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes ??
-                          (data.sourceAvailableBikesBefore ?? 0) -
-                            (data.requestedQuantity ?? 0) +
+                        {data.targetStation?.actualAvailableBikes ??
+                          (data.targetAvailableBikesBefore ?? 0) +
+                            (data.requestedQuantity ?? 0) -
                             data.revertedBikes}{" "}
                         xe
                       </span>
