@@ -99,7 +99,7 @@ export default function DistributionRequestClient({
           ) : null}
 
           <Button
-            onClick={() => router.push("/agency/distribution-request/create")}
+            onClick={() => router.push("/staff/distribution-request/create")}
             disabled={isDisabled}
             className="shadow-sm"
           >

@@ -148,7 +148,7 @@ export default function CreateDistributionRequestClient({
                         {/* Ô SẴN SÀNG: Thêm cảnh báo đỏ nếu < 10 */}
                         <div className="bg-background rounded-lg border border-border/50 p-3 flex flex-col gap-1 shadow-sm relative">
                           <span className="text-xs text-muted-foreground font-medium">
-                            Sẵn sàng
+                            Sẵn sàng cho thuê
                           </span>
                           <div className="flex items-center gap-2">
                             <span
@@ -328,7 +328,7 @@ export default function CreateDistributionRequestClient({
                   isSubmitting ||
                   maxLimit === 0 ||
                   !selectedTargetStation ||
-                  sourceAvailableBikes < Number(minAvailableBikeAtStation)
+                  sourceAvailableBikes <= Number(minAvailableBikeAtStation)
                 }
                 className="w-full"
               >

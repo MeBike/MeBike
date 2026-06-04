@@ -94,7 +94,6 @@ export default function DistributionRequestClient({
           ) : myStationDetail.bikes?.available === 0 ||
             myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
             <Badge
-              // Đã thêm các class flex, items-center, gap, height để đồng nhất với Badge trên
               className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium shadow-sm bg-red-100 text-red-700 border-red-200"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
@@ -106,15 +105,12 @@ export default function DistributionRequestClient({
             onClick={() => router.push("/agency/distribution-request/create")}
             disabled={isDisabled}
             className="shadow-sm"
-            // Nếu Button mặc định quá cao so với Badge (h-8), bạn có thể thêm class h-8 hoặc h-9 vào đây để cân đối hơn
           >
             <Plus className="mr-2 h-4 w-4" />
             {isDisabled ? "Không thể tạo yêu cầu" : "Tạo yêu cầu điều phối"}
           </Button>
         </div>
       </div>
-
-      {/* 2. Khối Bộ Lọc (Giống y chang bên Customer) */}
       <div className="bg-card border border-border rounded-lg p-4 space-y-4 shadow-sm">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground">Bộ lọc</h3>
@@ -147,8 +143,6 @@ export default function DistributionRequestClient({
           </div>
         </div>
       </div>
-
-      {/* 3. Khối Danh sách (Khối riêng tách biệt) */}
       <div className="min-h-[600px] space-y-4">
         {isVisualLoading ? (
           <TableSkeleton />
