@@ -82,14 +82,27 @@ export function createFixedSlotTemplateForUser(args: {
           }));
         }
 
-        const conflictCount = yield* txReservationQueryRepo.countActiveFixedSlotTemplateConflicts(
+        const stationConflictCount = yield* txReservationQueryRepo.countActiveFixedSlotTemplatesForUserStation(
           args.userId,
+          args.stationId,
+        );
+        if (stationConflictCount > 0) {
+          return yield* Effect.fail(new FixedSlotTemplateConflict({
+            userId: args.userId,
+            slotStart: args.slotStart,
+            slotDates: [...args.slotDates],
+          }));
+        }
+
+        const scheduleConflictCount = yield* txReservationQueryRepo.countActiveFixedSlotTemplateConflicts(
+          args.userId,
+          args.stationId,
           slotStart,
           slotDates,
         );
         // FIX: Enforce active fixed-slot overlap at DB level.
         // This read-then-write check races under concurrent create/update requests and can still admit duplicate active templates.
-        if (conflictCount > 0) {
+        if (scheduleConflictCount > 0) {
           return yield* Effect.fail(new FixedSlotTemplateConflict({
             userId: args.userId,
             slotStart: args.slotStart,

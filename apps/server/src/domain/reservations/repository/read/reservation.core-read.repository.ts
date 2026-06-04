@@ -40,6 +40,7 @@ export type ReservationCoreReadRepo = Pick<
   | "listActiveFixedSlotTemplatesByDate"
   | "listPendingFixedSlotReservationsByTemplateId"
   | "countActiveFixedSlotTemplateConflicts"
+  | "countActiveFixedSlotTemplatesForUserStation"
   | "listFixedSlotTemplatesForUser"
 >;
 
@@ -220,17 +221,19 @@ export function makeReservationCoreReadRepository(
      * Dem so fixed-slot template ACTIVE bi trung user + gio + tap ngay.
      *
      * @param userId ID user so huu template.
+     * @param stationId ID station cua template.
      * @param slotStart Gio bat dau cua slot.
      * @param slotDates Tap ngay can kiem tra conflict.
      * @param excludeTemplateId Template can bo qua khi dang update.
      * @returns Effect tra ve so conflict tim thay.
      */
-    countActiveFixedSlotTemplateConflicts: (userId, slotStart, slotDates, excludeTemplateId) =>
+    countActiveFixedSlotTemplateConflicts: (userId, stationId, slotStart, slotDates, excludeTemplateId) =>
       Effect.tryPromise({
         try: () =>
           client.fixedSlotTemplate.count({
             where: {
               userId,
+              stationId,
               ...(excludeTemplateId ? { id: { not: excludeTemplateId } } : {}),
               status: "ACTIVE",
               slotStart,
@@ -246,6 +249,32 @@ export function makeReservationCoreReadRepository(
         catch: err =>
           new ReservationRepositoryError({
             operation: "countActiveFixedSlotTemplateConflicts",
+            cause: err,
+          }),
+      }).pipe(defectOn(ReservationRepositoryError)),
+
+    /**
+     * Dem so fixed-slot template ACTIVE cua cung user tai cung station.
+     *
+     * @param userId ID user so huu template.
+     * @param stationId ID station cua template.
+     * @param excludeTemplateId Template can bo qua khi dang update.
+     * @returns Effect tra ve so conflict tim thay.
+     */
+    countActiveFixedSlotTemplatesForUserStation: (userId, stationId, excludeTemplateId) =>
+      Effect.tryPromise({
+        try: () =>
+          client.fixedSlotTemplate.count({
+            where: {
+              userId,
+              stationId,
+              ...(excludeTemplateId ? { id: { not: excludeTemplateId } } : {}),
+              status: "ACTIVE",
+            },
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "countActiveFixedSlotTemplatesForUserStation",
             cause: err,
           }),
       }).pipe(defectOn(ReservationRepositoryError)),

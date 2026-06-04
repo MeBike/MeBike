@@ -35,7 +35,7 @@ export const fixedSlotTemplateErrorMessages = {
   FIXED_SLOT_DATE_NOT_FUTURE: "Fixed-slot dates must be in the future",
   FIXED_SLOT_DATE_LOCKED: "Fixed-slot date can no longer be changed",
   FIXED_SLOT_DATE_NOT_FOUND: "Fixed-slot date not found on template",
-  FIXED_SLOT_TEMPLATE_CONFLICT: "An active fixed-slot template already exists for one or more selected dates at this time",
+  FIXED_SLOT_TEMPLATE_CONFLICT: "You already have an active fixed-slot template for this station",
   FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Fixed-slot template could not be cancelled safely",
   FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT: "Fixed-slot template could not be updated safely",
   FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS: "Fixed-slot start time is outside operating hours",

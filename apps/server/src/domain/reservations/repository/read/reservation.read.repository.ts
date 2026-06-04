@@ -25,6 +25,7 @@ export type ReservationReadRepo = Pick<
   | "listActiveFixedSlotTemplatesByDate"
   | "listPendingFixedSlotReservationsByTemplateId"
   | "countActiveFixedSlotTemplateConflicts"
+  | "countActiveFixedSlotTemplatesForUserStation"
   | "listFixedSlotTemplatesForUser"
   | "findNextUpcomingByUserId"
   | "listForUser"

@@ -273,7 +273,7 @@ describe("fixed-slot templates routing e2e", () => {
     });
   });
 
-  it("rejects duplicate active template at same user/date/time", async () => {
+  it("rejects a second active template for the same user at the same station", async () => {
     const user = await fixture.factories.user({ role: "USER" });
     const station = await fixture.factories.station({ name: "Conflict Station" });
     const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
@@ -299,8 +299,8 @@ describe("fixed-slot templates routing e2e", () => {
       },
       body: JSON.stringify({
         stationId: station.id,
-        slotStart: "09:30",
-        slotDates: ["2026-04-20", "2026-04-21"],
+        slotStart: "10:45",
+        slotDates: ["2026-04-21"],
       }),
     });
 
@@ -308,13 +308,91 @@ describe("fixed-slot templates routing e2e", () => {
 
     expect(response.status).toBe(409);
     expect(body).toEqual({
-      error: "An active fixed-slot template already exists for one or more selected dates at this time",
+      error: "You already have an active fixed-slot template for this station",
       details: {
         code: "FIXED_SLOT_TEMPLATE_CONFLICT",
-        slotStart: "09:30",
-        slotDates: ["2026-04-20", "2026-04-21"],
+        slotStart: "10:45",
+        slotDates: ["2026-04-21"],
       },
     });
+  });
+
+  it("allows another user to create an active template at the same station", async () => {
+    const firstUser = await fixture.factories.user({ role: "USER" });
+    const secondUser = await fixture.factories.user({ role: "USER" });
+    const station = await fixture.factories.station({ name: "Shared Fixed Slot Station" });
+    const token = fixture.auth.makeAccessToken({ userId: secondUser.id, role: "USER" });
+
+    await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        userId: firstUser.id,
+        stationId: station.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date("2026-04-10T10:00:00.000Z"),
+        dates: {
+          create: [{ slotDate: new Date(Date.UTC(2026, 3, 20)) }],
+        },
+      },
+    });
+
+    const response = await fixture.app.request("http://test/v1/fixed-slot-templates", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: station.id,
+        slotStart: "09:30",
+        slotDates: ["2026-04-20"],
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
+
+    expect(response.status).toBe(201);
+    expect(body.userId).toBe(secondUser.id);
+    expect(body.station.id).toBe(station.id);
+  });
+
+  it("allows the same user to create an active template at another station", async () => {
+    const user = await fixture.factories.user({ role: "USER" });
+    const stationA = await fixture.factories.station({ name: "Fixed Slot Station A" });
+    const stationB = await fixture.factories.station({ name: "Fixed Slot Station B" });
+    const token = fixture.auth.makeAccessToken({ userId: user.id, role: "USER" });
+
+    await fixture.prisma.fixedSlotTemplate.create({
+      data: {
+        userId: user.id,
+        stationId: stationA.id,
+        slotStart: new Date(Date.UTC(2000, 0, 1, 9, 30, 0)),
+        status: "ACTIVE",
+        updatedAt: new Date("2026-04-10T10:00:00.000Z"),
+        dates: {
+          create: [{ slotDate: new Date(Date.UTC(2026, 3, 20)) }],
+        },
+      },
+    });
+
+    const response = await fixture.app.request("http://test/v1/fixed-slot-templates", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        stationId: stationB.id,
+        slotStart: "09:30",
+        slotDates: ["2026-04-20"],
+      }),
+    });
+
+    const body = await response.json() as FixedSlotTemplatesContracts.CreateFixedSlotTemplateResponse;
+
+    expect(response.status).toBe(201);
+    expect(body.userId).toBe(user.id);
+    expect(body.station.id).toBe(stationB.id);
   });
 
   it("user can get own fixed-slot template detail", async () => {
