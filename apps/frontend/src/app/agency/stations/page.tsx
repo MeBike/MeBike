@@ -152,7 +152,7 @@ export default function StationsPage() {
   );
 
   const availableBikes = currentStationDetails?.bikes?.available ?? 11;
-  const isLowBikes = availableBikes <= minAvailableBikeAtStation;
+  const isLowBikes = availableBikes < minAvailableBikeAtStation;
 
   // Lắng nghe trạng thái cooldown thông báo trong LocalStorage
   useEffect(() => {
