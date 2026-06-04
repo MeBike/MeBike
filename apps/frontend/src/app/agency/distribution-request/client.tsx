@@ -8,7 +8,10 @@ import { redistributionColumn } from "@/columns/distribution-request-column";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { RedistributionRequest, RedistributionRequestStatus } from "@/types/DistributionRequest";
+import type {
+  RedistributionRequest,
+  RedistributionRequestStatus,
+} from "@/types/DistributionRequest";
 import type { CurrentStation, Pagination } from "@custom-types";
 import { Plus, Activity, AlertTriangle } from "lucide-react";
 import { useAgencyActions } from "@/hooks/use-agency";
@@ -18,20 +21,28 @@ interface DistributionRequestClientProps {
     requests: RedistributionRequest[];
     pagination?: Pagination;
     isVisualLoading: boolean;
-    minAvailableBikeAtStation:number;
+    minAvailableBikeAtStation: number;
   };
   filters: {
     statusFilter: RedistributionRequestStatus | "all";
     page: number;
   };
   actions: {
-    setStatusFilter: Dispatch<SetStateAction<RedistributionRequestStatus | "all">>;
+    setStatusFilter: Dispatch<
+      SetStateAction<RedistributionRequestStatus | "all">
+    >;
     setPage: Dispatch<SetStateAction<number>>;
   };
 }
 
 export default function DistributionRequestClient({
-  data: { requests, pagination, isVisualLoading, listStation ,minAvailableBikeAtStation},
+  data: {
+    requests,
+    pagination,
+    isVisualLoading,
+    listStation,
+    minAvailableBikeAtStation,
+  },
   filters: { statusFilter, page },
   actions: { setPage, setStatusFilter },
 }: DistributionRequestClientProps) {
@@ -54,7 +65,11 @@ export default function DistributionRequestClient({
     setPage(1);
     setSearchQuery("");
   };
-
+  const isDisabled =
+    isLoadingMyStationDetail ||
+    !myStationDetail ||
+    myStationDetail.bikes?.available === 0 ||
+    myStationDetail.bikes?.available <= minAvailableBikeAtStation;
   return (
     <div className="space-y-6">
       {/* 1. Header Tiêu đề */}
@@ -71,24 +86,30 @@ export default function DistributionRequestClient({
           {isLoadingMyStationDetail || !myStationDetail ? (
             <Badge
               variant="secondary"
-              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-pulse text-muted-foreground"
+              className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium text-muted-foreground shadow-sm animate-pulse"
             >
-              <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
+              <Activity className="h-3.5 w-3.5" />
+              Đang kiểm tra trạm...
             </Badge>
-          ) : myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
+          ) : myStationDetail.bikes?.available === 0 ||
+            myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
             <Badge
-              variant="destructive"
-              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
+              // Đã thêm các class flex, items-center, gap, height để đồng nhất với Badge trên
+              className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium shadow-sm bg-red-100 text-red-700 border-red-200"
             >
-              <AlertTriangle className="h-3.5 w-3.5" /> Không đủ xe để điều phối
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Không đủ xe
             </Badge>
           ) : null}
-          <Button 
+
+          <Button
             onClick={() => router.push("/agency/distribution-request/create")}
-            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available === 0 || myStationDetail.bikes?.available < minAvailableBikeAtStation}
+            disabled={isDisabled}
             className="shadow-sm"
+            // Nếu Button mặc định quá cao so với Badge (h-8), bạn có thể thêm class h-8 hoặc h-9 vào đây để cân đối hơn
           >
-            <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối
+            <Plus className="mr-2 h-4 w-4" />
+            {isDisabled ? "Không thể tạo yêu cầu" : "Tạo yêu cầu điều phối"}
           </Button>
         </div>
       </div>
@@ -108,7 +129,9 @@ export default function DistributionRequestClient({
             <select
               value={statusFilter}
               onChange={(e) => {
-                setStatusFilter(e.target.value as RedistributionRequestStatus | "all");
+                setStatusFilter(
+                  e.target.value as RedistributionRequestStatus | "all",
+                );
                 setPage(1);
               }}
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -132,14 +155,16 @@ export default function DistributionRequestClient({
         ) : (
           <>
             <p className="text-sm text-muted-foreground ml-1">
-              Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1} trang
+              Hiển thị {pagination?.page ?? 1} / {pagination?.totalPages ?? 1}{" "}
+              trang
             </p>
 
             <div className="bg-card border border-border rounded-lg p-0 overflow-hidden shadow-sm">
               <DataTable
                 title="Danh sách yêu cầu điều phối"
                 columns={redistributionColumn({
-                  onView: ({ id }) => router.push(`/agency/distribution-request/detail/${id}`),
+                  onView: ({ id }) =>
+                    router.push(`/agency/distribution-request/detail/${id}`),
                 })}
                 data={requests || []}
                 searchValue={searchQuery}
