@@ -25,11 +25,13 @@ import { useStationActions } from "@/hooks/use-station";
 interface CreateDistributionRequestClientProps {
   onSubmitRequest: (data: CreateRedistributionRequestInput) => Promise<void>;
   stations: CurrentStation;
+  minAvailableBikeAtStation : Number;
 }
 
 export default function CreateDistributionRequestClient({
   onSubmitRequest,
   stations,
+  minAvailableBikeAtStation,
 }: CreateDistributionRequestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -151,14 +153,14 @@ export default function CreateDistributionRequestClient({
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-bold text-base ${
-                                sourceAvailableBikes < 10
+                                sourceAvailableBikes < Number(minAvailableBikeAtStation)
                                   ? "text-destructive"
                                   : "text-green-600"
                               }`}
                             >
                               {myStationDetail.bikes.available}
                             </span>
-                            {sourceAvailableBikes < 10 && (
+                            {sourceAvailableBikes < Number(minAvailableBikeAtStation) && (
                               <span className="bg-destructive/10 text-destructive text-[10px] font-semibold px-2 py-0.5 rounded-full">
                                 Không đủ
                               </span>
@@ -244,27 +246,23 @@ export default function CreateDistributionRequestClient({
                   )}
                 </div>
 
-                {/* Requested Quantity */}
-                <div className="space-y-2">
-                  <Label className="font-semibold text-left block">
-                    Số lượng xe cần điều phối{" "}
-                    <span className="text-destructive ml-1">
-                      {maxLimit > 0 ? `(Tối đa: ${maxLimit})` : ""}
-                    </span>
-                  </Label>
-
+                <div className="space-y-1">
                   {selectedTargetStation && (
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>
+                      <p className="text-xs text-muted-foreground font-medium">
                         Chỗ trống tại trạm đích:{" "}
                         <span className="font-semibold text-red-600">
                           {targetAvailableSlots}
                         </span>
                       </p>
-                      <p>
-                        Xe khả dụng tại trạm xuất:{" "}
+                      <p className="text-xs text-muted-foreground font-medium">
+                        Xe khả dụng tại trạm xuất{" "}
                         <span className="font-semibold text-red-600">
-                          {Math.max(0, sourceAvailableBikes - 10)}(dành sẵn 10 xe cho khách thuê)
+                          (dành sẵn {Number(minAvailableBikeAtStation)} xe cho khách thuê)
+                        </span>
+                        :{" "}
+                        <span className="font-semibold text-red-600">
+                          {Math.max(0, sourceAvailableBikes - Number(minAvailableBikeAtStation))}
                         </span>
                       </p>
                     </div>
@@ -282,7 +280,7 @@ export default function CreateDistributionRequestClient({
                       },
                     })}
                     placeholder="Nhập số lượng"
-                    min={1}
+                    min={0}
                     max={maxLimit}
                     disabled={!selectedTargetStation || maxLimit === 0}
                   />
@@ -314,12 +312,12 @@ export default function CreateDistributionRequestClient({
 
             <div className="space-y-4">
               {/* CẢNH BÁO KHI TRẠM XUẤT CÓ < 10 XE */}
-              {sourceAvailableBikes < 10 && (
+              {sourceAvailableBikes < Number(minAvailableBikeAtStation) && (
                 <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive border border-destructive/20">
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <p>
                     Không thể gửi yêu cầu. Trạm xuất cần có ít nhất{" "}
-                    <strong>10 xe khả dụng</strong> để thực hiện điều phối.
+                    <strong>{Number(minAvailableBikeAtStation)} xe khả dụng</strong> để thực hiện điều phối.
                   </p>
                 </div>
               )}
@@ -330,7 +328,7 @@ export default function CreateDistributionRequestClient({
                   isSubmitting ||
                   maxLimit === 0 ||
                   !selectedTargetStation ||
-                  sourceAvailableBikes < 10
+                  sourceAvailableBikes < Number(minAvailableBikeAtStation)
                 }
                 className="w-full"
               >

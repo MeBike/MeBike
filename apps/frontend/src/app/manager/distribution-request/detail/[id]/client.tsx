@@ -615,7 +615,7 @@ export const DistributionRequestDetailClient = ({
                         <span className="text-slate-500">Xe hoàn trả</span>
                         <span className="font-bold text-emerald-600">
                           +
-                          {isReverted && data.revertedBikes}{" "}
+                          {data.revertedBikes}{" "}
                           xe
                         </span>
                       </div>

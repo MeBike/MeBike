@@ -25,11 +25,13 @@ import { useAgencyActions } from "@/hooks/use-agency";
 interface CreateDistributionRequestClientProps {
   onSubmitRequest: (data: CreateRedistributionRequestInput) => Promise<void>;
   stations: CurrentStation;
+  minAvailableBikeAtStation : Number;
 }
 
 export default function CreateDistributionRequestClient({
   onSubmitRequest,
   stations,
+  minAvailableBikeAtStation,
 }: CreateDistributionRequestClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -153,14 +155,14 @@ export default function CreateDistributionRequestClient({
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-bold text-base ${
-                                sourceAvailableBikes < 10
+                                sourceAvailableBikes <= Number(minAvailableBikeAtStation)
                                   ? "text-destructive"
                                   : "text-green-600"
                               }`}
                             >
                               {myStationDetail.bikes.available}
                             </span>
-                            {sourceAvailableBikes < 10 && (
+                            {sourceAvailableBikes <= Number(minAvailableBikeAtStation) && (
                               <span className="bg-destructive/10 text-destructive text-[10px] font-semibold px-2 py-0.5 rounded-full">
                                 Không đủ
                               </span>
@@ -266,7 +268,10 @@ export default function CreateDistributionRequestClient({
                       <p>
                         Xe khả dụng tại trạm xuất:{" "}
                         <span className="font-semibold text-red-600">
-                          {Math.max(0, sourceAvailableBikes - 10)}(dành sẵn 10 xe cho khách thuê)
+                          (dành sẵn {Number(minAvailableBikeAtStation)} xe cho khách thuê)
+                        </span>
+                        <span className="font-semibold text-red-600">
+                          {Math.max(0, sourceAvailableBikes - Number(minAvailableBikeAtStation))}
                         </span>
                       </p>
                     </div>
@@ -332,7 +337,7 @@ export default function CreateDistributionRequestClient({
                   isSubmitting ||
                   maxLimit === 0 ||
                   !selectedTargetStation ||
-                  sourceAvailableBikes < 10
+                  sourceAvailableBikes <= Number(minAvailableBikeAtStation)
                 }
                 className="w-full"
               >
