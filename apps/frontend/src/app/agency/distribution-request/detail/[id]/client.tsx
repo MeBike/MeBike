@@ -580,7 +580,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      Trạm xuất phát (Lấy xe)
+                      Trạm Nhận Xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.sourceStation.name}
@@ -603,7 +603,7 @@ export const DistributionRequestDetailClient = ({
                     <p
                       className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? "text-orange-600" : "text-blue-600"}`}
                     >
-                      Trạm tiếp nhận (Trả xe)
+                      Trạm Cho Xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.targetStation.name}
@@ -632,7 +632,7 @@ export const DistributionRequestDetailClient = ({
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Cho
+                      Trạm Cho Xe
                     </span>
                   </div>
                   <div className="space-y-3 ml-2">
@@ -655,8 +655,6 @@ export const DistributionRequestDetailClient = ({
                         xe
                       </span>
                     </div>
-
-                    {/* HIỂN THỊ DÒNG NÀY NẾU CÓ XE HOÀN TRẢ */}
                     {(data.revertedBikes > 0 || isReverted) && (
                       <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                         <span className="text-slate-500">
@@ -691,7 +689,7 @@ export const DistributionRequestDetailClient = ({
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Nhận
+                      Trạm Nhận Xe
                     </span>
                   </div>
                   <div className="space-y-3 ml-2">
@@ -961,7 +959,6 @@ export const DistributionRequestDetailClient = ({
         </CardContent>
       </Card>
 
-      {/* ================= MODAL: TỪ CHỐI ================= */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
@@ -1004,8 +1001,6 @@ export const DistributionRequestDetailClient = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* ================= MODAL: HỦY ================= */}
       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
         <DialogContent className="sm:max-w-md rounded-2xl">
           <DialogHeader>
