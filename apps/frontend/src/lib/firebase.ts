@@ -1,6 +1,6 @@
 import { initializeApp , getApp, getApps} from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getDatabase } from "firebase/database"; // Chỉ import getDatabase ở đây thôi
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
