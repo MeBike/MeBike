@@ -127,7 +127,6 @@ export function NotificationBell({ userId, userRole }: { userId?: string; userRo
   };
 
   const handleNotifClick = async (notif: AppNotification) => {
-    // 1. Đánh dấu đã đọc cho thông báo này nếu chưa đọc
     const isUnread = userId ? !notif.readBy?.[userId] : !notif.read;
     if (isUnread) {
       const updates: Record<string, any> = {};
@@ -142,14 +141,10 @@ export function NotificationBell({ userId, userRole }: { userId?: string; userRo
         console.error("Lỗi cập nhật đã đọc", err);
       }
     }
-
-    // 2. Đóng popover
     setIsOpen(false);
-
-    // 3. Điều hướng nếu có stationId
     if (notif.stationId) {
       const rolePath = userRole ? userRole.toLowerCase() : "staff";
-      if (["staff", "manager", "agency"].includes(rolePath)) {
+      if (["staff","agency"].includes(rolePath)) {
         router.push(`/${rolePath}/distribution-request/create?targetStationId=${notif.stationId}`);
       }
     }
