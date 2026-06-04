@@ -686,9 +686,9 @@ export const DistributionRequestDetailClient = ({
                         Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes ??
-                          (data.sourceAvailableBikesBefore ?? 0) -
-                            (data.requestedQuantity ?? 0) +
+                        {data.targetStation?.actualAvailableBikes ??
+                          (data.targetAvailableBikesBefore ?? 0) +
+                            (data.requestedQuantity ?? 0) -
                             data.revertedBikes}{" "}
                         xe
                       </span>

@@ -727,11 +727,9 @@ export const DistributionRequestDetailClient = ({
                       </span>
                       <span className="font-bold text-slate-900 text-base">
                         {data.targetStation?.actualAvailableBikes ??
-                          (data.targetStation?.availableBikesBefore ??
-                            (data as any).targetAvailableBikesBefore ??
-                            0) +
-                            (data.targetStation?.actualReceivedBikes ??
-                              successfulBikes)}{" "}
+                          (data.targetAvailableBikesBefore ?? 0) +
+                            (data.requestedQuantity ?? 0) -
+                            data.revertedBikes}{" "}
                         xe
                       </span>
                     </div>
