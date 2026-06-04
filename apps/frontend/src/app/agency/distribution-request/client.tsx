@@ -85,7 +85,7 @@ export default function DistributionRequestClient({
           ) : null}
           <Button 
             onClick={() => router.push("/agency/distribution-request/create")}
-            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= minAvailableBikeAtStation}
+            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available === 0 || myStationDetail.bikes?.available < minAvailableBikeAtStation}
             className="shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu điều phối

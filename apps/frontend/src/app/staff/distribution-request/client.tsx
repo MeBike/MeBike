@@ -82,7 +82,7 @@ export default function DistributionRequestClient({
             >
               <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
             </Badge>
-          ) : myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
+          ) : myStationDetail.bikes?.available === 0 || myStationDetail.bikes?.available < minAvailableBikeAtStation ? (
             <Badge
               variant="destructive"
               className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
