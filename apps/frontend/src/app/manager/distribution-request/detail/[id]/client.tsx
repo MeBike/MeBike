@@ -615,9 +615,7 @@ export const DistributionRequestDetailClient = ({
                         <span className="text-slate-500">Xe hoàn trả</span>
                         <span className="font-bold text-emerald-600">
                           +
-                          {isReverted
-                            ? data.requestedQuantity
-                            : data.revertedBikes}{" "}
+                          {isReverted && data.revertedBikes}{" "}
                           xe
                         </span>
                       </div>
@@ -628,7 +626,6 @@ export const DistributionRequestDetailClient = ({
                         Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {/* Ưu tiên số liệu thực tế từ API, nếu không có thì tính: Trước - Xuất + Hoàn */}
                         <span className="font-bold text-slate-900 text-base">
                           {data.sourceStation?.actualAvailableBikes ??
                             (data.sourceAvailableBikesBefore ?? 0) -
@@ -640,11 +637,8 @@ export const DistributionRequestDetailClient = ({
                     </div>
                   </div>
                 </div>
-
-                {/* Box Trạm Nhận */}
                 <div className="border border-slate-100 rounded-xl p-5 shadow-sm relative overflow-hidden bg-white">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
-
                   <div className="flex items-center gap-2 mb-5 ml-2">
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <ArrowDownToLine className="h-4 w-4" />
