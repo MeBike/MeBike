@@ -25,7 +25,7 @@ import { useStationActions } from "@/hooks/use-station";
 interface CreateDistributionRequestClientProps {
   onSubmitRequest: (data: CreateRedistributionRequestInput) => Promise<void>;
   stations: CurrentStation;
-  minAvailableBikeAtStation : Number;
+  minAvailableBikeAtStation : number;
 }
 
 export default function CreateDistributionRequestClient({
