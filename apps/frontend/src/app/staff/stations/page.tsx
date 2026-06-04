@@ -181,8 +181,8 @@ export default function StationsPage() {
     )?.value || 0,
   );
 
-  const availableBikes = currentStationDetails?.bikes?.available ?? 11;
-  const isLowBikes = availableBikes <= minAvailableBikeAtStation;
+  const availableBikes = currentStationDetails?.bikes?.available ?? 0;
+  const isLowBikes = availableBikes === 0 || availableBikes < minAvailableBikeAtStation
 
   useEffect(() => {
     if (!currentStationId) return;
