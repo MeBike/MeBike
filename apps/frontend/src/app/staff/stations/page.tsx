@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Plus, BarChart3, ChevronUp, Loader2, Bell } from "lucide-react";
+import { BarChart3, ChevronUp, ChevronDown, Loader2, Bell } from "lucide-react";
 import { useStationActions } from "@/hooks/use-station";
 import { useDistributionRequest } from "@/hooks/use-distribution-request";
 import { StationTableSection } from "./components/station-table-section";
@@ -21,14 +21,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; // Import thêm Select để làm filter
+} from "@/components/ui/select";
 import {
   LineChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   Legend,
 } from "recharts";
@@ -63,6 +62,19 @@ export default function StationsPage() {
   const [startHour, setStartHour] = useState<number>(defaultStart);
   const [endHour, setEndHour] = useState<number>(23);
   const debounceSearchQuery = useDebounce(searchQuery, 500);
+
+  // State quản lý việc ẩn/hiện biểu đồ (Mặc định tắt khi vào trang)
+  const [isChartVisible, setIsChartVisible] = useState(false);
+
+  // State lưu thông tin điểm tròn được click để hiển thị popup thông tin
+  const [selectedDot, setSelectedDot] = useState<{
+    cx: number;
+    cy: number;
+    time: string;
+    reservedCount: number;
+    demandLevel: string;
+  } | null>(null);
+
   const { systemConfigs, getAllSystemConfigs } = useSystemConfigActions({
     hasToken: true,
   });
@@ -94,12 +106,15 @@ export default function StationsPage() {
     startHour: startHour,
     endHour: endHour,
   });
+
   useEffect(() => {
     if (getReservationForecast) {
       getReservationForecast();
     }
+    // Reset lại popup khi thay đổi bộ lọc giờ để tránh lệch tọa độ hiển thị
+    setSelectedDot(null);
   }, [startHour, endHour, getReservationForecast]);
-  // --- 1. TẠO THÊM LIST GIỜ ĐỂ ĐỔ VÀO DROPDOWN SELECT ---
+
   const hoursOptions = useMemo(() => {
     return Array.from({ length: 24 }, (_, i) => ({
       value: i,
@@ -107,7 +122,6 @@ export default function StationsPage() {
     }));
   }, []);
 
-  // --- 3. CẬP NHẬT LẠI FAKE DATA (THÊM +0.5 ĐỂ NẰM GIỮA KHE GIỜ) ---
   const fakeChartData = useMemo(() => {
     return [
       {
@@ -155,7 +169,6 @@ export default function StationsPage() {
     ];
   }, []);
 
-  // Tạo danh sách vạch chia trục X chạy động theo startHour và endHour của bộ lọc
   const xAxisTicks = useMemo(() => {
     const ticks = [];
     for (let i = startHour; i <= endHour; i++) {
@@ -182,7 +195,8 @@ export default function StationsPage() {
   );
 
   const availableBikes = currentStationDetails?.bikes?.available ?? 0;
-  const isLowBikes = availableBikes === 0 || availableBikes < minAvailableBikeAtStation
+  const isLowBikes =
+    availableBikes === 0 || availableBikes < minAvailableBikeAtStation;
 
   useEffect(() => {
     if (!currentStationId) return;
@@ -262,7 +276,6 @@ export default function StationsPage() {
     setPage(1);
   }, [searchQuery]);
 
-  // --- MAP DATA THẬT TỪ NEW API MODEL (THÊM LẠI +0.5 ĐỂ CĂN GIỮA) ---
   const chartData = useMemo(() => {
     const rawData = reservationForecast;
     if (!rawData || !rawData.hours || !Array.isArray(rawData.hours)) {
@@ -272,7 +285,7 @@ export default function StationsPage() {
       const currentHour = parseInt(String(hourItem.label).split(":")[0], 10);
       return {
         time: hourItem.label,
-        hourValue: currentHour + 0.5, // Logic +0.5 thần thánh giúp chấm nằm giữa khe giờ
+        hourValue: currentHour + 0.5,
         reservedCount: hourItem.reservedCount || 0,
         demandLevel: hourItem.demandLevel || "low",
       };
@@ -339,7 +352,7 @@ export default function StationsPage() {
           </div>
         </div>
 
-        {/* BIỂU ĐỒ HOÀN CHỈNH KÈM BỘ FILTER */}
+        {/* KHU VỰC BIỂU ĐỒ */}
         {listStation?.currentStation && (
           <Card className="shadow-sm border-border">
             <CardHeader className="pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50">
@@ -352,228 +365,296 @@ export default function StationsPage() {
                 )}
               </CardTitle>
 
-              {/* THANH BỘ LỌC THỜI GIAN KHUNG GIỜ */}
-              <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-xl border border-border/40 self-start sm:self-auto">
-                <span className="text-xs font-bold text-muted-foreground px-2">
-                  Khung giờ:
-                </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* BỘ LỌC THỜI GIAN */}
+                <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-xl border border-border/40 self-start sm:self-auto">
+                  <span className="text-xs font-bold text-muted-foreground px-2">
+                    Khung giờ:
+                  </span>
 
-                {/* Chọn Start Hour */}
-                <Select
-                  value={String(startHour)}
-                  onValueChange={(val) => {
-                    const num = Number(val);
-                    setStartHour(num);
-                    // Tự động đẩy endHour nếu start >= end, nhưng chốt chặn thấp nhất luôn là 6h
-                    if (num >= endHour) {
-                      setEndHour(Math.max(Math.min(num + 1, 23), 6));
-                    }
+                  <Select
+                    value={String(startHour)}
+                    onValueChange={(val) => {
+                      const num = Number(val);
+                      setStartHour(num);
+                      if (num >= endHour) {
+                        setEndHour(Math.max(Math.min(num + 1, 23), 6));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
+                      <SelectValue placeholder="Từ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hoursOptions.map((h) => (
+                        <SelectItem
+                          key={`start-${h.value}`}
+                          value={String(h.value)}
+                          disabled={h.value > endHour}
+                        >
+                          {h.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <span className="text-muted-foreground text-xs">➔</span>
+
+                  <Select
+                    value={String(endHour)}
+                    onValueChange={(val) => setEndHour(Number(val))}
+                  >
+                    <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
+                      <SelectValue placeholder="Đến" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hoursOptions.map((h) => (
+                        <SelectItem
+                          key={`end-${h.value}`}
+                          value={String(h.value)}
+                          disabled={h.value < startHour || h.value < 6}
+                        >
+                          {h.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* NÚT BẬT/TẮT BIỂU ĐỒ (SET DEFAULT LÀ TẮT) */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-xl px-3 border-border bg-background shadow-sm hover:bg-muted"
+                  onClick={() => {
+                    setIsChartVisible(!isChartVisible);
+                    setSelectedDot(null); // Đóng popup khi tắt chart
                   }}
                 >
-                  <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
-                    <SelectValue placeholder="Từ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hoursOptions.map((h) => (
-                      <SelectItem
-                        key={`start-${h.value}`}
-                        value={String(h.value)}
-                        disabled={h.value > endHour}
-                      >
-                        {h.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <span className="text-muted-foreground text-xs">➔</span>
-
-                {/* Chọn End Hour */}
-                <Select
-                  value={String(endHour)}
-                  onValueChange={(val) => setEndHour(Number(val))}
-                >
-                  <SelectTrigger className="w-[100px] h-8 text-xs bg-background rounded-lg shadow-sm">
-                    <SelectValue placeholder="Đến" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {hoursOptions.map((h) => (
-                      <SelectItem
-                        key={`end-${h.value}`}
-                        value={String(h.value)}
-                        // KHÓA THÊM: Nếu giờ nhỏ hơn startHour HOẶC nhỏ hơn 6h thì không cho chọn
-                        disabled={h.value < startHour || h.value < 6}
-                      >
-                        {h.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  {isChartVisible ? (
+                    <>
+                      <ChevronUp className="w-4 h-4 mr-1.5" /> Ẩn biểu đồ
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-1.5" /> Xem biểu đồ
+                    </>
+                  )}
+                </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              {activeChartData.length > 0 ? (
-                <div className="h-[270px] w-full rounded-xl border border-border/50 bg-muted/5 p-4 mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={activeChartData}
-                      margin={{ top: 20, right: 40, left: 10, bottom: 20 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-                      <XAxis
-                        type="number"
-                        dataKey="hourValue"
-                        domain={[
-                          xAxisTicks[0],
-                          xAxisTicks[xAxisTicks.length - 1],
-                        ]} // Chạy động theo mảng ticks mới chọn
-                        ticks={xAxisTicks}
-                        tickFormatter={(value) =>
-                          `${value.toString().padStart(2, "0")}:00`
-                        }
-                        axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
-                        tickLine={false}
-                        tick={{ fontSize: 12 }}
-                        dy={10}
-                        label={{
-                          value: "Thời gian (Giờ) ➔",
-                          position: "insideBottomRight",
-                          offset: -15,
-                          fill: "#475569",
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}
-                      />
+            {isChartVisible && (
+              <CardContent>
+                {/* Lớp bọc ngoài tạo khoảng cách viền, màu nền */}
+                <div className="mt-4 rounded-xl border border-border/50 bg-muted/5 p-4">
+                  {/* KHU VỰC QUAN TRỌNG: Thẻ div bọc trực tiếp CHART & POPUP này TUYỆT ĐỐI KHÔNG ĐƯỢC CÓ PADDING để tọa độ hiển thị chuẩn 100% */}
+                  <div className="h-[270px] w-full relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={activeChartData}
+                        margin={{ top: 20, right: 40, left: 10, bottom: 20 }}
+                        style={{ outline: "none" }} // Thêm dòng này để XÓA BỎ ô viền xanh khi click
+                        onClick={() => setSelectedDot(null)} // Click ra vùng trống để đóng popup
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
 
-                      <YAxis
-                        axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
-                        tickLine={false}
-                        tick={{ fontSize: 12 }}
-                        dx={-10}
-                        allowDecimals={false}
-                        label={{
-                          value: "Số lượng xe (Chiếc)",
-                          angle: -90,
-                          position: "insideLeft",
-                          offset: 0,
-                          textAnchor: "middle",
-                          fill: "#475569",
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}
-                      />
+                        <XAxis
+                          type="number"
+                          dataKey="hourValue"
+                          domain={[
+                            xAxisTicks[0],
+                            xAxisTicks[xAxisTicks.length - 1],
+                          ]}
+                          ticks={xAxisTicks}
+                          tickFormatter={(value) =>
+                            `${value.toString().padStart(2, "0")}:00`
+                          }
+                          axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
+                          tickLine={false}
+                          tick={{ fontSize: 12 }}
+                          dy={10}
+                          label={{
+                            value: "Thời gian (Giờ) ➔",
+                            position: "insideBottomRight",
+                            offset: -15,
+                            fill: "#475569",
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        />
 
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (active && payload && payload.length) {
-                            const data = payload[0].payload;
-                            const startHourValue = Math.floor(
-                              Number(data.hourValue),
-                            );
-                            const formatStr = (h: number) =>
-                              h.toString().padStart(2, "0");
+                        <YAxis
+                          axisLine={{ stroke: "#94a3b8", strokeWidth: 2 }}
+                          tickLine={false}
+                          tick={{ fontSize: 12 }}
+                          dx={-10}
+                          allowDecimals={false}
+                          label={{
+                            value: "Số lượng xe (Chiếc)",
+                            angle: -90,
+                            position: "insideLeft",
+                            offset: 0,
+                            textAnchor: "middle",
+                            fill: "#475569",
+                            fontSize: 13,
+                            fontWeight: 600,
+                          }}
+                        />
+
+                        <Legend wrapperStyle={{ paddingTop: "20px" }} />
+
+                        <Line
+                          type="monotone"
+                          dataKey="reservedCount"
+                          name="Số xe đặt trước"
+                          stroke="#94a3b8"
+                          strokeWidth={2}
+                          activeDot={false} // Khóa hover mặc định để không tranh chấp layout
+                          dot={(props: any) => {
+                            const { cx, cy, payload } = props;
                             const config =
                               DEMAND_CONFIG[
-                                data.demandLevel as keyof typeof DEMAND_CONFIG
+                                payload.demandLevel as keyof typeof DEMAND_CONFIG
                               ] || DEMAND_CONFIG.low;
+                            const isSelected =
+                              selectedDot?.time === payload.time;
 
                             return (
-                              <div className="rounded-xl border border-border bg-popover p-3 shadow-md space-y-1.5 text-sm">
-                                <p className="font-bold text-foreground">
-                                  Khung giờ: {formatStr(startHourValue)}:00 -{" "}
-                                  {formatStr(startHourValue)}:59
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-muted-foreground">
-                                    Số xe đặt trước:
-                                  </span>
-                                  <span className="font-bold text-amber-500">
-                                    {data.reservedCount} chiếc
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 pt-0.5 border-t border-border/60">
-                                  <span className="text-muted-foreground text-xs">
-                                    Mức độ nhu cầu:
-                                  </span>
-                                  <span
-                                    className={cn(
-                                      "text-[11px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
-                                      config.badgeBg,
-                                    )}
-                                  >
-                                    {config.text}
-                                  </span>
-                                </div>
-                              </div>
+                              <circle
+                                cx={cx}
+                                cy={cy}
+                                r={isSelected ? 7 : 5}
+                                fill={config.color}
+                                stroke="#ffffff"
+                                strokeWidth={isSelected ? 2.5 : 1.5}
+                                className={cn(
+                                  "cursor-pointer focus:outline-none",
+                                  isSelected &&
+                                    "drop-shadow-[0_2px_5px_rgba(0,0,0,0.3)]",
+                                )}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Ngăn nổi bọt sự kiện lên LineChart
+                                  setSelectedDot({
+                                    cx,
+                                    cy,
+                                    time: payload.time,
+                                    reservedCount: payload.reservedCount,
+                                    demandLevel: payload.demandLevel,
+                                  });
+                                }}
+                              />
                             );
-                          }
-                          return null;
-                        }}
-                      />
+                          }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
 
-                      <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                    {/* POPUP SẼ ĐƯỢC ĐỊNH VỊ CHÍNH XÁC TẠI ĐÂY DO ĐÃ LOẠI BỎ PADDING CỦA CHA */}
+                    {selectedDot && (
+                      <div
+                        className="absolute z-50 rounded-xl border border-border bg-popover p-3 shadow-xl space-y-2 text-sm w-52 animate-in fade-in zoom-in-95 duration-150 pointer-events-auto shadow-slate-200 dark:shadow-none"
+                        style={{
+                          left: selectedDot.cx,
+                          top: selectedDot.cy,
+                          transform:
+                            selectedDot.cx > window.innerWidth * 0.6
+                              ? "translate(-110%, -50%)"
+                              : "translate(12px, -50%)", // Nếu sát góc bên phải quá thì tự động lật popup sang bên trái để không bị tràn màn hình
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-between border-b pb-1 border-border/60">
+                          <p className="font-bold text-foreground">
+                            Khung giờ: {selectedDot.time}
+                          </p>
+                          <button
+                            onClick={() => setSelectedDot(null)}
+                            className="text-muted-foreground hover:text-foreground text-xs p-0.5 rounded hover:bg-muted"
+                          >
+                            ✕
+                          </button>
+                        </div>
 
-                      <Line
-                        type="monotone"
-                        dataKey="reservedCount"
-                        name="Số xe đặt trước"
-                        stroke="#94a3b8"
-                        strokeWidth={2}
-                        dot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          const config =
-                            DEMAND_CONFIG[
-                              payload.demandLevel as keyof typeof DEMAND_CONFIG
-                            ] || DEMAND_CONFIG.low;
-                          return (
-                            <circle
-                              cx={cx}
-                              cy={cy}
-                              r={5}
-                              fill={config.color}
-                              stroke="#ffffff"
-                              strokeWidth={1.5}
-                              className="shadow-sm"
-                            />
-                          );
-                        }}
-                        activeDot={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          const config =
-                            DEMAND_CONFIG[
-                              payload.demandLevel as keyof typeof DEMAND_CONFIG
-                            ] || DEMAND_CONFIG.low;
-                          return (
-                            <circle
-                              cx={cx}
-                              cy={cy}
-                              r={7}
-                              fill={config.color}
-                              stroke="#ffffff"
-                              strokeWidth={2}
-                              className="drop-shadow-md"
-                            />
-                          );
-                        }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-xs">
+                            Số xe đặt trước:
+                          </span>
+                          <span className="font-bold text-amber-500">
+                            {selectedDot.reservedCount} chiếc
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 gap-2">
+                          <span className="text-muted-foreground text-xs">
+                            Mức độ nhu cầu:
+                          </span>
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
+                              (
+                                DEMAND_CONFIG[
+                                  selectedDot.demandLevel as keyof typeof DEMAND_CONFIG
+                                ] || DEMAND_CONFIG.low
+                              ).badgeBg,
+                            )}
+                          >
+                            {
+                              (
+                                DEMAND_CONFIG[
+                                  selectedDot.demandLevel as keyof typeof DEMAND_CONFIG
+                                ] || DEMAND_CONFIG.low
+                              ).text
+                            }
+                          </span>
+                        </div>
+
+                        {selectedDot.demandLevel === "high" && (
+                          <Button
+                            size="sm"
+                            className="w-full mt-2 h-7 text-[11px] font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg gap-1 shadow-sm transition-all active:scale-95"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const response = await axios.post(
+                                  "/api/notifications/low-bike",
+                                  {
+                                    stationId: currentStationId,
+                                    stationName: currentStationName,
+                                    availableBikes: availableBikes,
+                                    context: `Nhu cầu cao phát hiện tại khung giờ ${selectedDot.time}`,
+                                  },
+                                );
+                                if (response.data.success) {
+                                  toast.success(
+                                    `Đã gửi thông báo điều phối khẩn cấp thành công cho khung giờ ${selectedDot.time}!`,
+                                  );
+                                  setSelectedDot(null);
+                                } else {
+                                  toast.error("Gửi báo cáo thất bại.");
+                                }
+                              } catch (err) {
+                                console.error(err);
+                                toast.error(
+                                  "Có lỗi xảy ra khi thực hiện gửi báo cáo.",
+                                );
+                              }
+                            }}
+                          >
+                            <Bell className="w-3 h-3" />
+                            Gửi thông báo ngay
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="h-[250px] flex items-center justify-center rounded-xl border border-dashed border-border mt-2 bg-muted/10">
-                  <span className="text-muted-foreground text-sm font-medium">
-                    {isLoadingReservationForecast
-                      ? "Đang tải dữ liệu dự báo..."
-                      : "Chưa có dữ liệu dự báo cho thời gian này"}
-                  </span>
-                </div>
-              )}
-            </CardContent>
+              </CardContent>
+            )}
           </Card>
         )}
 
-        {/* DANH SÁCH TRẠM */}
+        {/* DANH SÁCH TRẠM VẬN HÀNH */}
         <div className="space-y-4 min-h-[400px]">
           <h2 className="text-2xl font-bold px-1">Danh sách vận hành</h2>
           <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-4 shadow-sm">

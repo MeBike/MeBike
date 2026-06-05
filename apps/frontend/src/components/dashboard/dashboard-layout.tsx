@@ -31,7 +31,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                     {user?.role || "user"}
                   </p>
                 </div>
-                <NotificationBell userId={user?.id} />
+                <NotificationBell userId={user?.id} userRole={user?.role} />
                 <Avatar className="w-10 h-10 border-2 border-primary/20">
                   <AvatarImage
                     src={user.avatar || "/placeholder.svg"}

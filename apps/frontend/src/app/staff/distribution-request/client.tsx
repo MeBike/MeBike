@@ -63,6 +63,11 @@ export default function DistributionRequestClient({
       getMyStationDetail();
     }
   }, [getMyStationDetail, listStation?.currentStation?.id]);
+  const isDisabled =
+    isLoadingMyStationDetail ||
+    !myStationDetail ||
+    myStationDetail.bikes?.available === 0 ||
+    myStationDetail.bikes?.available <= minAvailableBikeAtStation;
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -78,29 +83,31 @@ export default function DistributionRequestClient({
           {isLoadingMyStationDetail || !myStationDetail ? (
             <Badge
               variant="secondary"
-              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-pulse text-muted-foreground"
+              className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium text-muted-foreground shadow-sm animate-pulse"
             >
-              <Activity className="h-3.5 w-3.5" /> Đang kiểm tra trạm...
+              <Activity className="h-3.5 w-3.5" />
+              Đang kiểm tra trạm...
             </Badge>
-          ) : myStationDetail.bikes?.available === 0 || myStationDetail.bikes?.available < minAvailableBikeAtStation ? (
+          ) : myStationDetail.bikes?.available === 0 ||
+            myStationDetail.bikes?.available <= minAvailableBikeAtStation ? (
             <Badge
-              variant="destructive"
-              className="h-8 px-2.5 flex items-center gap-1.5 font-medium rounded-md shadow-sm animate-fade-in"
+              className="flex h-8 items-center gap-1.5 rounded-md px-2.5 font-medium shadow-sm bg-red-100 text-red-700 border-red-200"
             >
-              <AlertTriangle className="h-3.5 w-3.5" /> Không đủ xe để điều phối
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Không đủ xe
             </Badge>
           ) : null}
+
           <Button
             onClick={() => router.push("/staff/distribution-request/create")}
-            disabled={isLoadingMyStationDetail || !myStationDetail || myStationDetail.bikes?.available <= minAvailableBikeAtStation}
+            disabled={isDisabled}
             className="shadow-sm"
           >
-            <Plus className="mr-2 h-4 w-4" /> Tạo yêu cầu
+            <Plus className="mr-2 h-4 w-4" />
+            {isDisabled ? "Không thể tạo yêu cầu" : "Tạo yêu cầu điều phối"}
           </Button>
         </div>
       </div>
-
-      {/* --- BỘ LỌC ĐỒNG BỘ --- */}
       <div className="rounded-xl border border-border bg-card shadow-sm transition-all">
         <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
           <div className="flex items-center gap-2">

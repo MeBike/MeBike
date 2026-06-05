@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,9 +25,12 @@ interface AppNotification {
   timestamp: string;
   read: boolean;
   readBy?: Record<string, boolean>;
+  stationId?: string;
+  type?: string;
 }
 
-export function NotificationBell({ userId }: { userId?: string }) {
+export function NotificationBell({ userId, userRole }: { userId?: string; userRole?: string }) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -122,6 +126,30 @@ export function NotificationBell({ userId }: { userId?: string }) {
     }
   };
 
+  const handleNotifClick = async (notif: AppNotification) => {
+    const isUnread = userId ? !notif.readBy?.[userId] : !notif.read;
+    if (isUnread) {
+      const updates: Record<string, any> = {};
+      if (userId) {
+        updates[`notifications/${notif.id}/readBy/${userId}`] = true;
+      } else {
+        updates[`notifications/${notif.id}/read`] = true;
+      }
+      try {
+        await update(ref(database), updates);
+      } catch (err) {
+        console.error("Lỗi cập nhật đã đọc", err);
+      }
+    }
+    setIsOpen(false);
+    if (notif.stationId) {
+      const rolePath = userRole ? userRole.toLowerCase() : "staff";
+      if (["staff","agency"].includes(rolePath)) {
+        router.push(`/${rolePath}/distribution-request/create?targetStationId=${notif.stationId}`);
+      }
+    }
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
@@ -156,7 +184,8 @@ export function NotificationBell({ userId }: { userId?: string }) {
                 return (
                   <div
                     key={notif.id}
-                    className={`flex flex-col gap-1 border-b p-4 last:border-0 ${isUnread ? "bg-primary/5" : ""}`}
+                    onClick={() => handleNotifClick(notif)}
+                    className={`flex flex-col gap-1 border-b p-4 last:border-0 cursor-pointer hover:bg-muted/50 transition-colors ${isUnread ? "bg-primary/5" : ""}`}
                   >
                     <span className="font-bold text-sm leading-tight">
                       {notif.title}

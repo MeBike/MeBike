@@ -25,7 +25,7 @@ export default function Page() {
     status: statusFilter === "all" ? undefined : statusFilter,
     hasToken: true,
   });
-    const { systemConfigs, getAllSystemConfigs, isLoading } =
+  const { systemConfigs, getAllSystemConfigs, isLoading } =
       useSystemConfigActions({ hasToken: true });
   useEffect(() => {
     getStaffViewDistributionRequest();

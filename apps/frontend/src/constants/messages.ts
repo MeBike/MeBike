@@ -877,7 +877,7 @@ export const DISTRIBUTION_REQUEST = {
   INSUFFICIENT_AVAILABLE_BIKES:
     "Số lượng xe có sẵn không đủ để đáp ứng yêu cầu",
   EXCEEDED_MIN_BIKES_AT_STATION:
-    "Thao tác vượt quá giới hạn tối thiểu xe tại trạm (10 xe)",
+    "Thao tác vượt quá giới hạn tối thiểu xe tại trạm",
   STATION_NOT_FOUND: "Không tìm thấy trạm",
   USER_NOT_FOUND: "Không tìm thấy người dùng",
   INCOMPLETED_REDISTRIBUTION_REQUEST_EXISTS:
