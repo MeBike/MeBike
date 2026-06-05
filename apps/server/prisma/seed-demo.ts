@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
-import type { ReservationOption, ReservationStatus } from "../generated/prisma/client";
+import type { Prisma, ReservationOption, ReservationStatus } from "../generated/prisma/client";
 
 import {
   AccountStatus,
@@ -24,6 +24,8 @@ import {
   UserVerifyStatus,
   WalletHoldReason,
   WalletStatus,
+  WalletTransactionStatus,
+  WalletTransactionType,
 } from "../generated/prisma/client";
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
@@ -35,7 +37,7 @@ import { seedDefaultGlobalCouponRules } from "./seed-coupon-rules";
 import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { DEFAULT_PRICING_POLICY_ID, seedDefaultPricingPolicy } from "./seed-pricing-policy";
 import { seedDefaultSystemConfigs } from "./seed-system-configs";
-import { buildDemoCustomerFullName, buildDemoTechnicianFullName } from "./seed/demo-faker";
+import { buildDemoCustomerFullName } from "./seed/demo-faker";
 import { seedDemoRatings } from "./seed/demo-ratings";
 import { seedRatingReasons } from "./seed/rating-reasons";
 import { STATION_IDS } from "./seed/station-ids";
@@ -735,7 +737,7 @@ async function main() {
     await prisma.bike.deleteMany({
       where: {
         bikeNumber: {
-          startsWith: "DEMO-",
+          startsWith: "MB-",
         },
       },
     });
@@ -1033,14 +1035,7 @@ async function main() {
       };
     });
     await prisma.wallet.createMany({
-      data: walletData.map(({ initialDeposit: _id, ...w }) => ({
-        id: w.id,
-        userId: w.userId,
-        balance: w.balance,
-        reservedBalance: w.reservedBalance,
-        status: w.status,
-        updatedAt: w.updatedAt,
-      })),
+      data: walletData.map(({ initialDeposit, ...rest }) => rest),
     });
 
     const walletRows = await prisma.wallet.findMany({
@@ -1048,17 +1043,7 @@ async function main() {
     });
     const walletByUserId = new Map(walletRows.map(w => [w.userId, w.id]));
 
-    const walletTransactions: {
-      id: string;
-      walletId: string;
-      amount: bigint;
-      fee: bigint;
-      description: string | null;
-      hash: string | null;
-      type: string;
-      status: string;
-      createdAt: Date;
-    }[] = [];
+    const walletTransactions: Prisma.WalletTransactionCreateManyInput[] = [];
 
     for (const wd of walletData) {
       walletTransactions.push({
@@ -1068,8 +1053,8 @@ async function main() {
         fee: 0n,
         description: "Demo initial deposit",
         hash: null,
-        type: "DEPOSIT",
-        status: "SUCCESS",
+        type: WalletTransactionType.DEPOSIT,
+        status: WalletTransactionStatus.SUCCESS,
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       });
     }
@@ -1088,8 +1073,8 @@ async function main() {
           fee: 0n,
           description: "Demo rental payment",
           hash: null,
-          type: "DEBIT",
-          status: "SUCCESS",
+          type: WalletTransactionType.DEBIT,
+          status: WalletTransactionStatus.SUCCESS,
           createdAt: rental.endTime!,
         });
       }
@@ -1108,8 +1093,8 @@ async function main() {
           fee: 0n,
           description: "Demo reservation fee",
           hash: null,
-          type: "DEBIT",
-          status: "SUCCESS",
+          type: WalletTransactionType.DEBIT,
+          status: WalletTransactionStatus.SUCCESS,
           createdAt: res.createdAt,
         });
       }
