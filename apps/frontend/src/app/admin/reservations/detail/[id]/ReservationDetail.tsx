@@ -256,11 +256,11 @@ export default function ReservationDetailClient() {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
                   label="ID"
-                  value={<span className="font-mono">{data.bike?.id}</span>}
+                  value={<span className="font-mono">{data.bike?.id || "N/A"}</span>}
                 />
                 <Field
                   label="Mã số xe"
-                  value={<span className="font-mono">{data.bike?.bikeNumber}</span>}
+                  value={<span className="font-mono">{data.bike?.bikeNumber || "N/A"}</span>}
                 />
                 <Field
                   label="Trạng thái xe"
