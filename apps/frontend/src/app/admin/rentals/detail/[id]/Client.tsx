@@ -276,33 +276,12 @@ export default function AdminRentalDetailClient({
               </div>
             </SectionCard>
 
-            <SectionCard icon={Bike} title="Phương tiện">
+            <SectionCard icon={Bike} title="Thông tin phương tiện">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="ID" value={data.bike?.id || "N/A"} />
                 <Field
-                  label="Mã xe"
-                  value={
-                    data.bike?.id ? (
-                      <span className="font-mono text-xs">{data.bike.id}</span>
-                    ) : (
-                      <span className="italic text-muted-foreground">
-                        Chưa gán xe
-                      </span>
-                    )
-                  }
-                />
-                <Field
-                  label="Xe được gán"
-                  value={
-                    data.bike?.bikeNumber ? (
-                      <span className="font-mono text-xs">
-                        {data.bike.bikeNumber}
-                      </span>
-                    ) : (
-                      <span className="italic text-muted-foreground">
-                        Chưa gán xe
-                      </span>
-                    )
-                  }
+                  label="Mã số xe"
+                  value={data.bike?.bikeNumber || "N/A"}
                 />
                 <Field
                   label="Trạng thái xe"
@@ -359,7 +338,9 @@ export default function AdminRentalDetailClient({
                   <span className="text-muted-foreground">
                     Phương thức thanh toán:
                   </span>
-                  <span className="font-medium">{data.subscriptionId ? "Gói tháng" : "Ví Mebike"}</span>
+                  <span className="font-medium">
+                    {data.subscriptionId ? "Gói tháng" : "Ví Mebike"}
+                  </span>
                 </div>
               </div>
             </SectionCard>

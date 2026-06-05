@@ -264,8 +264,12 @@ export default function ReservationDetailClient() {
             <SectionCard icon={Bike} title="Thông tin phương tiện">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
-                  label="Mã số xe (ID)"
-                  value={<span className="font-mono">{data.bike?.id}</span>}
+                  label="ID"
+                  value={<span className="font-mono">{data.bike?.id || "N/A"}</span>}
+                />
+                <Field
+                  label="Mã số xe"
+                  value={<span className="font-mono">{data.bike?.bikeNumber || "N/A"}</span>}
                 />
                 <Field
                   label="Trạng thái xe"

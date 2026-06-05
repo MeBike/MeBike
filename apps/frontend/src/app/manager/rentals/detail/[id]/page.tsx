@@ -61,7 +61,7 @@ function Field({
 }) {
   return (
     <div className={className}>
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="text-xs font-medium text-muted-foreground uppercase">{label}</p>
       <div className="mt-1 text-sm font-medium text-foreground">{value}</div>
     </div>
   );
@@ -264,10 +264,10 @@ export default function AdminRentalDetailPage() {
               </div>
             </SectionCard>
 
-            <SectionCard icon={Bike} title="Phương tiện">
+            <SectionCard icon={Bike} title="Thông tin phương tiện">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field
-                  label="Mã xe"
+                  label="ID"
                   value={
                     detailData.bike?.id ? (
                       <span className="font-mono text-xs">
@@ -281,7 +281,7 @@ export default function AdminRentalDetailPage() {
                   }
                 />
                 <Field
-                  label="Xe được gán"
+                  label="Mã số xe"
                   value={
                     detailData.bike?.bikeNumber ? (
                       <span className="font-mono text-xs">
