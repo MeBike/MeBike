@@ -506,7 +506,7 @@ export default function StationsPage() {
                             left: selectedDot.cx,
                             top: selectedDot.cy,
                             transform:
-                              selectedDot.cx > window.innerWidth * 0.6
+                              typeof window !== "undefined" &&selectedDot.cx > window.innerWidth * 0.6
                                 ? "translate(-110%, -50%)"
                                 : "translate(12px, -50%)",
                           }}
