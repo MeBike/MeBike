@@ -50,6 +50,13 @@ export const bikeColumn = ({
   onView?: ({ id }: { id: string }) => void;
 }): ColumnDef<Bike>[] => [
   {
+    accessorKey: "bikeNumber",
+    header: "Mã số xe",
+    cell: ({ row }) => {
+      return row.original.bikeNumber || "Không có";
+    },
+  },
+  {
     accessorKey: "station",
     header: "Tên trạm",
     cell: ({ row }) => {
