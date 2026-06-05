@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
-import type { Prisma, ReservationOption, ReservationStatus } from "../generated/prisma/client";
+import type { Prisma } from "../generated/prisma/client";
 
 import {
   AccountStatus,
@@ -17,6 +17,8 @@ import {
   NfcCardStatus,
   PrismaClient,
   RentalStatus,
+  ReservationOption,
+  ReservationStatus,
   SubscriptionPackage,
   SubscriptionStatus,
   SupplierStatus,
@@ -30,6 +32,7 @@ import {
 import { formatBikeNumber } from "../src/domain/bikes/bike-number";
 import { setBikeNumberSequence } from "../src/domain/bikes/repository/bike.repository.shared";
 import { calculateUsageChargeMinor } from "../src/domain/pricing/calculator";
+import { createVietnamHourDate } from "../src/domain/shared/business-hours";
 import { toPrismaDecimal } from "../src/domain/shared/decimal";
 import { toMinorUnit } from "../src/domain/shared/money";
 import logger from "../src/lib/logger";
@@ -64,6 +67,7 @@ function buildRoleUsername(prefix: "staff" | "manager" | "agency" | "tech", stat
 
 const DEMO_DEFAULT_BIKES_PER_STATION = 15;
 const DEMO_BIKES_PER_STATION_OVERRIDES: Record<string, number> = {
+  "Ga An Phú": 40,
   "Ga Bến Thành": 40,
   "Ga Bình Thái": 5,
 };
@@ -71,6 +75,7 @@ const DEMO_RENTAL_MIN_HOUR = 6;
 const DEMO_RENTAL_MAX_HOUR = 22;
 const DEMO_NFC_CARD_UID = "3946298114";
 const DEMO_NFC_CARD_USER_EMAIL = "user02@mebike.local";
+const DEMO_RESERVATION_STATION_NAME = "Ga An Phú";
 
 const DEMO_AGENCY_MAIN_ID = "019b17bd-d130-7e7d-be69-91ceef7b9003";
 const DEMO_AGENCY_EAST_ID = "019b17bd-d130-7e7d-be69-91ceef7b9004";
@@ -187,6 +192,42 @@ function toPastDemoRentalUtcDate(dayOffset: number, hour: number, minute: number
 
 function toDemoRentalUtcDateInMonth(year: number, month: number, day: number, hour: number, minute: number) {
   return toUtcDateInMonth(year, month, day, toDemoRentalHour(hour), minute);
+}
+
+function getVietnamDateParts(date: Date) {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const parts = formatter.formatToParts(date);
+
+  return {
+    year: Number(parts.find(part => part.type === "year")?.value ?? "0"),
+    month: Number(parts.find(part => part.type === "month")?.value ?? "0"),
+    day: Number(parts.find(part => part.type === "day")?.value ?? "0"),
+    hour: Number(parts.find(part => part.type === "hour")?.value ?? "0"),
+    minute: Number(parts.find(part => part.type === "minute")?.value ?? "0"),
+  };
+}
+
+function getNextVietnamReservationDate(hour: number, minute: number) {
+  const now = new Date();
+  const nowInVietnam = getVietnamDateParts(now);
+  const useNextDay = nowInVietnam.hour > hour || (nowInVietnam.hour === hour && nowInVietnam.minute >= minute);
+  const slotStart = createVietnamHourDate(
+    nowInVietnam.year,
+    nowInVietnam.month,
+    nowInVietnam.day + (useNextDay ? 1 : 0),
+    hour,
+  );
+
+  return new Date(slotStart.getTime() + minute * 60 * 1000);
 }
 
 function pick<T>(arr: readonly T[], idx: number): T {
@@ -481,7 +522,59 @@ function buildReservations(_params: {
   subscriptionIdsByUserId: ReadonlyMap<string, string>;
   pricing: PricingConfig;
 }): DemoReservation[] {
-  return [];
+  const { users, bikes, pricing } = _params;
+  const normalUsers = users.filter(user => user.role === UserRole.USER).slice(0, 17);
+  const stationId = STATION_IDS[DEMO_RESERVATION_STATION_NAME];
+
+  if (!stationId || normalUsers.length < 17) {
+    return [];
+  }
+
+  const reservedBikes = bikes
+    .filter(bike => bike.stationId === stationId)
+    .slice(0, 17);
+
+  if (reservedBikes.length < 17) {
+    return [];
+  }
+
+  const reservationSlots = [
+    { hour: 18, minutes: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45] },
+    { hour: 19, minutes: [0, 10, 20, 30, 40] },
+    { hour: 20, minutes: [0, 15] },
+  ] as const;
+
+  const reservations: DemoReservation[] = [];
+  let reservationIndex = 0;
+
+  for (const slot of reservationSlots) {
+    for (const minute of slot.minutes) {
+      const user = normalUsers[reservationIndex]!;
+      const bike = reservedBikes[reservationIndex]!;
+      const startTime = getNextVietnamReservationDate(slot.hour, minute);
+      const endTime = new Date(startTime.getTime() + 15 * 60 * 1000);
+      const createdAt = new Date(startTime.getTime() - 30 * 60 * 1000);
+
+      reservations.push({
+        id: uuidv7(),
+        userId: user.id,
+        bikeId: bike.id,
+        stationId,
+        reservationOption: ReservationOption.ONE_TIME,
+        subscriptionId: null,
+        startTime,
+        endTime,
+        prepaid: Number(pricing.reservationFee),
+        status: ReservationStatus.PENDING,
+        createdAt,
+        updatedAt: createdAt,
+      });
+
+      reservationIndex++;
+    }
+  }
+
+  return reservations;
 }
 
 async function main() {
