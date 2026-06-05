@@ -117,7 +117,7 @@ export function BikeDetailView({
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <Field
                   label="Mã số xe"
-                  value={`${bike.bikeNumber || "N/A"}`}
+                  value={bike.bikeNumber || "N/A"}
                 />
                 <Field
                   label="Trạng thái"
