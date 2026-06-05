@@ -61,7 +61,7 @@ describe("reservationRepository read integration", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
-  it.fails("findPendingHoldByBikeIdNow ignores holds for other bikes", async () => {
+  it("findPendingHoldByBikeIdNow ignores holds for other bikes", async () => {
     const now = new Date();
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station Other Bike Hold" });
