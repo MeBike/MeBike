@@ -1,5 +1,12 @@
-export type RedistributionRequestStatus = "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | "IN_TRANSIT"
-| "PARTIALLY_COMPLETED" | "REVERTED";
+export type RedistributionRequestStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "IN_TRANSIT"
+  | "PARTIALLY_COMPLETED"
+  | "REVERTED";
 export type PriorityLevel = "HIGH" | "MEDIUM" | "LOW";
 export type RedistributionRequest = {
   id: string;
@@ -10,8 +17,8 @@ export type RedistributionRequest = {
   completedAt: string;
   createdAt: string;
   updatedAt: string;
-  priorityLevel : PriorityLevel;
-  priorityScore : number;
+  priorityLevel: PriorityLevel;
+  priorityScore: number;
   requestedByUser: {
     id: string;
     fullName: string;
@@ -32,16 +39,16 @@ export type RedistributionRequest = {
     id: string;
     bikeId: string;
     deliveredAt: string;
-    bikeNumber : string;
+    bikeNumber: string;
   }[];
 };
 export type RedistributionRequestDetail = {
   id: string;
   reason: string;
-  sourceAvailableBikesBefore : number;
-  targetAvailableBikesBefore : number;
+  sourceAvailableBikesBefore: number;
+  targetAvailableBikesBefore: number;
   requestedQuantity: number;
-  revertedBikes : number;
+  revertedBikes: number;
   status: RedistributionRequestStatus;
   startedAt: string;
   completedAt: string;
@@ -49,11 +56,11 @@ export type RedistributionRequestDetail = {
   updatedAt: string;
   requestedByUser: User;
   approvedByUser?: User;
-  revertedByUser? : User;
-  rejectedByUser? : User;
+  revertedByUser?: User;
+  rejectedByUser?: User;
   sourceStation: Station;
-  priorityLevel : PriorityLevel;
-  priorityScore : number;
+  priorityLevel: PriorityLevel;
+  priorityScore: number;
   targetStation: Station;
   items: Item[];
 };
@@ -77,23 +84,23 @@ type Station = {
   latitude: number;
   longitude: number;
   totalCapacity: number;
-  updatedAt : string;
-  availableBikesBefore : string;
-  bikesForRedistribution : string;
-  actualReceivedBikes : string;
-  actualAvailableBikes : string;
-  availableBikesAfter : string;
-  locationGeo : {
-    type : string;
-    coordinates : number[];
-  }
+  updatedAt: string;
+  availableBikesBefore: string;
+  bikesForRedistribution: string;
+  actualReceivedBikes: string;
+  actualAvailableBikes: string;
+  availableBikesAfter: string;
+  locationGeo: {
+    type: string;
+    coordinates: number[];
+  };
 };
 type Item = {
   id: string;
   bike: {
     id: string;
     status: string;
-    bikeNumber : string;
+    bikeNumber: string;
   };
   deliveredAt: string;
 };
@@ -103,18 +110,18 @@ interface UserProfile {
   id: string;
   fullName: string;
   email: string;
-  verify: 'VERIFIED' | 'UNVERIFIED';
+  verify: "VERIFIED" | "UNVERIFIED";
   location: string | null;
   username: string;
   phoneNumber: string | null;
   avatar: string | null;
-  role: 'USER' | 'ADMIN' | 'STAFF'; // Thêm các role có thể có của bạn
+  role: "USER" | "ADMIN" | "STAFF"; // Thêm các role có thể có của bạn
   nfcCardUid: string | null;
   updatedAt: string;
 }
 
 interface LocationGeo {
-  type: 'Point';
+  type: "Point";
   coordinates: number[];
 }
 
@@ -131,7 +138,7 @@ interface StationDetail {
 
 interface BikeDetail {
   id: string;
-  status: 'AVAILABLE' | 'IN_USE' | 'MAINTENANCE' | 'LOST'; // Enum tùy hệ thống của bạn
+  status: "AVAILABLE" | "IN_USE" | "MAINTENANCE" | "LOST"; // Enum tùy hệ thống của bạn
   supplierId: string;
   updatedAt: string;
 }
@@ -150,14 +157,14 @@ export interface RedistributionRequestDetailForApprove {
   id: string;
   reason: string | null;
   requestedQuantity: number;
-  status: 
-    | 'PENDING_APPROVAL' 
-    | 'APPROVED' 
-    | 'REJECTED' 
-    | 'IN_TRANSIT' 
-    | 'PARTIALLY_COMPLETED' 
-    | 'COMPLETED' 
-    | 'CANCELLED';
+  status:
+    | "PENDING_APPROVAL"
+    | "APPROVED"
+    | "REJECTED"
+    | "IN_TRANSIT"
+    | "PARTIALLY_COMPLETED"
+    | "COMPLETED"
+    | "CANCELLED";
   startedAt: string | null;
   completedAt: string | null;
   createdAt: string;
@@ -167,4 +174,21 @@ export interface RedistributionRequestDetailForApprove {
   sourceStation: StationDetail;
   targetStation: StationDetail;
   items: RedistributionItem[];
+}
+
+export type ReservationForecast = {
+  windowStart: string;
+  windowEnd: string;
+  station: {
+    id: string;
+    name: string;
+  };
+  hours : [
+    {
+      label: string;
+      timestamp: string;
+      reservedCount : number;
+      demandLevel : "low" | "high" | "medium";
+    }
+  ]
 }

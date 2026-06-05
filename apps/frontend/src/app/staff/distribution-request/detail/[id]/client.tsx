@@ -429,7 +429,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      Trạm xuất phát (Lấy xe)
+                      Trạm cho xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">{data.sourceStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1">{data.sourceStation.address}</p>
@@ -443,7 +443,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? 'text-orange-600' : 'text-blue-600'}`}>
-                      Trạm tiếp nhận (Trả xe)
+                      Trạm nhận xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">{data.targetStation.name}</p>
                     <p className="text-sm text-slate-500 mt-1">{data.targetStation.address}</p>
@@ -469,7 +469,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Cho</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Cho Xe</span>
                   </div>
 
                   <div className="space-y-3 ml-2">
@@ -491,7 +491,7 @@ export const DistributionRequestDetailClient = ({
                       <div className="flex justify-between items-center text-sm border-b border-slate-50 pb-2">
                         <span className="text-slate-500">Xe hoàn trả (Nhập lại)</span>
                         <span className="font-bold text-emerald-600">
-                          +{isReverted ? data.requestedQuantity : data.revertedBikes} xe
+                          +{data.revertedBikes} xe
                         </span>
                       </div>
                     )}
@@ -518,7 +518,7 @@ export const DistributionRequestDetailClient = ({
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
-                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Nhận</span>
+                    <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">Trạm Nhận Xe</span>
                   </div>
 
                   <div className="space-y-3 ml-2">
@@ -588,7 +588,7 @@ export const DistributionRequestDetailClient = ({
                 <div className="bg-red-50/50 border border-red-100 rounded-2xl p-4 flex justify-between items-center shadow-sm">
                   <div>
                     <span className="text-red-600/80 text-xs font-bold uppercase tracking-wider block">Xe bị hoàn trả</span>
-                    <span className="text-red-700 font-bold text-2xl">{isReverted ? data.requestedQuantity : data.revertedBikes} <span className="text-sm">xe</span></span>
+                    <span className="text-red-700 font-bold text-2xl">{data.revertedBikes} <span className="text-sm">xe</span></span>
                   </div>
                   <div className="text-right">
                     <span className="text-emerald-600/80 text-xs font-bold uppercase tracking-wider block">Thực nhận</span>

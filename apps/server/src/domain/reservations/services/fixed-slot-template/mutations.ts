@@ -275,9 +275,26 @@ export function applyTemplateMutation(args: {
     const nextDateKeySet = new Set(args.nextSlotDates.map(toSlotDateKey));
     const futureNextDates = args.nextSlotDates.filter(slotDate => slotDate.getTime() > today.getTime());
 
+    if (args.nextSlotDates.length > 0) {
+      const stationConflictCount = yield* args.txQueryRepo.countActiveFixedSlotTemplatesForUserStation(
+        args.userId,
+        args.template.station.id,
+        args.templateId,
+      );
+
+      if (stationConflictCount > 0) {
+        return yield* Effect.fail(new FixedSlotTemplateConflict({
+          userId: args.userId,
+          slotStart: formatSlotTimeValue(args.nextSlotStart),
+          slotDates: args.nextSlotDates.map(toSlotDateKey),
+        }));
+      }
+    }
+
     if (futureNextDates.length > 0) {
       const conflictCount = yield* args.txQueryRepo.countActiveFixedSlotTemplateConflicts(
         args.userId,
+        args.template.station.id,
         args.nextSlotStart,
         futureNextDates,
         args.templateId,

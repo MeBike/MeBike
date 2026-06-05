@@ -17,7 +17,7 @@ const fixedSlotErrorMessages: Record<string, string> = {
   FIXED_SLOT_DATE_LOCKED: "Có ngày đã bị khóa, không thể thay đổi nữa.",
   FIXED_SLOT_DATE_NOT_FOUND: "Ngày cần cập nhật không còn trong khung giờ.",
   FIXED_SLOT_START_OUTSIDE_OPERATING_HOURS: "Khung giờ cố định chỉ được bắt đầu từ 05:00 đến trước 23:00 giờ Việt Nam.",
-  FIXED_SLOT_TEMPLATE_CONFLICT: "Đã có khung giờ trùng vào một hoặc nhiều ngày đã chọn.",
+  FIXED_SLOT_TEMPLATE_CONFLICT: "Bạn đã có lịch đặt cố định đang hoạt động tại trạm này.",
   FIXED_SLOT_TEMPLATE_CANCEL_CONFLICT: "Không thể hủy khung giờ lúc này. Thử lại sau.",
   FIXED_SLOT_TEMPLATE_UPDATE_CONFLICT: "Không thể cập nhật khung giờ lúc này. Thử lại sau.",
   UNAUTHORIZED: "Cần đăng nhập lại để tiếp tục.",

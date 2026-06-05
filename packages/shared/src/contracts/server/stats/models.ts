@@ -19,6 +19,7 @@ export const ReservationForecastHourSchema = z.object({
   label: z.string(),
   timestamp: z.string().datetime(),
   reservedCount: z.number().int().nonnegative(),
+  demandLevel: z.enum(["high", "medium", "low"]),
 });
 
 export type ReservationForecastHour = z.infer<typeof ReservationForecastHourSchema>;

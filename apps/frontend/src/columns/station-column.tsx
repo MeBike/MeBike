@@ -155,7 +155,7 @@ export const stationStaffColumns = ({
     accessorKey: "bikes",
     header: "Số xe hiện tại",
     cell: ({ row }) => {
-      const currentBikes = row.original.bikes.total;
+      const currentBikes = row.original.capacity.totalInStationBikes;
       const needsRedistribution = row.original.needsRedistribution;
 
       return (

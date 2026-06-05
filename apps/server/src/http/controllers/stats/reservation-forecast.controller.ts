@@ -32,7 +32,7 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
       queryService.getPendingForecastByWindow(window.start, window.end),
       Effect.promise(() => prismaService.client.station.findUnique({
         where: { id: stationScopeId },
-        select: { id: true, name: true },
+        select: { id: true, name: true, totalCapacity: true },
       })),
     ], { concurrency: "unbounded" });
 
@@ -51,16 +51,29 @@ export const getReservationForecast: RouteHandler<StatsRoutes["getReservationFor
     }
   }
 
-  const hoursList = [];
+  const rawHours = [];
   for (let h = window.hStart; h < window.hEnd; h++) {
     const slotStart = createVietnamHourDate(window.year, window.month, window.day, h);
-
-    hoursList.push({
+    rawHours.push({
       label: `${String(h).padStart(2, "0")}:00`,
       timestamp: slotStart.toISOString(),
       reservedCount: reservationCountByHour.get(h) ?? 0,
     });
   }
+
+  const highThreshold = Math.max(1, (station.totalCapacity * 0.25));
+  const medThreshold = highThreshold * 0.5;
+
+  const hoursList = rawHours.map(r => ({
+    ...r,
+    demandLevel: (
+      r.reservedCount >= highThreshold
+        ? "high"
+        : r.reservedCount >= medThreshold
+          ? "medium"
+          : "low"
+    ) as "high" | "medium" | "low",
+  }));
 
   return c.json({
     windowStart: window.start.toISOString(),

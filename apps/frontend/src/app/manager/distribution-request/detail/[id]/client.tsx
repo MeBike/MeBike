@@ -529,7 +529,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      Trạm xuất phát (Lấy xe)
+                      Trạm nhận xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.sourceStation.name}
@@ -553,7 +553,7 @@ export const DistributionRequestDetailClient = ({
                     <p
                       className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? "text-orange-600" : "text-blue-600"}`}
                     >
-                      Trạm tiếp nhận (Trả xe)
+                      Trạm cho xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.targetStation.name}
@@ -583,7 +583,7 @@ export const DistributionRequestDetailClient = ({
                       <ArrowUpFromLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Cho
+                      Trạm Cho Xe
                     </span>
                   </div>
 
@@ -615,9 +615,7 @@ export const DistributionRequestDetailClient = ({
                         <span className="text-slate-500">Xe hoàn trả</span>
                         <span className="font-bold text-emerald-600">
                           +
-                          {isReverted
-                            ? data.requestedQuantity
-                            : data.revertedBikes}{" "}
+                          {data.revertedBikes}{" "}
                           xe
                         </span>
                       </div>
@@ -628,7 +626,6 @@ export const DistributionRequestDetailClient = ({
                         Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {/* Ưu tiên số liệu thực tế từ API, nếu không có thì tính: Trước - Xuất + Hoàn */}
                         <span className="font-bold text-slate-900 text-base">
                           {data.sourceStation?.actualAvailableBikes ??
                             (data.sourceAvailableBikesBefore ?? 0) -
@@ -640,17 +637,14 @@ export const DistributionRequestDetailClient = ({
                     </div>
                   </div>
                 </div>
-
-                {/* Box Trạm Nhận */}
                 <div className="border border-slate-100 rounded-xl p-5 shadow-sm relative overflow-hidden bg-white">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
-
                   <div className="flex items-center gap-2 mb-5 ml-2">
                     <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                       <ArrowDownToLine className="h-4 w-4" />
                     </div>
                     <span className="text-slate-700 font-bold uppercase tracking-wider text-xs">
-                      Trạm Nhận
+                      Trạm Nhận Xe
                     </span>
                   </div>
 
@@ -686,9 +680,9 @@ export const DistributionRequestDetailClient = ({
                         Hiện tại / Sau điều phối
                       </span>
                       <span className="font-bold text-slate-900 text-base">
-                        {data.sourceStation?.actualAvailableBikes ??
-                          (data.sourceAvailableBikesBefore ?? 0) -
-                            (data.requestedQuantity ?? 0) +
+                        {data.targetStation?.actualAvailableBikes ??
+                          (data.targetAvailableBikesBefore ?? 0) +
+                            (data.requestedQuantity ?? 0) -
                             data.revertedBikes}{" "}
                         xe
                       </span>

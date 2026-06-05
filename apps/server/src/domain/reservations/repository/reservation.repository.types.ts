@@ -168,8 +168,19 @@ export type ReservationQueryRepo = {
    */
   countActiveFixedSlotTemplateConflicts: (
     userId: string,
+    stationId: string,
     slotStart: Date,
     slotDates: ReadonlyArray<Date>,
+    excludeTemplateId?: string,
+  ) => Effect.Effect<number>;
+
+  /**
+   * Đếm số fixed-slot template `ACTIVE` của cùng user tại cùng station.
+   * Dùng để chặn một user có nhiều hơn một fixed-slot template active ở một station.
+   */
+  countActiveFixedSlotTemplatesForUserStation: (
+    userId: string,
+    stationId: string,
     excludeTemplateId?: string,
   ) => Effect.Effect<number>;
 
