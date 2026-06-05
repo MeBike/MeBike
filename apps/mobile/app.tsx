@@ -32,6 +32,8 @@ const linking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+const FONT_LOAD_TIMEOUT_MS = 3500;
+
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
@@ -56,15 +58,30 @@ export default function App() {
 
   useEffect(() => {
     let isMounted = true;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
     const loadFonts = async () => {
       try {
-        await Font.loadAsync(appFontSources);
-      }
-      catch (error) {
-        log.error("Failed to load app fonts", { error: String(error) });
+        const fontLoad = Font.loadAsync(appFontSources).catch((error) => {
+          log.error("Failed to load app fonts", { error: String(error) });
+        });
+
+        const timeout = new Promise<void>((resolve) => {
+          timeoutId = setTimeout(() => {
+            log.warn("Continuing without app fonts after startup timeout", {
+              timeoutMs: FONT_LOAD_TIMEOUT_MS,
+            });
+            resolve();
+          }, FONT_LOAD_TIMEOUT_MS);
+        });
+
+        await Promise.race([fontLoad, timeout]);
       }
       finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
         if (isMounted) {
           setFontsLoaded(true);
         }
@@ -78,6 +95,9 @@ export default function App() {
 
     return () => {
       isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, []);
 
