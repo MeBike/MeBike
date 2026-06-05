@@ -565,8 +565,8 @@ export default function StationsPage() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-between border-b pb-1 border-border/60">
-                          <p className="font-bold text-foreground">
-                            Khung giờ: {selectedDot.time}
+                          <p className="font-bold text-foreground whitespace-nowrap">
+                            Khung giờ: {selectedDot.time} - {selectedDot.time.split(":")[0]}:59
                           </p>
                           <button
                             onClick={() => setSelectedDot(null)}
