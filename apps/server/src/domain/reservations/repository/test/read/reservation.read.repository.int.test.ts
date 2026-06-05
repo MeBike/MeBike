@@ -61,6 +61,29 @@ describe("reservationRepository read integration", () => {
     expect(Option.isNone(result)).toBe(true);
   });
 
+  it.fails("findPendingHoldByBikeIdNow ignores holds for other bikes", async () => {
+    const now = new Date();
+    const user = await kit.createUser();
+    const station = await kit.createStation({ name: "Station Other Bike Hold" });
+    const heldBike = await kit.createBike({ stationId: station.id, status: "RESERVED" });
+    const availableBike = await kit.createBike({ stationId: station.id, status: "AVAILABLE" });
+
+    await kit.fixture.factories.reservation({
+      userId: user.id,
+      bikeId: heldBike.id,
+      stationId: station.id,
+      reservationOption: "ONE_TIME",
+      startTime: new Date(now.getTime() - 10 * 60 * 1000),
+      endTime: new Date(now.getTime() + 10 * 60 * 1000),
+      prepaid: "0",
+      status: "PENDING",
+    });
+
+    const result = await Effect.runPromise(repo.findPendingHoldByBikeIdNow(availableBike.id, now));
+
+    expect(Option.isNone(result)).toBe(true);
+  });
+
   it("findLatestPendingOrActiveByUserId returns most recently updated pending reservation", async () => {
     const user = await kit.createUser();
     const station = await kit.createStation({ name: "Station C" });
