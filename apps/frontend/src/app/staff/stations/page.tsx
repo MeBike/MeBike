@@ -558,15 +558,15 @@ export default function StationsPage() {
                           left: selectedDot.cx,
                           top: selectedDot.cy,
                           transform:
-                            selectedDot.cx > window.innerWidth * 0.6
+                            typeof window !== "undefined" && selectedDot.cx > window.innerWidth * 0.6
                               ? "translate(-110%, -50%)"
                               : "translate(12px, -50%)", // Nếu sát góc bên phải quá thì tự động lật popup sang bên trái để không bị tràn màn hình
                         }}
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-between border-b pb-1 border-border/60">
-                          <p className="font-bold text-foreground">
-                            Khung giờ: {selectedDot.time}
+                          <p className="font-bold text-foreground whitespace-nowrap">
+                            Khung giờ: {selectedDot.time} - {selectedDot.time.split(":")[0]}:59
                           </p>
                           <button
                             onClick={() => setSelectedDot(null)}
