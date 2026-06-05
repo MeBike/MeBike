@@ -78,8 +78,8 @@ export function makeReservationHoldReadRepository(
         try: () =>
           client.reservation.findFirst({
             where: {
-              bikeId,
               ...pendingHoldWhere(now),
+              bikeId,
             },
             orderBy: { endTime: "asc" },
             select: selectReservationRow,
