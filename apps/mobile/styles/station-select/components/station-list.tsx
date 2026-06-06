@@ -16,6 +16,7 @@ type StationListItem = StationReadSummary & {
 };
 
 type StationListProps = {
+  isLoading: boolean;
   stations: StationListItem[];
   refreshing: boolean;
   onRefresh: () => void;
@@ -23,6 +24,7 @@ type StationListProps = {
 };
 
 export function StationList({
+  isLoading,
   stations,
   refreshing,
   onRefresh,
@@ -98,10 +100,16 @@ export function StationList({
       contentContainerStyle={{ paddingTop: 12, paddingBottom: 24 }}
       ListEmptyComponent={(
         <YStack alignItems="center" gap="$2" padding="$6">
-          <AppText align="center" variant="sectionTitle">Không tìm thấy trạm phù hợp</AppText>
-          <AppText align="center" tone="muted" variant="bodySmall">
-            Thử thay đổi từ khóa hoặc tắt bộ lọc gần bạn để xem thêm trạm.
+          <AppText align="center" variant="sectionTitle">
+            {isLoading ? "Đang tải trạm..." : "Không tìm thấy trạm phù hợp"}
           </AppText>
+          {isLoading
+            ? null
+            : (
+                <AppText align="center" tone="muted" variant="bodySmall">
+                  Thử thay đổi từ khóa hoặc tắt bộ lọc gần bạn để xem thêm trạm.
+                </AppText>
+              )}
         </YStack>
       )}
       refreshControl={(

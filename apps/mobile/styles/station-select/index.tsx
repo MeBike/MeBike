@@ -7,7 +7,6 @@ import { useTheme, XStack, YStack } from "tamagui";
 import StationMap from "@/components/station-map";
 import { useAuthNext } from "@/providers/auth-provider-next";
 import { IconSymbol } from "@components/IconSymbol";
-import { LoadingScreen } from "@components/LoadingScreen";
 import { borderWidths } from "@theme/metrics";
 import { AppButton } from "@ui/primitives/app-button";
 import { AppCard } from "@ui/primitives/app-card";
@@ -57,10 +56,6 @@ export default function StationSelectScreen() {
     () => stations.find(station => station.id === selectedStationId) ?? null,
     [selectedStationId, stations],
   );
-
-  if (isLoadingStations && !showingNearby) {
-    return <LoadingScreen />;
-  }
 
   return (
     <Screen>
@@ -220,6 +215,7 @@ export default function StationSelectScreen() {
                 </YStack>
 
                 <StationList
+                  isLoading={isLoadingStations}
                   stations={stations}
                   refreshing={refreshing}
                   onRefresh={handleRefresh}
