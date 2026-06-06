@@ -580,7 +580,7 @@ export const DistributionRequestDetailClient = ({
                   </div>
                   <div className="pt-1.5">
                     <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      Trạm Nhận Xe
+                      Trạm Cho Xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.sourceStation.name}
@@ -603,7 +603,7 @@ export const DistributionRequestDetailClient = ({
                     <p
                       className={`text-[11px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${isReverted ? "text-orange-600" : "text-blue-600"}`}
                     >
-                      Trạm Cho Xe
+                      Trạm Nhận Xe
                     </p>
                     <p className="font-bold text-slate-900 text-lg">
                       {data.targetStation.name}
